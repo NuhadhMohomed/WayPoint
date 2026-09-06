@@ -53,7 +53,7 @@ Provides the foundational intercity transit network infrastructure. Enables oper
 1. `GET /api/v1/routes` (List & filter intercity routes)
 2. `POST /api/v1/routes` (Create new route & stop sequence)
 3. `GET /api/v1/services` (List scheduled service departures)
-4. `POST /api/v1/journey/search` (Search & rank candidate journeys)
+4. `POST /api/v1/journeys/search` (Search & rank candidate journeys)
 
 ### 1.9 Business-Specific Operation Beyond Basic CRUD
 - **Operation**: *Preference-Aware Candidate Journey & Transfer Window Generator*. Computes multi-leg connecting routes, evaluates transfer window feasibility, and scores options based on passenger preferences.
@@ -97,7 +97,7 @@ Manages physical transport assets, including bus fleet inventory, driver assignm
 - Develop replacement resource feasibility solver checking unassigned buses, seat capacity constraints, and driver rest hours.
 
 ### 2.4 Main PostgreSQL Responsibilities
-- Design schemas and EF Core migrations for `Buses`, `SeatLayoutTemplates`, `Seats`, `Drivers`, `DriverAssignments`, and `MaintenanceRecords`.
+- Design schemas and EF Core migrations for `Buses`, `SeatLayouts`, `Seats`, `Drivers`, `DriverAssignments`, and `MaintenanceRecords`.
 - Define unique constraints preventing double-assignment of drivers to overlapping departure schedules.
 
 ### 2.5 Main React Responsibilities
@@ -116,7 +116,7 @@ Manages physical transport assets, including bus fleet inventory, driver assignm
 
 ### 2.8 API Endpoints (Minimum 4 Endpoints)
 1. `GET /api/v1/buses` (List bus fleet inventory & maintenance status)
-2. `POST /api/v1/seat-layouts` (Define visual seat layout template)
+2. `POST /api/v1/seats/layouts` (Define visual seat layout template)
 3. `GET /api/v1/drivers` (Manage drivers & schedule assignments)
 4. `GET /api/v1/services/{id}/seats` (Calculate real-time seat availability map)
 
@@ -183,7 +183,7 @@ Handles passenger seat reservations, temporary hold timeouts, payment sandbox ch
 
 ### 3.8 API Endpoints (Minimum 4 Endpoints)
 1. `POST /api/v1/bookings/hold` (Reserve temporary seat hold with countdown)
-2. `POST /api/v1/bookings/confirm-payment` (Execute transactional payment & booking confirmation)
+2. `POST /api/v1/payments/confirm-sandbox-charge` (Execute transactional payment & booking confirmation)
 3. `GET /api/v1/tickets/{id}` (Retrieve digital QR e-ticket payload)
 4. `POST /api/v1/bookings/cancel` (Calculate refund eligibility & cancel booking)
 
@@ -251,7 +251,7 @@ Manages service disruption events, logs passenger impacts, orchestrates multi-ag
 
 ### 4.8 API Endpoints (Minimum 4 Endpoints)
 1. `POST /api/v1/disruptions` (Log service disruption case & impact)
-2. `POST /api/v1/ai/rebooking-workflow` (Initiate multi-agent AI rebooking proposal)
+2. `POST /api/v1/rebooking/generate-proposal` (Initiate multi-agent AI rebooking proposal)
 3. `GET /api/v1/approvals/pending` (Retrieve pending high-impact approval queue)
 4. `POST /api/v1/approvals/{id}/decision` (Execute Transport Manager approval/rejection decision)
 

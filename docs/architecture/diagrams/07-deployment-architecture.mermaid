@@ -12,6 +12,8 @@ graph TB
         subgraph ContainerHosting["Container / App Service Host"]
             APIApp["ASP.NET Core Web API (Docker / Kestrel)"]
             AIModule["Agentic AI Service / Tool Orchestrator"]
+            %% NOTE: AIModule is a separate node only if ADR-003 selects Option B (Python LangGraph microservice).
+            %% If Option A (C# Semantic Kernel) is selected, the AI subsystem is embedded in the ASP.NET Core process.
         end
 
         subgraph ManagedDB["Managed Database Host"]

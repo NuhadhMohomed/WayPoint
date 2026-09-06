@@ -1,6 +1,6 @@
 # WayPoint Project & SE3090 Assignment Analysis
 
-This document provides a complete, authoritative analysis of the **WayPoint Project Proposal** (`docs/referance/WayPoint_Revised_Project_Proposal.pdf`) and the official **SE3090 Assignment 1 Specification and Marking Scheme** (`docs/referance/2026-S1-SE3090-Assignment 1 - Integrated Full-Stack and Agentic AI Application Development-SpecificationWithMarkingScheme.pdf`).
+This document provides a complete, authoritative analysis of the **WayPoint Project Proposal** (`docs/reference/WayPoint_Revised_Project_Proposal.pdf`) and the official **SE3090 Assignment 1 Specification and Marking Scheme** (`docs/reference/2026-S1-SE3090-Assignment 1 - Integrated Full-Stack and Agentic AI Application Development-SpecificationWithMarkingScheme.pdf`).
 
 ---
 
@@ -88,7 +88,7 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 
 - `REQ-AI-01` (**Level 4 Workflow**): The AI subsystem must solve a multi-step domain objective. Generic chatbots, single-prompt generators, or simple Q&A tools do NOT satisfy the requirement.
 - `REQ-AI-02` (**Planning & Delegation**): System analyzes user/disruption objectives, generates a structured execution plan, and delegates tasks to distinct agent roles.
-- `REQ-AI-03` (**10 Allow-Listed Tools**):
+- `REQ-AI-03` (**10 Allow-Listed Tools**): The assignment specification lists each tool slot with a primary name and an optional alias (separated by `/`). In all other WayPoint documentation, the **left-side (primary) name** is the canonical implementation name:
   1. `SearchRoutes` / `SearchServices`
   2. `GetBoardingPoints` / `GetTimetable`
   3. `CheckTransferFeasibility`
@@ -279,11 +279,11 @@ The team MUST resolve and document the following items in project documentation 
 
 - [ ] **Gate 1 — Component Ownership Assignment**: Assign Students 1 through 4 to the 4 business components (Journey Planning, Fleet/Resource, Booking/Ticketing, Disruption/Approval).
 - [ ] **Gate 2 — Architectural Decision Records (ADRs)**: Draft and approve preliminary ADRs in `docs/adr/`:
-  - `ADR-01`: React State Management (e.g., Zustand vs Redux Toolkit).
-  - `ADR-02`: Flutter State Management (e.g., Bloc vs Riverpod).
-  - `ADR-03`: Agentic AI Framework & LLM Orchestration (e.g., Semantic Kernel vs LangChain/LangGraph microservice).
-  - `ADR-04`: AI Workflow State Schema & Persistence in PostgreSQL.
-  - `ADR-05`: Cloud Hosting Platform (e.g., Render vs Azure App Service).
+  - `ADR-001`: React State Management (e.g., Zustand vs Redux Toolkit).
+  - `ADR-002`: Flutter State Management (e.g., Bloc vs Riverpod).
+  - `ADR-003`: Agentic AI Framework & LLM Orchestration (e.g., Semantic Kernel vs LangChain/LangGraph microservice).
+  - `ADR-004`: AI Workflow State Schema & Persistence in PostgreSQL.
+  - `ADR-005`: Cloud Hosting Platform (e.g., Render vs Azure App Service).
 - [ ] **Gate 3 — Database Schema & ERD Approval**: Finalize relational schema for Routes, Stops, Buses, SeatLayouts, Services, Bookings, DisruptionCases, and `AiWorkflow` tables in `docs/architecture/`.
 - [ ] **Gate 4 — API Contract Specification**: Define Swagger/OpenAPI endpoints and DTO schemas for all 16+ API endpoints.
 - [ ] **Gate 5 — Allow-Listed Tool Contracts**: Define exact JSON schemas for the 10 allow-listed Agentic AI tools.
@@ -294,5 +294,5 @@ The team MUST resolve and document the following items in project documentation 
 ## 21. Recommended Next Documentation Steps
 
 1. Create **`docs/architecture/system-architecture.md`** detailing component boundaries, DB ERD, and API contracts.
-2. Create initial **ADR documents** in `docs/adr/` (`0001-react-state-management.md`, `0002-flutter-state-management.md`, `0003-agentic-ai-framework.md`, `0004-ai-state-persistence.md`, `0005-cloud-deployment.md`).
+2. Create initial **ADR documents** in `docs/adr/` (`ADR-001-react-state-management.md`, `ADR-002-flutter-state-management.md`, `ADR-003-ai-orchestration.md`, `ADR-004-ai-workflow-persistence.md`, `ADR-005-cloud-deployment.md`).
 3. Finalize team member component assignments in **`AGENTS.md`** and **`README.md`**.

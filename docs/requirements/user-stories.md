@@ -129,7 +129,7 @@ This document outlines the user stories for the **WayPoint** AI-Powered Intercit
 
 ### `US-ADMIN-001`: User & Role Management
 - **User Story**: *As an Administrator*, I want to manage user accounts, assign operational roles (Passenger, Operator, Manager, Admin), and configure system settings, *so that* application security and access control are maintained.
-- **Mapped Requirement**: `FR-AUTH-003`, `FR-BE-03`
+- **Mapped Requirement**: `FR-AUTH-003`
 - **Acceptance Criteria**:
   1. Administrator can grant or revoke staff roles.
   2. Role updates take effect upon next token refresh.

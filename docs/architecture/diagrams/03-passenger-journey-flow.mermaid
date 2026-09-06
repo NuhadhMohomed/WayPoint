@@ -5,7 +5,7 @@ sequenceDiagram
     participant DB as PostgreSQL Database
     participant GW as Payment Sandbox Gateway
 
-    P->>API: POST /api/v1/journey/search (Origin, Destination, Date, Preferences)
+    P->>API: POST /api/v1/journeys/search (Origin, Destination, Date, Preferences)
     API->>DB: Query Routes, Stops, Services & Seat Map
     DB-->>API: Return Active Timetables & Seat Inventory
     API->>API: Compute Transfer Windows (Min 20m) & Rank Options
@@ -18,7 +18,7 @@ sequenceDiagram
     API->>DB: Commit Transaction
     API-->>P: Return 200 OK (Hold ID & 10m Countdown)
 
-    P->>API: POST /api/v1/bookings/confirm-payment (HoldId, CardData)
+    P->>API: POST /api/v1/payments/confirm-sandbox-charge (HoldId, PaymentMethodToken)
     API->>GW: Process Sandbox Charge Request
     GW-->>API: Charge Authorized (Status: Success)
     API->>DB: Begin DB Transaction

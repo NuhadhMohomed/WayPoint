@@ -6,11 +6,11 @@ A comprehensive multi-tier application platform powering web, mobile, backend, a
 
 ```text
 WayPoint/
-├── backend/                  # Server-side API and backend services
-├── web/                      # Frontend web application
-├── mobile/                   # Mobile application (iOS / Android)
+├── backend/                  # ASP.NET Core Web API (authoritative backend)
+├── web/                      # React web application (Operator & Manager Workspace)
+├── mobile/                   # Flutter cross-platform mobile client (Passenger App)
 ├── ai/                       # AI/ML models, services, and agent workflows
-├── database/                 # Schemas, migrations, and database scripts
+├── database/                 # PostgreSQL schemas, migrations, and seed scripts
 ├── tests/                    # Integration, E2E, and cross-cutting test suites
 │
 ├── docs/                     # Project documentation
@@ -21,7 +21,8 @@ WayPoint/
 │   ├── ai/                   # AI module specs and prompt engineering
 │   ├── testing/              # Test strategy and execution plans
 │   ├── deployment/           # Infrastructure & deployment guides
-│   └── adr/                  # Architectural Decision Records (ADRs)
+│   ├── adr/                  # Architectural Decision Records (ADRs)
+│   └── reference/            # Assignment specification & project proposal
 │
 ├── .github/                  # GitHub configurations
 │   ├── workflows/            # CI/CD workflows
@@ -32,6 +33,7 @@ WayPoint/
 ├── .editorconfig             # Cross-editor formatting rules
 ├── .env.example              # Example environment variables
 ├── AGENTS.md                 # Guidelines for AI coding agents
+├── LICENSE                   # MIT License
 └── README.md                 # Main project overview
 ```
 
@@ -39,8 +41,11 @@ WayPoint/
 
 ### Prerequisites
 
-- Node.js / Python / Docker (depending on component requirements)
-- Git
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [PostgreSQL](https://www.postgresql.org/download/) (v15+)
+- [Node.js](https://nodejs.org/) (v18+ LTS, for React web app)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (v3.x, for mobile app)
+- [Git](https://git-scm.com/)
 
 ### Setup
 

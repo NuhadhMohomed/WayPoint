@@ -267,6 +267,50 @@ This document defines the functional and non-functional requirements for the **W
   2. UI displays clear error summary and manual fallback operational controls.
 - **Priority**: Must Have
 
+#### `FR-AI-005`: AI Workflow State Persistence
+- **Description**: Persist all AI workflow execution states, step logs, tool call parameters, and validation outcomes durably in PostgreSQL.
+- **Actor**: System Backend
+- **Preconditions**: Multi-agent workflow initiated.
+- **Expected Behavior**: Backend writes `AiWorkflow`, `AiWorkflowStep`, and `AiToolCall` records to PostgreSQL at every step transition, enabling post-hoc audit and observability.
+- **Acceptance Criteria**:
+  1. All workflow execution data survives system restart.
+  2. Workflow state queryable by `workflowId` via API.
+- **Priority**: Must Have
+- **Traceability**: `REQ-AI-07`, `REQ-DB-05`
+
+#### `FR-AI-006`: Human Approval Boundary Enforcement
+- **Description**: Pause execution of high-impact operational changes in `PendingManagerApproval` state until authorized by a Transport Manager.
+- **Actor**: Validation & Safety Agent / Backend API
+- **Preconditions**: AI recommends action classified as High-Impact.
+- **Expected Behavior**: Backend transitions workflow state to `PendingManagerApproval`, halting automated execution until explicit manager decision is recorded.
+- **Acceptance Criteria**:
+  1. High-impact changes CANNOT proceed without an `Approve` decision.
+  2. Approval decision is logged immutably with manager ID and timestamp.
+- **Priority**: Must Have
+- **Traceability**: `REQ-AI-06`
+
+#### `FR-AI-007`: AI Workflow Observability & Audit Display
+- **Description**: Provide a React UI interface displaying AI workflow execution states, tool call traces, step timings, validation summaries, and error logs.
+- **Actor**: Transport Manager / Operator
+- **Preconditions**: At least one AI workflow has been executed.
+- **Expected Behavior**: React workspace renders workflow execution timeline with per-step tool call details, durations, validation results, and final outcomes.
+- **Acceptance Criteria**:
+  1. Interface lists workflow ID, step execution timeline, tool arguments, and validation status.
+  2. Failed or retried tool calls are highlighted with error details.
+- **Priority**: Must Have
+- **Traceability**: `REQ-AI-07`, `REQ-FE-05`
+
+#### `FR-AI-008`: Prompt Injection Resistance & Safe Input Handling
+- **Description**: Sanitize user-supplied inputs in system prompts, apply execution timeouts, and enforce retry caps before triggering safe-failure transitions.
+- **Actor**: System Backend / AI Subsystem
+- **Preconditions**: User or external input incorporated into agent prompt.
+- **Expected Behavior**: Backend strips injection patterns, enforces maximum execution duration, and caps retry attempts before defaulting to safe-failure state.
+- **Acceptance Criteria**:
+  1. Prompt injection payloads do not alter agent behavior.
+  2. Execution timeout triggers graceful workflow termination.
+- **Priority**: Must Have
+- **Traceability**: `REQ-AI-08`, `REQ-SEC-05`
+
 ---
 
 ### 1.7 Notifications (`FR-NOTIF`)
@@ -326,6 +370,26 @@ This document defines the functional and non-functional requirements for the **W
 
 ---
 
+### 1.11 Frontend Requirements (`FR-FE`)
+
+> The following frontend requirement IDs (`FR-FE-01` through `FR-FE-13`) are defined in the SE3090 Assignment Specification and extracted in [`project-analysis.md`](../project/project-analysis.md) Sections 4–5 (`REQ-FE-01` through `REQ-FE-13`). They are cross-referenced here to formalise their standing in this SRS document.
+
+- `FR-FE-01` (**Role-Based Dashboard**): Summary widgets covering route/service occupancy, revenue, upcoming departures, and journey planning analytics. *(Source: `REQ-FE-01`)*
+- `FR-FE-02` (**Business Data Management**): Full CRUD interfaces with validation, search, filtering, sorting, and pagination for routes, stops, services, buses, seat layouts, drivers, and fare rules. *(Source: `REQ-FE-02`)*
+- `FR-FE-03` (**Disruption Workbench**): Workspace displaying candidate alternatives, resource feasibility evidence, and passenger impact analysis. *(Source: `REQ-FE-03`)*
+- `FR-FE-04` (**Manager Approval Workbench**): Dedicated UI for Transport Managers to inspect before/after operational impacts and execute approve/reject/revision actions. *(Source: `REQ-FE-04`)*
+- `FR-FE-05` (**AI Workflow Observability Dashboard**): UI displaying agent execution summaries, tool call histories, step timings, and deterministic validation outputs. *(Source: `REQ-FE-05`)*
+- `FR-FE-06` (**Journey Search & Booking**): Passenger mobile screens for search, seat selection, booking, and payment. *(Source: `REQ-FE-06`)*
+- `FR-FE-07` (**Interactive Seat Map**): Real-time seat map with hold/available/booked status indicators. *(Source: `REQ-FE-07`)*
+- `FR-FE-08` (**Digital E-Ticket Wallet**): Mobile wallet displaying active and historical e-tickets with QR codes. *(Source: `REQ-FE-08`)*
+- `FR-FE-09` (**Booking History & Cancellation**): Passenger booking history with cancellation and refund tracking. *(Source: `REQ-FE-09`)*
+- `FR-FE-10` (**Disruption Alert Notifications**): In-app disruption alerts highlighting affected bookings and required actions. *(Source: `REQ-FE-10`)*
+- `FR-FE-11` (**Rebooking Response**): Passenger screens for accepting alternative journey proposals or requesting full refunds. *(Source: `REQ-FE-11`)*
+- `FR-FE-12` (**QR Ticket Boarding Scanner**): Operator mobile scanner for verifying passenger QR tickets at boarding. *(Source: `REQ-FE-12`)*
+- `FR-FE-13` (**Passenger Manifest**): Departure manifest view with real-time boarding verification status. *(Source: `REQ-FE-13`)*
+
+---
+
 ## 2. Non-Functional Requirements
 
 ### 2.1 Security Requirements (`NFR-SEC`)
@@ -334,6 +398,8 @@ This document defines the functional and non-functional requirements for the **W
 - `NFR-SEC-002` (**Secret Management**): API keys, JWT signing keys, and database passwords MUST be loaded strictly from environment variables (`.env`). Secrets MUST NOT be committed to Git.
 - `NFR-SEC-003` (**Transport Security**): All API communications between React/Flutter and ASP.NET Core MUST use HTTPS in production deployments.
 - `NFR-SEC-004` (**Least Privilege Tool Execution**): AI agents MUST execute allow-listed tools using scoped DTO permissions. Agents CANNOT access system command shells or raw DB connections.
+- `NFR-SEC-005` (**AI Security Guardrails**): AI agents MUST operate within an allow-listed tool sandbox with DTO-validated inputs. Agents CANNOT access system command shells, raw database connections, or unsigned API keys. Execution timeouts and retry caps MUST be enforced.
+- `NFR-SEC-006` (**Audit Trail Completeness**): All high-impact operational changes, manager approval decisions, and AI tool executions MUST generate immutable audit log records that cannot be edited or deleted via the API.
 
 ### 2.2 Performance Requirements (`NFR-PERF`)
 

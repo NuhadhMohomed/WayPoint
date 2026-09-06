@@ -150,7 +150,7 @@ And commits transaction
 ### Scenario 6.1: Allow-Listed Tool Execution Control (`FR-AI-002`)
 ```gherkin
 Given the Resource & Booking Agent is evaluating replacement options
-When the agent invokes allow-listed tool CheckReplacementResources with DTO { ServiceId: "S-303", MinSeats: 35 }
+When the agent invokes allow-listed tool CheckSeatAvailability with DTO { ServiceId: "S-303", MinSeats: 35 }
 Then backend intercepts tool call and validates parameter DTO
 And executes backend business logic against PostgreSQL
 And returns structured JSON response to agent

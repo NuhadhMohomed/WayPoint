@@ -103,7 +103,7 @@ The database model explicitly enforces state machine lifecycles across 11 key op
 
 ---
 
-## 4. Complete Table Specifications (32 Entities)
+## 4. Complete Table Specifications (34 Tables)
 
 ### 4.1 Core Identity & User Entities
 

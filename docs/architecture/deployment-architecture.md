@@ -71,7 +71,7 @@ graph TB
 - **Startup Sequence**:
   1. PostgreSQL Database instance started and migrations applied.
   2. ASP.NET Core Web API instance started.
-  3. AI Orchestrator service started connected to API tool runner.
+  3. AI Orchestrator service started connected to API tool runner. *(Note: This step applies only if `ADR-003` selects Option B — Python LangGraph microservice. If Option A — C# Semantic Kernel — is selected, the AI subsystem runs embedded within the ASP.NET Core process and no separate service startup is needed.)*
 
 ---
 

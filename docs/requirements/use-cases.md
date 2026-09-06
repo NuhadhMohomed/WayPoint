@@ -27,7 +27,7 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
 ### Main Success Scenario
 1. Passenger selects origin (e.g., Colombo), destination (e.g., Ella), travel date/time, and passenger count.
 2. Passenger specifies optional preference filters (e.g., arrival before 6:00 PM, direct service preferred, AC amenity required).
-3. Flutter app sends `POST /api/v1/journey/search` request to ASP.NET Core Web API.
+3. Flutter app sends `POST /api/v1/journeys/search` request to ASP.NET Core Web API.
 4. ASP.NET Core queries PostgreSQL database for active routes, intermediate stops, timetables, and available seat inventory matching the corridor.
 5. Backend evaluates route transfer feasibility (checking minimum 20-minute buffer for connecting journeys).
 6. Backend ranks candidate journey options based on arrival time, total duration, total fare, directness, and amenity match score.
@@ -100,15 +100,15 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
 ### Main Success Scenario
 1. Operator submits disruption details (Service ID, Disruption Reason: "Engine Failure", Severity: "Major") via React UI to `POST /api/v1/disruptions`.
 2. ASP.NET Core logs `DisruptionCase` record in PostgreSQL and queries affected ticketed bookings.
-3. Backend initiates Level 4 Agentic AI workflow (`POST /api/v1/ai/rebooking-workflow`).
+3. Backend initiates Level 4 Agentic AI workflow (`POST /api/v1/rebooking/generate-proposal`).
 4. **Planner Agent** analyzes disruption objective and generates a structured multi-step plan:
    - Step 1: Analyze candidate route alternatives (delegated to Journey Analysis Agent).
    - Step 2: Check replacement bus & driver feasibility (delegated to Resource Agent).
    - Step 3: Evaluate rebooking costs & fare rules (delegated to Resource Agent).
    - Step 4: Validate safety rules, classify impact, & check approval boundary (delegated to Validation & Safety Agent).
-5. **Journey Analysis Agent** executes allow-listed tool `SearchRoutes` & `GetTimetable` to find alternative departure candidates.
-6. **Resource Agent** executes `CheckReplacementResources` to check unassigned buses with equal/greater seat capacity and available drivers.
-7. **Validation & Safety Agent** executes `CalculatePassengerImpact` and `CheckCancellationPolicy`.
+5. **Journey Analysis Agent** executes allow-listed tool `SearchRoutes` & `GetBoardingPoints` to find alternative departure candidates.
+6. **Resource Agent** executes `CheckSeatAvailability` to check unassigned buses with equal/greater seat capacity and available drivers.
+7. **Validation & Safety Agent** executes `CalculatePassengerImpact` and `CalculateFareDifference`.
 8. Validation Agent determines the action involves cancelling a ticketed service and reassigning passengers, classifying impact as **High-Impact**.
 9. Agent executes allow-listed tool `RequestManagerApproval`.
 10. Backend sets workflow state to `PendingManagerApproval` and persists all agent steps, tool calls, and proposed rebooking plans in PostgreSQL tables (`AiWorkflow`, `AiWorkflowStep`, `AiToolCall`).
@@ -145,7 +145,7 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
    - Before/after timetable and fare impact metrics.
    - AI agent tool execution trace and deterministic validation summary.
 3. Transport Manager reviews evidence and clicks **"Approve Rebooking"**.
-4. React app sends `POST /api/v1/approvals/{proposalId}/decision` with decision: `Approve` and comments.
+4. React app sends `POST /api/v1/approvals/{id}/decision` with decision: `Approve` and comments.
 5. ASP.NET Core Web API executes `ApplyApprovedOperationalChange` tool logic inside a PostgreSQL database transaction:
    - Cancels original service status.
    - Transfers affected passenger bookings to replacement service seats transactionally.
@@ -179,7 +179,7 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
 ### Main Success Scenario
 1. Operator opens "Bus Fleet Management" and clicks "Add New Bus".
 2. Operator inputs registration number, total capacity (e.g., 40 seats), bus class (e.g., Super Luxury AC), and assigns a visual 2x2 seat matrix template.
-3. React app sends `POST /api/v1/fleet/buses` request to backend.
+3. React app sends `POST /api/v1/buses` request to backend.
 4. ASP.NET Core validates DTO inputs and inserts bus and seat records into PostgreSQL.
 5. Operator opens "Timetable Administration" and creates a new scheduled departure for Colombo–Ella corridor.
 6. Operator assigns bus, driver, departure time, and fare rules.
