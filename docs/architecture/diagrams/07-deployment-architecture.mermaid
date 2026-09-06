@@ -1,0 +1,31 @@
+graph TB
+    subgraph ClientDevices["Client Devices"]
+        MobileDevice["Android Mobile Device (Flutter APK)"]
+        Browser["Desktop Browser (React Web App)"]
+    end
+
+    subgraph CloudInfra["Cloud Infrastructure (Render / Azure / Railway)"]
+        subgraph StaticHosting["Static Frontend Host (Vercel / Netlify / Render)"]
+            ReactApp["Deployed React SPA (Production Build)"]
+        end
+
+        subgraph ContainerHosting["Container / App Service Host"]
+            APIApp["ASP.NET Core Web API (Docker / Kestrel)"]
+            AIModule["Agentic AI Service / Tool Orchestrator"]
+        end
+
+        subgraph ManagedDB["Managed Database Host"]
+            PostgresCloud[(Cloud PostgreSQL Managed DB)]
+        end
+    end
+
+    MobileDevice -->|HTTPS / REST| APIApp
+    Browser -->|HTTP GET Static Assets| ReactApp
+    ReactApp -->|HTTPS / REST| APIApp
+    APIApp -->|Npgsql / EF Core| PostgresCloud
+    APIApp -->|Internal REST / gRPC| AIModule
+
+    %% No direct access
+    MobileDevice -. X Prohibited X .- PostgresCloud
+    ReactApp -. X Prohibited X .- PostgresCloud
+    AIModule -. X Prohibited X .- PostgresCloud

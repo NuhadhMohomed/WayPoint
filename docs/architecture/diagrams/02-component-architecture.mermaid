@@ -1,0 +1,40 @@
+graph TB
+    subgraph BackendArchitecture["ASP.NET Core Backend (Clean Architecture Layers)"]
+        subgraph APILayer["1. API Layer (Web API)"]
+            Controllers["REST Controllers"]
+            Middlewares["Auth, JWT, CORS, Error Middleware"]
+            SwaggerDocs["Swagger / OpenAPI"]
+        end
+
+        subgraph AppLayer["2. Application Layer"]
+            Services["Application Services & Handlers"]
+            DTOs["DTO Models & Validations"]
+            ToolRunner["AI Tool Runner Wrappers"]
+        end
+
+        subgraph DomainLayer["3. Domain Layer"]
+            Entities["Domain Entities & Enums"]
+            ValueObjects["Value Objects"]
+            DomainRules["Business Rule Assertions"]
+        end
+
+        subgraph InfraLayer["4. Infrastructure Layer"]
+            DbContext["WayPointDbContext (EF Core)"]
+            Repositories["EF Repositories"]
+            ExternalProxies["Payment & Map Service Proxies"]
+        end
+    end
+
+    subgraph BusinessComponents["Four Student Component Vertical Slices"]
+        Comp1["Comp 1: Journey Planning & Route Catalogue (Student 1)"]
+        Comp2["Comp 2: Fleet, Seat & Resource Feasibility (Student 2)"]
+        Comp3["Comp 3: Booking, Ticketing & Passenger Options (Student 3)"]
+        Comp4["Comp 4: Disruption, Rebooking & Approval (Student 4)"]
+    end
+
+    APILayer --> AppLayer
+    AppLayer --> DomainLayer
+    AppLayer --> InfraLayer
+    InfraLayer --> DomainLayer
+
+    BusinessComponents --> BackendArchitecture

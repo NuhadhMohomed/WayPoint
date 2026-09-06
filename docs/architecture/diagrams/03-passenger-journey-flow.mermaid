@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor P as Passenger (Flutter App)
+    participant API as ASP.NET Core Web API
+    participant DB as PostgreSQL Database
+    participant GW as Payment Sandbox Gateway
+
+    P->>API: POST /api/v1/journey/search (Origin, Destination, Date, Preferences)
+    API->>DB: Query Routes, Stops, Services & Seat Map
+    DB-->>API: Return Active Timetables & Seat Inventory
+    API->>API: Compute Transfer Windows (Min 20m) & Rank Options
+    API-->>P: Return Candidate Journey Options Payload
+
+    P->>API: POST /api/v1/bookings/hold (ServiceId, SeatNumbers)
+    API->>DB: Begin DB Transaction & Check Availability
+    DB-->>API: Seats Available
+    API->>DB: Insert SeatHold (HeldUntil = UtcNow + 10m)
+    API->>DB: Commit Transaction
+    API-->>P: Return 200 OK (Hold ID & 10m Countdown)
+
+    P->>API: POST /api/v1/bookings/confirm-payment (HoldId, CardData)
+    API->>GW: Process Sandbox Charge Request
+    GW-->>API: Charge Authorized (Status: Success)
+    API->>DB: Begin DB Transaction
+    API->>DB: Update Booking (Confirmed) & Seats (Booked)
+    API->>DB: Generate QR E-Ticket Record
+    API->>DB: Commit Transaction
+    API-->>P: Return Confirmed Booking & Signed QR E-Ticket

@@ -1,48 +1,202 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-venv/
-.venv/
-__pycache__/
-*.pyc
+# ==============================================================================
+# WayPoint - .gitignore
+# Multi-tier application (.NET 8, React, Flutter, Python AI, PostgreSQL)
+# ==============================================================================
 
-# Production / Builds
+# ------------------------------------------------------------------------------
+# Environment Variables & Sensitive Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.pubxml
+*.pubxml.user
+secrets.json
+appsettings.*.local.json
+appsettings.Secrets.json
+appsettings.local.json
+
+# ------------------------------------------------------------------------------
+# .NET / C# (ASP.NET Core, EF Core, Class Libraries, Tests)
+# ------------------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+publish/
+Generated_Files/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage.opencover.xml
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+*.VisualState.xml
+.vs/
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+*.nupkg
+*.snupkg
+project.lock.json
+project.assets.json
+
+# ------------------------------------------------------------------------------
+# Web / Frontend (React, Vite, Next.js, Node.js)
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp/
+.pnp.js
 dist/
 build/
 out/
 .next/
-*.apk
-*.aab
-*.ipa
-
-# Environment & Secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.pem
-*.key
-
-# IDEs and Editors
-.vscode/*
-!.vscode/extensions.json
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# Database & Logs
-*.log
+.vite/
+.turbo/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.sqlite
-*.db
+pnpm-debug.log*
 
-# Coverage / Testing
-coverage/
-.nyc_output/
+# ------------------------------------------------------------------------------
+# Mobile / Flutter & Dart
+# ------------------------------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+ephemeral/
+*.apk
+*.aab
+*.ipa
+*.app
+*.xctest
+*.dSYM.zip
+flutter_*.png
+
+# Android specific (within Flutter/Native)
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/**/GeneratedPluginRegistrant.kt
+
+# iOS specific (within Flutter/Native)
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/**/GeneratedPluginRegistrant.h
+**/ios/**/GeneratedPluginRegistrant.m
+
+# ------------------------------------------------------------------------------
+# AI / Python (FastAPI, PyTorch, LangChain, Jupyter)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# AI Models & Large Checkpoints (use DVC / Git LFS / cloud buckets instead)
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+*.ckpt
+*.h5
+
+# ------------------------------------------------------------------------------
+# Databases & Local Storage
+# ------------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.mdf
+*.ldf
+*.ndf
+*.dump
+*.sql.gz
+
+# ------------------------------------------------------------------------------
+# IDEs and Text Editors
+# ------------------------------------------------------------------------------
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (Rider, PyCharm, WebStorm, Android Studio)
+.idea/
+*.iml
+*.iws
+
+# Sublime Text / Atom / Eclipse / Vim
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*~
+
+# ------------------------------------------------------------------------------
+# Operating System Artifacts
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ------------------------------------------------------------------------------
+# Custom Project Exclusions
+# ------------------------------------------------------------------------------
+docs/referance/WayPoint_Revised_Project_Proposal.docx

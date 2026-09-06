@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WayPoint.API", "WayPoint.API\WayPoint.API.csproj", "{DCAAD674-2CC4-4A6F-A578-494499A99795}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WayPoint.Application", "WayPoint.Application\WayPoint.Application.csproj", "{99EA64EB-1E63-494F-B2AB-1D1C7C378191}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WayPoint.Domain", "WayPoint.Domain\WayPoint.Domain.csproj", "{35D1EFC2-FEE1-416B-A32A-DA48C68C9CFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WayPoint.Infrastructure", "WayPoint.Infrastructure\WayPoint.Infrastructure.csproj", "{5D5398D7-E767-43FA-AA47-754D1FDE243A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WayPoint.Tests", "WayPoint.Tests\WayPoint.Tests.csproj", "{B289D403-07E7-4BA2-8A3F-6B26C10D0B05}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCAAD674-2CC4-4A6F-A578-494499A99795}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCAAD674-2CC4-4A6F-A578-494499A99795}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCAAD674-2CC4-4A6F-A578-494499A99795}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCAAD674-2CC4-4A6F-A578-494499A99795}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99EA64EB-1E63-494F-B2AB-1D1C7C378191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99EA64EB-1E63-494F-B2AB-1D1C7C378191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99EA64EB-1E63-494F-B2AB-1D1C7C378191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99EA64EB-1E63-494F-B2AB-1D1C7C378191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35D1EFC2-FEE1-416B-A32A-DA48C68C9CFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35D1EFC2-FEE1-416B-A32A-DA48C68C9CFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35D1EFC2-FEE1-416B-A32A-DA48C68C9CFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35D1EFC2-FEE1-416B-A32A-DA48C68C9CFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D5398D7-E767-43FA-AA47-754D1FDE243A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D5398D7-E767-43FA-AA47-754D1FDE243A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D5398D7-E767-43FA-AA47-754D1FDE243A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D5398D7-E767-43FA-AA47-754D1FDE243A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B289D403-07E7-4BA2-8A3F-6B26C10D0B05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B289D403-07E7-4BA2-8A3F-6B26C10D0B05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B289D403-07E7-4BA2-8A3F-6B26C10D0B05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B289D403-07E7-4BA2-8A3F-6B26C10D0B05}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

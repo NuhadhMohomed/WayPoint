@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor Op as Operator (React Web App)
+    participant API as ASP.NET Core Web API
+    participant DB as PostgreSQL Database
+    participant AI as Agentic AI Subsystem
+
+    Op->>API: POST /api/v1/disruptions (ServiceId, Reason: Engine Breakdown, Severity: Major)
+    API->>DB: Insert DisruptionCase & Update Service (Disrupted)
+    API->>AI: Trigger Multi-Agent Workflow (Disruption ID)
+    AI->>API: Invoke Tool: CheckReplacementResources
+    API->>DB: Query Unassigned Fleet & Driver Roster
+    DB-->>API: Return Feasible Bus NC-4589 & Driver D-88
+    API-->>AI: Return Tool Result Payload
+    AI->>API: Invoke Tool: CalculatePassengerImpact
+    API-->>AI: Return Affected Count = 32
+    AI->>API: Invoke Tool: RequestManagerApproval (High-Impact Proposal)
+    API->>DB: Persist AiWorkflow, Steps, ToolCalls & RebookingProposal
+    API->>DB: Set Workflow State = PendingManagerApproval
+    API-->>Op: Disruption Logged; Workflow Paused in PendingManagerApproval

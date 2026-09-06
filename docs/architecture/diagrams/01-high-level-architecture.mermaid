@@ -1,0 +1,33 @@
+graph TD
+    subgraph Clients["Client Applications"]
+        Flutter["Flutter Mobile App (Passenger Client)"]
+        React["React Web App (Operator & Manager Workspace)"]
+    end
+
+    subgraph Backend["Authoritative Application Layer"]
+        API["ASP.NET Core Web API (REST / JSON)"]
+    end
+
+    subgraph Storage["Relational Data Store"]
+        Postgres[(PostgreSQL Database)]
+    end
+
+    subgraph AI["AI Subsystem"]
+        Orchestration["Agentic AI Orchestration (4 Specialized Agents)"]
+    end
+
+    subgraph External["External Services"]
+        Payment["Payment Sandbox Gateway"]
+        Maps["Map / Location Service"]
+    end
+
+    Flutter -->|HTTPS / REST| API
+    React -->|HTTPS / REST| API
+    API -->|EF Core ORM| Postgres
+    API -->|Internal Service Call & Allow-Listed Tools| Orchestration
+    API -->|Secure Server-to-Server API Calls| External
+
+    %% Boundary Violations (Prohibited Connections)
+    Flutter -. X Direct Access Prohibited X .- Postgres
+    React -. X Direct Access Prohibited X .- Postgres
+    Orchestration -. X Direct Access Prohibited X .- Postgres

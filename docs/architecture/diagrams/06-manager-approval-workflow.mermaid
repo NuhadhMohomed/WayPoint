@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor Mgr as Transport Manager (React Web App)
+    participant API as ASP.NET Core Web API
+    participant DB as PostgreSQL Database
+    participant Push as Push Notification Service
+    actor Pass as Passenger (Flutter App)
+
+    Mgr->>API: GET /api/v1/approvals/pending
+    API->>DB: Query RebookingProposals with State = PendingManagerApproval
+    DB-->>API: Return Proposal Data, Passenger Impact & AI Tool Evidence
+    API-->>Mgr: Display Manager Approval Workbench (Impact Metrics, Before/After)
+
+    alt Manager Approves Proposal
+        Mgr->>API: POST /api/v1/approvals/{id}/decision (Decision: Approve, ManagerSig)
+        API->>DB: Begin DB Transaction
+        API->>DB: ApplyApprovedOperationalChange (Cancel Old Service, Rebook Passengers)
+        API->>DB: Insert ApprovalDecision Record (Signed & Timestamps)
+        API->>DB: Commit Transaction
+        API->>Push: Dispatch SendPassengerNotification (Push Alert)
+        Push-->>Pass: Receive Push Alert: "Journey Rebooked on Bus NC-4589"
+        API-->>Mgr: Proposal Status Updated to "Approved & Executed"
+    else Manager Rejects Proposal
+        Mgr->>API: POST /api/v1/approvals/{id}/decision (Decision: Reject, Reason: Cost High)
+        API->>DB: Update Proposal Status = Rejected & Log Manager Reason
+        API->>DB: Initiate Automatic Full Refund Processing
+        API-->>Mgr: Proposal Status Updated to "Rejected - Refunds Triggered"
+    end

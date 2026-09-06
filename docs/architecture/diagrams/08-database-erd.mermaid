@@ -1,0 +1,44 @@
+erDiagram
+    Users ||--o{ Roles : has
+    Users ||--o| Operators : profile
+    Users ||--o| Passengers : profile
+
+    Routes ||--|{ RouteStops : contains
+    Routes ||--o{ BoardingPoints : includes
+    Routes ||--o{ TouristDestinations : links
+    Routes ||--o{ Services : schedules
+
+    Services }|--|| Buses : uses
+    Services }|--|| Drivers : driven_by
+    Services ||--o{ FareRules : applies
+    Services ||--o{ ServiceAlerts : logs
+    Services ||--o{ DisruptionCases : experiences
+
+    Buses }|--|| SeatLayouts : structured_by
+    Buses ||--o{ MaintenanceRecords : logs
+    Drivers ||--o{ DriverAssignments : assigned
+
+    SeatLayouts ||--|{ Seats : contains
+    Services ||--o{ ServiceAmenities : offers
+    Amenities ||--o{ ServiceAmenities : mapped
+
+    Passengers ||--o{ JourneySearches : submits
+    JourneySearches ||--o{ JourneyCandidates : generates
+
+    Passengers ||--o{ SeatHolds : requests
+    Services ||--o{ SeatHolds : holds
+    Seats ||--o{ SeatHolds : locks
+
+    Passengers ||--o{ Bookings : places
+    Services ||--o{ Bookings : receives
+    Bookings ||--|| Tickets : issues
+    Bookings ||--o{ PaymentAttempts : charges
+    Bookings ||--o{ Refunds : calculates
+
+    DisruptionCases ||--o{ RebookingProposals : evaluates
+    RebookingProposals }|--|| ApprovalDecisions : requires
+    Users ||--o{ ApprovalDecisions : decides
+
+    AiWorkflows ||--|{ AiWorkflowSteps : logs
+    AiWorkflowSteps ||--o{ AiToolCalls : executes
+    AiWorkflowSteps ||--o{ AiValidationResults : validates

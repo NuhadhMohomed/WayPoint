@@ -1,0 +1,33 @@
+graph TD
+    Objective["Disruption Objective Payload"] --> Planner["1. Planner / Coordinator Agent"]
+
+    subgraph Agents["Four Specialized Agents"]
+        Planner -->|Delegates Route Analysis| JourneyAgent["2. Journey Analysis Agent"]
+        Planner -->|Delegates Fleet Checks| ResourceAgent["3. Resource & Booking Agent"]
+        Planner -->|Delegates Safety & Approval| SafetyAgent["4. Validation & Safety Agent"]
+    end
+
+    subgraph AllowListedTools["10 Allow-Listed Backend Tools"]
+        T1["SearchRoutes / SearchServices"]
+        T2["GetBoardingPoints / GetTimetable"]
+        T3["CheckTransferFeasibility"]
+        T4["CheckSeatAvailability / CheckReplacementResources"]
+        T5["CalculateFareDifference / CheckCancellationPolicy"]
+        T6["CreateRebookingProposal"]
+        T7["CalculatePassengerImpact"]
+        T8["RequestManagerApproval"]
+        T9["ApplyApprovedOperationalChange"]
+        T10["SendPassengerNotification"]
+    end
+
+    JourneyAgent -->|Executes Tool| T1
+    JourneyAgent -->|Executes Tool| T2
+    ResourceAgent -->|Executes Tool| T4
+    ResourceAgent -->|Executes Tool| T5
+    SafetyAgent -->|Executes Tool| T7
+    SafetyAgent -->|Executes Tool| T8
+
+    T8 -->|High-Impact Gate| ApprovalState["Paused: PendingManagerApproval"]
+    ApprovalState --> Manager["Transport Manager Review (React Workspace)"]
+    Manager -->|Approve Signature| T9
+    T9 --> Notifications["Dispatch Passenger Push Notifications (T10)"]
