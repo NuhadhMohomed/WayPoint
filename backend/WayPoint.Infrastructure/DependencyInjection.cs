@@ -56,7 +56,10 @@ public static class DependencyInjection
                 Username = userInfo.Length > 0 ? userInfo[0] : "",
                 Password = userInfo.Length > 1 ? userInfo[1] : "",
                 Database = uri.AbsolutePath.TrimStart('/'),
-                SslMode = SslMode.Prefer
+                SslMode = SslMode.Require,
+                SslNegotiation = SslNegotiation.Direct,
+                Timeout = 15,
+                CommandTimeout = 60
             };
             return builder.ToString();
         }

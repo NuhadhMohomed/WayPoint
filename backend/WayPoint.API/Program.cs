@@ -11,6 +11,35 @@ using WayPoint.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load .env file automatically if present (for local development without leaking secrets)
+var rootDirectory = Directory.GetParent(builder.Environment.ContentRootPath)?.Parent?.FullName 
+                    ?? builder.Environment.ContentRootPath;
+var envFilePath = Path.Combine(rootDirectory, ".env");
+if (!File.Exists(envFilePath))
+{
+    envFilePath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+}
+
+if (File.Exists(envFilePath))
+{
+    foreach (var line in File.ReadAllLines(envFilePath))
+    {
+        var trimmed = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#")) continue;
+        var separatorIdx = trimmed.IndexOf('=');
+        if (separatorIdx > 0)
+        {
+            var key = trimmed[..separatorIdx].Trim();
+            var val = trimmed[(separatorIdx + 1)..].Trim().Trim('"', '\'');
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(key)))
+            {
+                Environment.SetEnvironmentVariable(key, val);
+            }
+        }
+    }
+}
+
+
 // 1. Application & Infrastructure Services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
