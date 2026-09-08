@@ -4,7 +4,7 @@
 ADR-003: Selection of Agentic AI Framework and Multi-Agent Orchestration Architecture
 
 ## Status
-`DECISION REQUIRED` (Team must choose between Option A: Native C# Microsoft Semantic Kernel vs. Option B: Python LangGraph Microservice)
+`Accepted` (Option B: Python LangGraph / FastAPI Microservice in `ai/`)
 
 ---
 
@@ -19,17 +19,22 @@ SE3090 Assignment 1 mandates a **Level 4 Agentic AI Subsystem**. The system must
 
 ---
 
-## Decision Options Under Team Consideration
+## Decision
+We select **Option B: Python LangGraph & FastAPI Microservice in `ai/`** for the Level 4 Agentic AI Subsystem. The AI microservice communicates exclusively with the ASP.NET Core Web API via internal HTTP allow-listed tool endpoints, maintaining zero direct database connectivity.
+
+---
+
+## Decision Options Evaluated
 
 ### Option A: Microsoft Semantic Kernel (Native C# inside ASP.NET Core API)
 - *Architecture*: Multi-agent orchestration implemented natively in C# within the ASP.NET Core project using Microsoft Semantic Kernel framework.
 - *Pros*: Single unified codebase, zero separate microservice deployment overhead, direct C# DTO tool execution without inter-process HTTP calls, native EF Core DbContext access for state persistence.
 - *Cons*: Less flexible prompt orchestration ecosystem compared to Python.
 
-### Option B: Python LangGraph / LangChain Microservice [SE3090 Lab Stack]
-- *Architecture*: Python FastAPI microservice using LangGraph framework for multi-agent graph orchestration. Communicates internally with ASP.NET Core API via private REST/gRPC endpoints.
-- *Pros*: Directly uses the Python LangGraph stack practiced in SE3090 lab sessions; state-of-the-art graph state machine controls (`LangGraph`).
-- *Cons*: Requires managing a secondary Python deployment container; inter-service communication overhead.
+### Option B: Python LangGraph / FastAPI Microservice [ACCEPTED - SE3090 Lab Stack]
+- *Architecture*: Python FastAPI microservice using LangGraph framework for multi-agent graph orchestration. Communicates internally with ASP.NET Core API via private REST endpoints.
+- *Pros*: Directly uses the Python LangGraph stack practiced in SE3090 lab sessions; state-of-the-art graph state machine controls (`LangGraph`); rich prompt and agent evaluation tooling.
+- *Cons*: Requires managing a secondary Python service in `ai/`; inter-service communication overhead.
 
 ---
 
@@ -47,13 +52,14 @@ SE3090 Assignment 1 mandates a **Level 4 Agentic AI Subsystem**. The system must
 
 ## Consequences
 
-### If Option A (Semantic Kernel) Selected
-- Simplified single-host deployment on Render/Azure.
-- Zero inter-service network latency during tool execution.
+### Positive
+- Team directly leverages lab experience with LangGraph agent state graphs, checkpoints, and multi-agent coordination.
+- Clean separation between business domain backend (C#) and AI prompt engineering/evaluation graphs (Python).
+- Rich ecosystem for agent evaluation metrics, tracing, and golden dataset testing.
 
-### If Option B (LangGraph Microservice) Selected
-- Team leverages pre-existing lab experience with LangGraph agent state graphs.
-- Requires configuring a private internal HTTP endpoint between ASP.NET Core and Python.
+### Negative
+- Requires maintaining Python virtual environment and dependencies in `ai/`.
+- Inter-service HTTP communication introduces serialization overhead during backend tool callbacks.
 
 ---
 

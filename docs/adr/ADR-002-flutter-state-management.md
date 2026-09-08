@@ -4,7 +4,7 @@
 ADR-002: Selection of Flutter State Management Approach for Passenger Application
 
 ## Status
-`DECISION REQUIRED` (Pending final team confirmation between Flutter BLoC/Cubit vs. Riverpod)
+`Accepted` (Confirmed: Flutter BLoC / Cubit for Passenger Mobile Application)
 
 ---
 
@@ -21,7 +21,7 @@ We require a robust, predictable state management pattern that cleanly separates
 ---
 
 ## Decision
-We propose using **Flutter BLoC (Business Logic Component) / Cubit** for mobile state management.
+We select **Flutter BLoC (Business Logic Component) / Cubit** for passenger mobile application state management.
 
 ---
 

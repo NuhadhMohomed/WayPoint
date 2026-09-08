@@ -1,0 +1,29 @@
+name: WayPoint Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop, "feature/**" ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Backend Dependencies
+      run: dotnet restore backend/WayPoint.sln
+
+    - name: Build Backend Solution
+      run: dotnet build backend/WayPoint.sln --no-restore --configuration Release
+
+    - name: Run Backend Automated Tests
+      run: dotnet test backend/WayPoint.sln --no-build --configuration Release --verbosity normal

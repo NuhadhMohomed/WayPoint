@@ -233,7 +233,7 @@ This document defines the functional and non-functional requirements for the **W
 - **Preconditions**: Objective payload submitted via ASP.NET Core API.
 - **Expected Behavior**: Backend initiates workflow coordinator, delegates tasks across 4 specialized agents, coordinates allow-listed tool calls, and returns structured plan results.
 - **Acceptance Criteria**:
-  1. Workflow implements 4 distinct agents: Planner/Coordinator, Journey Analysis, Resource & Booking, Validation & Safety.
+  1. Workflow implements 4 distinct specialized agents: Journey Analysis Agent, Resource Feasibility Agent, Booking & Policy Agent, and Validation & Safety Agent (with overall multi-agent workflow graph coordination designated as TBD / shared team implementation).
   2. Workflow state is persisted durably in PostgreSQL at every step.
 - **Priority**: Must Have
 

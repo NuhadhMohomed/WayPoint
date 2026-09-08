@@ -41,7 +41,7 @@ This document provides the complete, formal **Business Rules & Governance Specif
   - *Manager Approval Required*: No.
 
 ### 1.2 Authorization (`BR-AUTHZ`)
-- `BR-AUTHZ-001` (**Role-Based Access Control - RBAC**): Endpoints enforce role claims: `Passenger`, `Operator`, `TransportManager`, `Administrator`.
+- `BR-AUTHZ-001` (**Role-Based Access Control - RBAC**): Endpoints enforce role claims matching the canonical `UserRoleType` enum: `Passenger`, `Operator`, `TransportManager`, `Admin`. (The term *Administrator* is used as a functional descriptor).
 - `BR-AUTHZ-002` (**Resource Ownership Lock**): Passengers can only view or cancel their own bookings (`Booking.PassengerId == Token.UserId`).
 - **AI-Assisted Boundary**:
   - *AI May Recommend*: N/A.
@@ -112,7 +112,7 @@ This document provides the complete, formal **Business Rules & Governance Specif
   - *Manager Approval Required*: No (Automatic).
 
 ### 1.10 Payment (`BR-PAY`)
-- `BR-PAY-001` (**Sandbox Payment Verification**): Backend verifies payment gateway authorization code via ASP.NET Core proxy (`FR-BE-06`).
+- `BR-PAY-001` (**Dual-Strategy Sandbox Payment Verification**): Backend verifies payment authorization via ASP.NET Core (`FR-BE-06`). The system adopts a dual-strategy: an internal ASP.NET Core Mock Payment Gateway with configurable test cards (simulating instant approval, insufficient funds, and network failure) for 100% reliable viva exam demonstrations, with an optional Stripe Test Mode proxy.
 - `BR-PAY-002` (**Failed Payment Release**): Payment failure or timeout immediately releases `SeatHold` back to `Available`.
 - **AI-Assisted Boundary**:
   - *AI May Recommend*: N/A.

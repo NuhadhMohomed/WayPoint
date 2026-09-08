@@ -33,7 +33,6 @@ WayPoint/
 ├── .editorconfig             # Cross-editor formatting rules
 ├── .env.example              # Example environment variables
 ├── AGENTS.md                 # Guidelines for AI coding agents
-├── LICENSE                   # MIT License
 └── README.md                 # Main project overview
 ```
 
@@ -45,6 +44,7 @@ WayPoint/
 - [PostgreSQL](https://www.postgresql.org/download/) (v15+)
 - [Node.js](https://nodejs.org/) (v18+ LTS, for React web app)
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (v3.x, for mobile app)
+- [Python](https://www.python.org/) (v3.10+, for Agentic AI microservice in `ai/`)
 - [Git](https://git-scm.com/)
 
 ### Setup
@@ -71,6 +71,3 @@ For detailed architectural diagrams, design guidelines, and deployment procedure
 
 Please review `.github/pull_request_template.md` before submitting pull requests.
 
-## 📜 License
-
-[MIT](LICENSE)

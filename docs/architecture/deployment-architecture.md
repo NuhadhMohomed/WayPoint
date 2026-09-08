@@ -15,26 +15,26 @@ graph TB
         Browser["Desktop Browser (React Web App)"]
     end
 
-    subgraph CloudInfra["Cloud Infrastructure (Render / Azure / Railway)"]
-        subgraph StaticHosting["Static Frontend Host (Vercel / Netlify / Render)"]
-            ReactApp["Deployed React SPA (Production Build)"]
+    subgraph CloudInfra["Production Cloud Infrastructure (Railway & Vercel)"]
+        subgraph StaticHosting["Static Frontend Host (Vercel Edge CDN)"]
+            ReactApp["Deployed React SPA (Vite Production Build)"]
         end
 
-        subgraph ContainerHosting["Container / App Service Host"]
-            APIApp["ASP.NET Core Web API (Docker / Kestrel)"]
-            AIModule["Agentic AI Service / Tool Orchestrator"]
+        subgraph ContainerHosting["Container Host (Railway)"]
+            APIApp["ASP.NET Core Web API (.NET 8 Docker Container)"]
+            AIModule["Agentic AI Service (FastAPI / LangGraph in ai/)"]
         end
 
-        subgraph ManagedDB["Managed Database Host"]
-            PostgresCloud[(Cloud PostgreSQL Managed DB)]
+        subgraph ManagedDB["Managed Relational DB (Railway)"]
+            PostgresCloud[(Railway Managed PostgreSQL DB)]
         end
     end
 
     MobileDevice -->|HTTPS / REST| APIApp
     Browser -->|HTTP GET Static Assets| ReactApp
     ReactApp -->|HTTPS / REST| APIApp
-    APIApp -->|Npgsql / EF Core| PostgresCloud
-    APIApp -->|Internal REST / gRPC| AIModule
+    APIApp -->|Npgsql / EF Core (Private Network)| PostgresCloud
+    APIApp -->|Internal HTTP Tool Wrappers| AIModule
 
     %% No direct access
     MobileDevice -. X Prohibited X .- PostgresCloud
@@ -47,31 +47,32 @@ graph TB
 ## 2. Component Deployment Details
 
 ### 2.1 ASP.NET Core Web API
-- **Deployment Platform**: Render / Azure App Service / Railway (Docker container or .NET runtime).
-- **Public Health Endpoint**: `GET https://<api-host>/health` returning `200 OK` with DB status.
-- **Swagger Documentation URL**: `https://<api-host>/swagger`.
-- **Environment Configuration**: DB connection strings and JWT secrets loaded from cloud environment variables.
+- **Deployment Platform**: Railway (Linux Docker container running .NET 8 Kestrel).
+- **Public Health Endpoint**: `GET https://<railway-host>/health` returning `200 OK` with database connectivity status (`REQ-DEP-01`).
+- **Swagger Documentation URL**: `https://<railway-host>/swagger`.
+- **Environment Configuration**: `DATABASE_URL` (private Railway database URL), `JWT_SECRET`, and `CORS_ORIGINS` loaded via Railway service variables.
 
 ### 2.2 PostgreSQL Managed Cloud Database
-- **Deployment Platform**: Managed PostgreSQL instance (e.g., Render Postgres / Supabase / Azure Database for PostgreSQL).
-- **Initialization**: Database schema initialized automatically via Entity Framework Core migrations (`dotnet ef database update`) during deployment.
-- **Access Credentials**: Private network access or SSL-enforced credentials with restricted user privileges.
+- **Deployment Platform**: Railway Managed PostgreSQL Database service (`waypoint` database).
+- **Initialization**: Database schema initialized automatically via Entity Framework Core migrations applied on startup (`context.Database.MigrateAsync()`).
+- **Access Credentials**: Private internal host networking within the Railway project environment.
 
 ### 2.3 React Web Application
-- **Deployment Platform**: Vercel / Netlify / Render static hosting.
-- **Configuration**: Compiled production build configured to communicate with the deployed cloud API URL (`VITE_API_URL`).
+- **Deployment Platform**: Vercel (Global Edge Network static hosting).
+- **Configuration**: Compiled production build configured with environment variable `VITE_API_URL` pointing to the public Railway Web API domain.
+- **Continuous Deployment**: Automated git-push integration on `main` branch with instant cache invalidation.
 
 ### 2.4 Flutter Mobile Application
 - **Deliverable**: Compiled Android Application Package (`.apk`) file.
 - **Build Command**: `flutter build apk --release`.
-- **Distribution**: APK file included in submission package alongside installation instructions.
+- **Distribution**: APK binary delivered alongside the submission package for physical/emulator evaluator installation (`REQ-TECH-05`).
 
 ### 2.5 Agentic AI Subsystem
-- **Deployment**: Deployed as an internal service on cloud container host or documented for local execution.
+- **Deployment Platform**: Internal Python container service in `ai/` or orchestrated tool runner connected via private internal HTTP to ASP.NET Core.
 - **Startup Sequence**:
-  1. PostgreSQL Database instance started and migrations applied.
-  2. ASP.NET Core Web API instance started.
-  3. AI Orchestrator service started connected to API tool runner. *(Note: This step applies only if `ADR-003` selects Option B — Python LangGraph microservice. If Option A — C# Semantic Kernel — is selected, the AI subsystem runs embedded within the ASP.NET Core process and no separate service startup is needed.)*
+  1. Railway Managed PostgreSQL Database instance verified active.
+  2. ASP.NET Core Web API instance started, migrations applied, baseline data seeded.
+  3. Python LangGraph agent service initialized connected to internal backend tool callbacks.
 
 ---
 

@@ -173,6 +173,19 @@ htmlcov/
 *.swp
 *.swo
 *~
+*.bak
+*.backup
+*.old
+*.tmp
+*.temp
+
+# AI Editors & Coding Agent Workspaces
+.agents/
+.gemini/
+.antigravity/
+.cursor/
+.windsurf/
+.copilot/
 
 # ------------------------------------------------------------------------------
 # Operating System Artifacts
@@ -182,6 +195,7 @@ htmlcov/
 .AppleDouble
 .LSOverride
 ._*
+**/.DS_Store
 
 # Windows
 Thumbs.db
@@ -190,6 +204,8 @@ ehthumbs.db
 ehthumbs_vista.db
 Desktop.ini
 $RECYCLE.BIN/
+**/Thumbs.db
+**/Desktop.ini
 
 # Linux
 *~
@@ -200,3 +216,6 @@ $RECYCLE.BIN/
 # Custom Project Exclusions
 # ------------------------------------------------------------------------------
 docs/reference/WayPoint_Revised_Project_Proposal.docx
+*.sql.bak
+*.sql.tmp
+

@@ -109,11 +109,12 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 
 ## 8. Multi-Agent Requirements (`REQ-MULTI-xx`)
 
-- `REQ-MULTI-01` (**Four Distinct Agents**): The standard 4-student group must implement at least four (4) distinct specialized agents with unique contracts:
-  1. **Planner / Coordinator Agent**: Analyzes overall objective, creates ordered multi-step execution plans, and delegates work.
-  2. **Journey Analysis Agent**: Evaluates route structures, stops, timetables, transfer points, and service compatibility.
-  3. **Resource & Booking Agent**: Checks fleet status, replacement buses, driver availability, seat layouts, fares, and booking policies.
-  4. **Validation & Safety Agent**: Enforces business rules, calculates passenger impact metrics, classifies severity, and gates human approval.
+- `REQ-MULTI-01` (**Four Distinct Specialized Agents**): The standard 4-student group implements four (4) distinct specialized domain agents corresponding to the vertical component slices:
+  1. **Journey Analysis Agent** (Owned by Student 1 - Sethum): Evaluates route structures, stops, timetables, transfer points, and service compatibility.
+  2. **Resource Feasibility Agent** (Owned by Student 2 - Nuhadh): Checks fleet inventory, replacement buses, driver availability, seat layouts, and resource conflict limits.
+  3. **Booking & Policy Agent** (Owned by Student 3 - Mithila): Evaluates booking alternatives, fare differences, cancellation/refund policy rules, and seat hold states.
+  4. **Validation & Safety Agent** (Owned by Student 4 - Dineth): Enforces deterministic business rules, calculates passenger impact metrics, classifies severity, and gates human approval.
+  *(Note: Overall multi-agent workflow graph coordination is designated as TBD / shared team implementation).*
 - `REQ-MULTI-02` (**Distinct Agent Definition Rule**): An agent counts as distinct ONLY if it has an identifiable responsibility, defined input/output contract, controlled tool permissions, and visible execution participation. Renaming prompts or duplicating logic does NOT count as a separate agent.
 
 ---
@@ -122,12 +123,12 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 
 - `REQ-INDIV-01` (**Vertical Component Ownership**): Each student MUST take primary ownership of one business component across the complete tech stack:
 
-| Student | Component Title | Domain Scope |
+| Student | Component Title | Domain Scope & Agent Ownership |
 | :--- | :--- | :--- |
-| **Student 1** | Journey Planning & Route Catalogue | Routes, stops, tourist destinations, timetables, service search, journey candidate generation, Journey Planner Agent. |
-| **Student 2** | Fleet, Seat & Resource Feasibility | Buses, seat layouts, driver assignments, maintenance records, resource availability, Resource Feasibility Agent. |
-| **Student 3** | Booking, Ticketing & Passenger Options | Seat holds, payment processing, QR tickets, cancellations, refunds, Booking Options Agent. |
-| **Student 4** | Disruption, Rebooking & Approval | Service alerts, disruption records, passenger impact, rebooking proposals, approval workflow, Validation & Safety Agent. |
+| **Sethum** (Student 1) | Journey Planning & Route Catalogue | Routes, stops, tourist destinations, timetables, service search, journey candidate generation, Journey Analysis Agent. |
+| **Nuhadh** (Student 2) | Fleet, Seat & Resource Feasibility | Buses, seat layouts, driver assignments, maintenance records, resource availability, Resource Feasibility Agent. |
+| **Mithila** (Student 3) | Booking, Ticketing & Passenger Options | Seat holds, payment processing, QR tickets, cancellations, refunds, Booking & Policy Agent. |
+| **Dineth** (Student 4) | Disruption, Rebooking & Approval | Service alerts, disruption records, passenger impact, rebooking proposals, approval workflow, Validation & Safety Agent. |
 
 - `REQ-INDIV-02` (**No Specialized Roles**): Project-manager-only, testing-only, or documentation-only roles are strictly prohibited. Every student must write backend, database, React, Flutter, AI, and test code.
 - `REQ-INDIV-03` (**70 Individual Marks Allocation**):

@@ -4,7 +4,7 @@
 ADR-001: Selection of React State Management Framework for Operator Workspace
 
 ## Status
-`DECISION REQUIRED` (Pending final team confirmation between Zustand + TanStack Query vs. Redux Toolkit)
+`Accepted` (Confirmed: Zustand + TanStack Query with React/JavaScript and shadcn/ui on Tailwind CSS v3)
 
 ---
 

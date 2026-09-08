@@ -81,7 +81,13 @@ All error responses strictly follow RFC 7807 standard JSON payload format:
 - **Validation**: Email and password fields required.
 - **Success Status**: `200 OK`.
 - **Error Statuses**: `400 Bad Request`, `401 Unauthorized`.
-- **Business Rules**: `BR-AUTH-002` (5 failed logins trigger 15-min lockout).
+#### `GET /api/v1/auth/me`
+- **Purpose**: Retrieve current authenticated user profile and token verification status.
+- **Roles**: Passenger, Operator, TransportManager, Admin.
+- **Request DTO**: None (Extracted from JWT claims).
+- **Response DTO (`AuthUserDto`)**: `{ userId, email, fullName, role }`.
+- **Success Status**: `200 OK`.
+- **Error Statuses**: `401 Unauthorized`.
 
 ---
 

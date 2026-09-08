@@ -39,13 +39,15 @@ This document provides complete end-to-end traceability connecting **SE3090 Assi
 
 ---
 
-## Requirements Needing Team Confirmation
-
-The following technical and design items require explicit team confirmation prior to implementation:
-
-1. **Exact Seat Hold Timeout**: Confirm whether the temporary seat hold lock duration is 10 minutes or 15 minutes.
-2. **Connecting Transfer Buffer Duration**: Confirm minimum transfer window for connecting intercity services (proposed: 20 minutes).
-3. **Disruption Severity Thresholds**: Define exact quantitative criteria for a "Major Timetable Change" requiring manager approval (e.g., departure time shift > 15 minutes).
-4. **Third-Party Payment Sandbox Vendor**: Select between Stripe Test Mode, PayHere Sandbox, or custom ASP.NET Core Mock Payment Gateway.
-5. **Agentic AI Orchestration Framework**: Confirm final choice for `ADR-003` (Microsoft Semantic Kernel in C# vs Python LangGraph microservice).
-6. **Cloud Hosting Platform Provider**: Confirm final provider choice for `ADR-005` (Render vs Azure App Service / Railway).
+## Requirements & Architectural Decisions Confirmed
+ 
+ The following technical and design items have been formally confirmed and aligned across the architecture:
+ 
+ 1. **Exact Seat Hold Timeout**: **10 minutes** (`BR-HOLD-001`), enforced server-side via `SeatHold.HeldUntil` and rendered with a countdown ticker in Flutter.
+ 2. **Connecting Transfer Buffer Duration**: Minimum **20 minutes** (`BR-TRANSFER-001`) between connecting journey legs.
+ 3. **Disruption Severity Thresholds**: Timetable departure shifts $> 15$ minutes or ticketed service cancellations require Transport Manager sign-off (`BR-APPROVAL-001`).
+ 4. **Third-Party Payment Sandbox Strategy**: **Dual Strategy** — ASP.NET Core Mock Payment Gateway with configurable test cards (success/failure scenarios for deterministic viva demonstrations) plus optional Stripe Test Mode proxy.
+ 5. **Agentic AI Orchestration Framework (`ADR-003`)**: **Option B — Python LangGraph & FastAPI Microservice in `ai/`** (aligns with SE3090 lab stack; zero direct DB access; communicates via backend allow-listed tool endpoints).
+ 6. **Cloud Hosting Platform Provider (`ADR-005`)**: **Railway** for ASP.NET Core Web API & PostgreSQL database, and **Vercel** for React Web frontend.
+ 7. **Mobile State Management (`ADR-002`)**: **Flutter BLoC / Cubit** for predictable event-driven states and `bloc_test` viva readiness.
+ 8. **Multi-Agent Specialization & Coordination**: 4 distinct specialized domain agents aligned to vertical components (Sethum: Journey Analysis, Nuhadh: Resource Feasibility, Mithila: Booking & Policy, Dineth: Validation & Safety), with overall workflow graph coordination unassigned (TBD / shared team implementation).

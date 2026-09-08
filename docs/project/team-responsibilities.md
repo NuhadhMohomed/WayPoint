@@ -8,10 +8,10 @@ This document defines the ownership boundaries for the **four (4) primary busine
 
 | Component ID | Component Title | Assigned Owner | Core Business Focus |
 | :--- | :--- | :--- | :--- |
-| **Component 1** | **Journey Planning & Route Catalogue** | **Student 1** | Route networks, intermediate stops, timetables, tourist corridors, journey search & candidate generation. |
-| **Component 2** | **Fleet, Seat & Resource Feasibility** | **Student 2** | Bus fleet inventory, seat map templates, driver scheduling, maintenance, and resource replacement feasibility. |
-| **Component 3** | **Booking, Ticketing & Passenger Options** | **Student 3** | Temporary seat holds, payment sandbox checkout, QR e-tickets, cancellations, and refund processing. |
-| **Component 4** | **Disruption, Rebooking & Approval** | **Student 4** | Disruption logging, passenger impact, multi-agent AI rebooking, alerts, and Transport Manager approval. |
+| **Component 1** | **Journey Planning & Route Catalogue** | **Sethum** (Student 1) | Route networks, intermediate stops, timetables, tourist corridors, journey search & candidate generation. |
+| **Component 2** | **Fleet, Seat & Resource Feasibility** | **Nuhadh** (Student 2) | Bus fleet inventory, seat map templates, driver scheduling, maintenance, and resource replacement feasibility. |
+| **Component 3** | **Booking, Ticketing & Passenger Options** | **Mithila** (Student 3) | Temporary seat holds, payment sandbox checkout, QR e-tickets, cancellations, and refund processing. |
+| **Component 4** | **Disruption, Rebooking & Approval** | **Dineth** (Student 4) | Disruption logging, passenger impact, multi-agent AI rebooking, alerts, and Transport Manager approval. |
 
 ---
 
@@ -227,7 +227,7 @@ Manages service disruption events, logs passenger impacts, orchestrates multi-ag
 
 ### 4.3 Main Backend Responsibilities (ASP.NET Core)
 - Implement `DisruptionController`, `RebookingController`, `ApprovalController`, and `AiWorkflowController`.
-- Build Multi-Agent AI Workflow Coordinator executing the multi-step disruption recovery process.
+- Implement integration with the multi-agent disruption recovery workflow.
 - Implement Approval State Machine gating high-impact actions in `PendingManagerApproval` state.
 - Build transactional rebooking application engine executing approved remedies.
 
@@ -245,7 +245,7 @@ Manages service disruption events, logs passenger impacts, orchestrates multi-ag
 - Build Passenger Rebooking Response screen allowing passengers to accept alternative journey proposals or select full refund.
 
 ### 4.7 Main Agentic AI Responsibilities
-- Own and implement the **Validation & Safety Agent** and overall Multi-Agent Workflow Coordinator.
+- Own and implement the **Validation & Safety Agent** (Note: Overall multi-agent workflow graph coordination is designated as TBD / to be decided later by the team).
 - Agent responsibility: Validates proposed rebooking remedies against business rules, classifies operational impact severity, enforces human manager approval boundaries, and ensures safe failure.
 - Implement tool integrations for allow-listed tools: `CreateRebookingProposal`, `CalculatePassengerImpact`, `RequestManagerApproval`, and `ApplyApprovedOperationalChange`.
 

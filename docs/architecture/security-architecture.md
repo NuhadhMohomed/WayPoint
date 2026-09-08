@@ -9,8 +9,8 @@ This document defines the authentication, authorization, secret protection, data
 - **Mechanism**: JSON Web Token (JWT) Bearer Authentication.
 - **Signing Algorithm**: HMAC-SHA256 (`HS256`).
 - **Token Storage**:
-  - Flutter Mobile: Encrypted platform storage (`flutter_secure_storage`).
-  - React Web: In-memory state / secure HttpOnly session cookie.
+  - Flutter Mobile: Encrypted platform keystore/keychain storage (`flutter_secure_storage`).
+  - React Web: Client-side storage (`localStorage`) in current development SPA with Bearer authorization header injection via Axios interceptors; compatible with secure HttpOnly cookies in production.
 
 ### JWT Payload Claim Structure
 ```json
@@ -18,7 +18,7 @@ This document defines the authentication, authorization, secret protection, data
   "sub": "USR-8821",
   "email": "kamal@waypoint.lk",
   "role": "TransportManager",
-  "iss": "WayPointAPI",
+  "iss": "WayPoint",
   "aud": "WayPointClients",
   "iat": 1788390000,
   "exp": "2026-10-16T08:00:00Z"
@@ -29,14 +29,14 @@ This document defines the authentication, authorization, secret protection, data
 
 ## 2. Role-Based Access Control (RBAC) Matrix
 
-Access permissions are enforced server-side using ASP.NET Core `[Authorize(Roles = "...")]` attributes:
+Access permissions are enforced server-side using ASP.NET Core `[Authorize(Roles = "...")]` attributes. The canonical role claims in database entities and JWT tokens match the C# `UserRoleType` enum:
 
 | Role Claim | Permitted Endpoint Scope | Key Restrictions |
 | :--- | :--- | :--- |
 | **Passenger** | Search journeys, place seat holds, confirm payment, view own e-tickets, cancel own bookings, view disruption alerts. | CANNOT access operator CRUD, manager approval queues, or admin settings. |
-| **Operator / Dispatcher** | Manage routes, stops, timetables, bus fleet, drivers, log disruptions, view manifests, scan QR codes. | CANNOT execute Transport Manager approval decisions for high-impact proposals. |
-| **Transport Manager** | Access Manager Approval Workbench, review before/after impact evidence, approve/reject rebooking proposals. | Full operational approval authority over ticketed service cancellations. |
-| **Administrator** | Manage user roles, system config parameters, inspect full audit logs, monitor system health. | Administrative governance and audit access. |
+| **Operator** | Manage routes, stops, timetables, bus fleet, drivers, log disruptions, view manifests, scan QR codes. | CANNOT execute Transport Manager approval decisions for high-impact proposals. |
+| **TransportManager** | Access Manager Approval Workbench, review before/after impact evidence, approve/reject rebooking proposals. | Full operational approval authority over ticketed service cancellations. |
+| **Admin** | Manage user roles, system config parameters, inspect full audit logs, monitor system health. (Described as *Administrator* in operational requirements). | Administrative governance and audit access. |
 
 ---
 
