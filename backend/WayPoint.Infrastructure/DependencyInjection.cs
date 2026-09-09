@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Application.Common.Interfaces.Fleet;
 using WayPoint.Infrastructure.Data;
 using WayPoint.Infrastructure.Services;
+using WayPoint.Infrastructure.Services.Fleet;
 
 namespace WayPoint.Infrastructure;
 
@@ -26,6 +28,13 @@ public static class DependencyInjection
         services.AddScoped<IWayPointDbContext>(provider => provider.GetRequiredService<WayPointDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+        // Component 2: Fleet, Seat & Resource Feasibility Services (Nuhadh)
+        services.AddScoped<IBusService, BusService>();
+        services.AddScoped<ISeatLayoutService, SeatLayoutService>();
+        services.AddScoped<IDriverService, DriverService>();
+        services.AddScoped<ISeatAvailabilityService, SeatAvailabilityService>();
+        services.AddScoped<IResourceFeasibilityService, ResourceFeasibilityService>();
 
         return services;
     }
