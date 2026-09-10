@@ -6,9 +6,15 @@ import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
 import { RoutesPlaceholderPage } from './pages/RoutesPlaceholderPage'
-import { FleetPlaceholderPage } from './pages/FleetPlaceholderPage'
 import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
 import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
+
+// Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
+import { FleetHubLayout } from './features/fleet/FleetHubLayout'
+import { FleetMatrixBuilderPage } from './features/fleet/FleetMatrixBuilderPage'
+import { SeatLayoutDesignerPage } from './features/fleet/SeatLayoutDesignerPage'
+import { DriverRosteringPage } from './features/fleet/DriverRosteringPage'
+import { BookingManifestMonitorPage } from './features/fleet/BookingManifestMonitorPage'
 
 export function App() {
   return (
@@ -25,8 +31,14 @@ export function App() {
           {/* Component 1: Sethum */}
           <Route path="/routes" element={<RoutesPlaceholderPage />} />
 
-          {/* Component 2: Nuhadh */}
-          <Route path="/fleet" element={<FleetPlaceholderPage />} />
+          {/* Component 2: Nuhadh — Fleet Hub with Tabbed Navigation */}
+          <Route path="/fleet" element={<FleetHubLayout />}>
+            <Route index element={<Navigate to="buses" replace />} />
+            <Route path="buses" element={<FleetMatrixBuilderPage />} />
+            <Route path="layouts" element={<SeatLayoutDesignerPage />} />
+            <Route path="drivers" element={<DriverRosteringPage />} />
+          </Route>
+          <Route path="/manifest" element={<BookingManifestMonitorPage />} />
 
           {/* Component 3: Mithila */}
           <Route path="/bookings" element={<BookingsPlaceholderPage />} />

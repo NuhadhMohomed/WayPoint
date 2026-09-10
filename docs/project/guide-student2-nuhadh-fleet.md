@@ -126,12 +126,19 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`WayPoint.Tests/FleetTests.cs`)**:
-   - Test driver schedule overlap detection algorithm (ensuring no double-assignment within departure/arrival window).
-   - Test seat layout matrix generator and seat coordinate validation.
-2. **Integration Tests**:
-   - Test real-time seat status aggregation against active `SeatHold` and `Booking` records in PostgreSQL.
-   - Test replacement resource feasibility query under simulated fleet shortages.
+The comprehensive Testing Suite (Phase 4) is fully implemented across the stack:
+
+1. **Backend Unit Tests (xUnit + Moq)**:
+   - **Coverage**: Driver schedule overlap detection (`DriverOverlapDetectionTests.cs`), seat layout matrix and coordinate bounds validation (`SeatLayoutValidationTests.cs`), real-time seat availability aggregation (`SeatMatrixGeneratorTests.cs`), and resource feasibility constraints (`ResourceFeasibilityTests.cs`).
+   - **How to run**: `dotnet test backend/WayPoint.Tests/WayPoint.Tests.csproj`
+
+2. **Frontend Web Tests (React + Vitest)**:
+   - **Coverage**: Seat layout designer grid dynamic scaling, seat type cycling, and layout saving validation (`SeatLayoutDesigner.test.jsx`).
+   - **How to run**: Navigate to `web/` and run `npm run test`
+
+3. **Mobile Tests (Flutter + bloc_test)**:
+   - **Coverage**: Seat picker state machine transitions, interactive selection limits, and 10-minute hold initiation countdowns (`seat_picker_bloc_test.dart`).
+   - **How to run**: Navigate to `mobile/` and run `flutter test test/features/fleet/seat_picker_bloc_test.dart`
 
 ---
 
