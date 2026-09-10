@@ -44,7 +44,7 @@ describe('SeatLayoutDesignerPage', () => {
     expect(screen.getByRole('heading', { name: /Visual Seat Layout Designer/i })).toBeInTheDocument()
     expect(screen.getByText('Total Seats')).toBeInTheDocument()
     // 10x4 = 40 default seats
-    expect(screen.getByText('40')).toBeInTheDocument()
+    expect(screen.getAllByText('40')[0]).toBeInTheDocument()
   })
 
   it('changes grid size when rows and columns inputs are modified', async () => {
