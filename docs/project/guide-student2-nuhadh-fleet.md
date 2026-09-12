@@ -148,3 +148,10 @@ Be prepared to explain and demonstrate live without AI tools:
 - **Concurrency & Double-Booking Protection**: How the `RowVersion` bytea token on `Seats` prevents race conditions.
 - **Driver Rest-Hour Validation (`BR-RESOURCE-002`)**: Explain how your code verifies that a driver has at least 8 hours off-duty between consecutive service arrivals and departures.
 - **Dynamic Seat Map Construction**: Walk through how your backend takes 1D seat entities and maps them into a 2D matrix for Flutter and React.
+
+## 10. Reviews & Ratings Module Extension
+You are also responsible for the Driver & Bus Reviews/Ratings feature (`FR-REVIEW-001` to `FR-REVIEW-006`).
+Ensure you can demonstrate:
+- **7-Day Review Window**: How the system blocks updates after 7 days but allows deletions always.
+- **Anonymous Reviews**: How `PassengerName` is masked as "Anonymous Passenger" when `IsAnonymous` is true.
+- **Profanity Filter**: How `SanitizeComment` prevents inappropriate language before writing to the database.

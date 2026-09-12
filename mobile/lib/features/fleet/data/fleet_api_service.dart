@@ -80,4 +80,40 @@ class FleetApiService {
     final response = await _dio.get('/api/v1/services/$serviceId/manifest');
     return response.data as Map<String, dynamic>;
   }
+
+  // ─── Reviews ───
+
+  Future<Map<String, dynamic>> submitBusReview({
+    required String busId,
+    required String bookingId,
+    required int rating,
+    String? comment,
+    bool isAnonymous = false,
+  }) async {
+    final response = await _dio.post('/api/v1/reviews/buses', data: {
+      'busId': busId,
+      'bookingId': bookingId,
+      'rating': rating,
+      'comment': comment,
+      'isAnonymous': isAnonymous,
+    });
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> submitDriverReview({
+    required String driverId,
+    required String bookingId,
+    required int rating,
+    String? comment,
+    bool isAnonymous = false,
+  }) async {
+    final response = await _dio.post('/api/v1/reviews/drivers', data: {
+      'driverId': driverId,
+      'bookingId': bookingId,
+      'rating': rating,
+      'comment': comment,
+      'isAnonymous': isAnonymous,
+    });
+    return response.data as Map<String, dynamic>;
+  }
 }
