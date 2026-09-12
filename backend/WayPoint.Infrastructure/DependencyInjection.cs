@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IDriverService, DriverService>();
         services.AddScoped<ISeatAvailabilityService, SeatAvailabilityService>();
         services.AddScoped<IResourceFeasibilityService, ResourceFeasibilityService>();
+        services.AddScoped<IReviewService, ReviewService>();
 
         return services;
     }

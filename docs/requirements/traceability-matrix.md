@@ -24,6 +24,13 @@ This document provides complete end-to-end traceability connecting **SE3090 Assi
 | **`REQ-BE-03`** (JWT Auth & RBAC) | `FR-AUTH-002`, `FR-AUTH-003` | Security Middleware | JWT bearer authentication, claims-based role policies (`[Authorize]`). | Auth middleware unit & HTTP 401/403 tests. | Security Considerations Section. |
 | **`REQ-DB-03`** (Seat Hold Transactions) | `FR-BOOKING-001`, `BR-HOLD-001` | Transactional Seat Lock | `IDbContextTransaction` protecting seat status and `SeatHold` locks. | Concurrency load tests (duplicate holds). | Database & Technical Report. |
 | **`REQ-DB-05`** (AI State Persistence) | `FR-AI-001`, `FR-AI-007` | AI Persistence Tables | Tables `AiWorkflow`, `AiWorkflowStep`, `AiToolCall`, `AiValidationResult`. | DB persistence unit tests. | Agentic AI & Database Report. |
+| **FR-AUDIT-001** | Audit Log Generation | US-ADMIN-002 | SC-10.1 | 4. Disruption, Rebooking & Approval (Dineth) | `AuditLog` entity, `SaveChangesInterceptor` |
+| **FR-REVIEW-001** | Submit Reviews | US-REVIEW-001 | SC-11.1 | 2. Fleet & Resource Feasibility (Nuhadh) | `ReviewController.SubmitBusReview`, `ReviewService`, `BusReview` entity |
+| **FR-REVIEW-002** | Anonymous Reviews | US-REVIEW-001 | N/A | 2. Fleet & Resource Feasibility (Nuhadh) | `IsAnonymous` boolean flag in DB & DTO |
+| **FR-REVIEW-003** | Profanity Filtering | N/A | SC-11.2 | 2. Fleet & Resource Feasibility (Nuhadh) | `ReviewService.SanitizeComment` |
+| **FR-REVIEW-004** | Review Window | US-REVIEW-002 | SC-11.3 | 2. Fleet & Resource Feasibility (Nuhadh) | 7-day server-side validation |
+| **FR-REVIEW-005** | Review Deletion | US-REVIEW-002 | N/A | 2. Fleet & Resource Feasibility (Nuhadh) | `ReviewController.DeleteBusReview` |
+| **FR-REVIEW-006** | Dashboard Summaries | US-REVIEW-003 | N/A | 2. Fleet & Resource Feasibility (Nuhadh) | `GetBusRatingSummaryAsync` method |
 | **`REQ-AI-02`** (Planning & Delegation) | `FR-AI-001`, `REQ-MULTI-01` | Planner Agent | Planner agent decomposing objectives into ordered multi-step execution plans. | Plan structure assertion tests. | Agentic AI Evaluation Report. |
 | **`REQ-AI-03`** (10 Allow-Listed Tools) | `FR-AI-002` | Tool Runner Service | 10 backend tool wrappers validating DTO inputs and executing business logic. | Tool DTO validation unit tests. | Agentic AI Evaluation Report. |
 | **`REQ-AI-06`** (Manager Approval Boundary) | `FR-DISRUPTION-003`, `BR-APPROVAL-001` | Human Approval Gate | Safety agent gating high-impact changes in `PendingManagerApproval` state. | Approval boundary enforcement tests. | Agentic AI Evaluation Report. |

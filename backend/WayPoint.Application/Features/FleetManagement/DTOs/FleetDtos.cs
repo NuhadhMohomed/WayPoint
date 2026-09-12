@@ -178,3 +178,82 @@ public class DriverFilterParams
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
+
+// ─── Review DTOs ───
+
+public class CreateBusReviewDto
+{
+    public Guid BusId { get; set; }
+    public Guid PassengerId { get; set; }
+    public Guid BookingId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsAnonymous { get; set; } = false;
+}
+
+public class CreateDriverReviewDto
+{
+    public Guid DriverId { get; set; }
+    public Guid PassengerId { get; set; }
+    public Guid BookingId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsAnonymous { get; set; } = false;
+}
+
+public class UpdateReviewDto
+{
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsAnonymous { get; set; } = false;
+}
+
+public class BusReviewDto
+{
+    public Guid Id { get; set; }
+    public Guid BusId { get; set; }
+    public string PassengerName { get; set; } = string.Empty;  // "Anonymous" if IsAnonymous
+    public bool IsAnonymous { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class DriverReviewDto
+{
+    public Guid Id { get; set; }
+    public Guid DriverId { get; set; }
+    public string PassengerName { get; set; } = string.Empty;  // "Anonymous" if IsAnonymous
+    public bool IsAnonymous { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class BusRatingSummaryDto
+{
+    public Guid BusId { get; set; }
+    public string RegistrationNumber { get; set; } = string.Empty;
+    public double AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+    public int[] RatingDistribution { get; set; } = new int[5]; // [0]=1-star count, ..., [4]=5-star count
+}
+
+public class DriverRatingSummaryDto
+{
+    public Guid DriverId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public double AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+    public int[] RatingDistribution { get; set; } = new int[5];
+}
+
+public class ReviewFilterParams
+{
+    public int? MinRating { get; set; }
+    public int? MaxRating { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}

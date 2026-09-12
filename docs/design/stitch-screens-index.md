@@ -56,3 +56,7 @@ All 23 screens incorporate verified transit domain patterns and real Sri Lankan 
 4. **Tiered Refund Breakdown (`BR-REFUND-001`)**: 90% (>24h), 50% (12-24h), and 0% (<12h) rules rendered with exact rupee refund amounts.
 5. **Human Approval Gate for AI (`BR-APPROVAL-001`)**: Authoritative decision workbench where Transport Managers sign off on high-impact vehicle dispatch proposals before operational records change.
 6. **Immutable SHA-256 Audit Trail**: Verified cryptographic hash signatures on every operational change, override, and blocked payment bypass.
+
+## 4. Review & Rating Screens (Fleet Component Additions)
+- `SCR-FLEET-100` **Review Submission Screen**: Mobile screen where passengers submit ratings and comments for buses and drivers (`review_submission_screen.dart`).
+- `SCR-FLEET-101` **Operational Review Dashboard**: Web interface for operators to view aggregate ratings, review distribution charts, and passenger feedback (`FleetReviewsDashboardPage.jsx`).

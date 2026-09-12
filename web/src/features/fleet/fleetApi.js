@@ -66,4 +66,46 @@ export const fleetApi = {
     const res = await apiClient.post('/resources/replacement-feasibility', feasibilityData)
     return res.data
   },
+
+  // ─── Review Endpoints ───
+  submitBusReview: async (reviewData) => {
+    const res = await apiClient.post('/reviews/buses', reviewData)
+    return res.data
+  },
+  submitDriverReview: async (reviewData) => {
+    const res = await apiClient.post('/reviews/drivers', reviewData)
+    return res.data
+  },
+  updateBusReview: async (reviewId, reviewData) => {
+    const res = await apiClient.put(`/reviews/buses/${reviewId}`, reviewData)
+    return res.data
+  },
+  updateDriverReview: async (reviewId, reviewData) => {
+    const res = await apiClient.put(`/reviews/drivers/${reviewId}`, reviewData)
+    return res.data
+  },
+  deleteBusReview: async (reviewId) => {
+    const res = await apiClient.delete(`/reviews/buses/${reviewId}`)
+    return res.data
+  },
+  deleteDriverReview: async (reviewId) => {
+    const res = await apiClient.delete(`/reviews/drivers/${reviewId}`)
+    return res.data
+  },
+  getBusReviews: async (busId, params) => {
+    const res = await apiClient.get(`/reviews/buses/${busId}`, { params })
+    return res.data
+  },
+  getDriverReviews: async (driverId, params) => {
+    const res = await apiClient.get(`/reviews/drivers/${driverId}`, { params })
+    return res.data
+  },
+  getBusRatingSummary: async (busId) => {
+    const res = await apiClient.get(`/reviews/buses/${busId}/summary`)
+    return res.data
+  },
+  getDriverRatingSummary: async (driverId) => {
+    const res = await apiClient.get(`/reviews/drivers/${driverId}/summary`)
+    return res.data
+  },
 }
