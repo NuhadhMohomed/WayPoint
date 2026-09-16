@@ -7,6 +7,7 @@ import '../../../core/widgets/waypoint_button.dart';
 import '../../../core/widgets/waypoint_card.dart';
 import '../models/booking_models.dart';
 import '../widgets/hold_countdown_bar.dart';
+import 'ticket_wallet_screen.dart';
 
 /// MOB-06: Payment Sandbox Checkout & Hold Bar
 /// Stitch Screen ID: 01076854fa0e41d299d8fc02ab224ad1
@@ -282,7 +283,34 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               icon: Icons.confirmation_number_outlined,
               onPressed: () {
                 Navigator.of(ctx).pop();
-                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => TicketWalletScreen(
+                      initialTickets: [
+                        DigitalTicketPass(
+                          ticketId: 'TCK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                          bookingReference: reference,
+                          serviceCode: widget.holdInfo.serviceCode,
+                          routeTitle: widget.holdInfo.routeTitle,
+                          originCity: widget.holdInfo.originCity,
+                          destinationCity: widget.holdInfo.destinationCity,
+                          boardingPointName: 'Platform 3, Makumbura Highway Terminal',
+                          departureTime: widget.holdInfo.departureTime,
+                          arrivalTime: widget.holdInfo.arrivalTime,
+                          busRegistration: 'NC-8890',
+                          busClass: 'SuperLuxury Express',
+                          seatNumbers: widget.holdInfo.seatNumbers,
+                          passengerName: 'Nimal Silva',
+                          totalFare: widget.holdInfo.totalAmount,
+                          isBoarded: false,
+                          qrCodePayload: qrPayload,
+                          issuedAt: DateTime.now(),
+                        ),
+                        DigitalTicketPass.sampleColomboToKandy(),
+                      ],
+                    ),
+                  ),
+                );
                 if (widget.onBookingSuccess != null) {
                   widget.onBookingSuccess!();
                 }

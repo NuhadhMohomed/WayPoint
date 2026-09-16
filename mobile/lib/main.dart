@@ -3,6 +3,7 @@ import 'core/theme/app_theme.dart';
 
 import 'features/booking/models/booking_models.dart';
 import 'features/booking/screens/payment_checkout_screen.dart';
+import 'features/booking/screens/ticket_wallet_screen.dart';
 import 'core/widgets/waypoint_button.dart';
 import 'core/widgets/waypoint_card.dart';
 import 'core/widgets/transit_badge.dart';
@@ -127,7 +128,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   'Total Payable: Rs. ${sampleHold.totalAmount.toStringAsFixed(2)}',
                   style: const TextStyle(color: Color(0xFF22C55E), fontSize: 15, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 WayPointButton(
                   text: 'Open MOB-06 Payment Checkout',
                   icon: Icons.credit_card,
@@ -145,6 +146,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                             );
                           },
                         ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                WayPointButton(
+                  text: 'Open MOB-07 Digital Ticket Wallet',
+                  variant: WayPointButtonVariant.outline,
+                  icon: Icons.confirmation_number_outlined,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const TicketWalletScreen(),
                       ),
                     );
                   },

@@ -206,3 +206,114 @@ class BookingConfirmationResult extends Equatable {
   @override
   List<Object?> get props => [isSuccess, bookingReference, errorMessage];
 }
+
+/// Strongly-typed digital boarding pass model representing issued e-tickets in MOB-07.
+class DigitalTicketPass extends Equatable {
+  final String ticketId;
+  final String bookingReference;
+  final String serviceCode;
+  final String routeTitle;
+  final String originCity;
+  final String destinationCity;
+  final String boardingPointName;
+  final DateTime departureTime;
+  final DateTime arrivalTime;
+  final String busRegistration;
+  final String busClass;
+  final List<String> seatNumbers;
+  final String passengerName;
+  final double totalFare;
+  final bool isBoarded;
+  final DateTime? boardedAt;
+  final String qrCodePayload;
+  final DateTime issuedAt;
+
+  const DigitalTicketPass({
+    required this.ticketId,
+    required this.bookingReference,
+    required this.serviceCode,
+    required this.routeTitle,
+    required this.originCity,
+    required this.destinationCity,
+    required this.boardingPointName,
+    required this.departureTime,
+    required this.arrivalTime,
+    required this.busRegistration,
+    required this.busClass,
+    required this.seatNumbers,
+    required this.passengerName,
+    required this.totalFare,
+    this.isBoarded = false,
+    this.boardedAt,
+    required this.qrCodePayload,
+    required this.issuedAt,
+  });
+
+  bool get isUpcoming => departureTime.isAfter(DateTime.now()) && !isBoarded;
+
+  /// Sample upcoming ticket for Colombo - Ella Scenic Corridor (Tomorrow)
+  factory DigitalTicketPass.sampleColomboToElla() {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final dep = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0);
+    final arr = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 13, 0);
+
+    return DigitalTicketPass(
+      ticketId: 'TCK-99014-LK',
+      bookingReference: 'WP-7B92K1',
+      serviceCode: 'SRV-COL-ELLA-0800',
+      routeTitle: 'Colombo - Ella Highland Scenic Corridor',
+      originCity: 'Makumbura MMC (Colombo)',
+      destinationCity: 'Ella City Station',
+      boardingPointName: 'Platform 3, Makumbura Highway Terminal',
+      departureTime: dep,
+      arrivalTime: arr,
+      busRegistration: 'NC-8890',
+      busClass: 'SuperLuxury Express',
+      seatNumbers: const ['4A', '4B'],
+      passengerName: 'Nimal Silva',
+      totalFare: 5700.0,
+      isBoarded: false,
+      qrCodePayload: 'WP|REF:WP-7B92K1|SRV:SRV-COL-ELLA-0800|SEATS:4A,4B|PASS:Nimal Silva|HMAC:a8f93c2e71d4b6',
+      issuedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+    );
+  }
+
+  /// Sample completed ticket for Colombo - Kandy Intercity Express
+  factory DigitalTicketPass.sampleColomboToKandy() {
+    final past = DateTime.now().subtract(const Duration(days: 3));
+    final dep = DateTime(past.year, past.month, past.day, 7, 0);
+    final arr = DateTime(past.year, past.month, past.day, 10, 0);
+
+    return DigitalTicketPass(
+      ticketId: 'TCK-77182-LK',
+      bookingReference: 'WP-3X88M9',
+      serviceCode: 'SRV-COL-KDY-0700',
+      routeTitle: 'Colombo - Kandy Intercity Express',
+      originCity: 'Colombo Fort Central Terminal',
+      destinationCity: 'Kandy Goodshed Terminal',
+      boardingPointName: 'Bay 4, Fort Central Bus Stand',
+      departureTime: dep,
+      arrivalTime: arr,
+      busRegistration: 'ND-5421',
+      busClass: 'Luxury Air-Conditioned',
+      seatNumbers: const ['2C'],
+      passengerName: 'Nimal Silva',
+      totalFare: 1450.0,
+      isBoarded: true,
+      boardedAt: dep.subtract(const Duration(minutes: 12)),
+      qrCodePayload: 'WP|REF:WP-3X88M9|SRV:SRV-COL-KDY-0700|SEATS:2C|PASS:Nimal Silva|HMAC:f1c099e2a84b',
+      issuedAt: past.subtract(const Duration(days: 1)),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        ticketId,
+        bookingReference,
+        serviceCode,
+        seatNumbers,
+        isBoarded,
+        qrCodePayload,
+      ];
+}
+
