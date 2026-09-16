@@ -317,3 +317,168 @@ class DigitalTicketPass extends Equatable {
       ];
 }
 
+/// Model representing a historical booking item in MOB-08.
+class HistoricalBookingItem extends Equatable {
+  final String bookingId;
+  final String bookingReference;
+  final String serviceCode;
+  final String routeTitle;
+  final String originCity;
+  final String destinationCity;
+  final DateTime departureTime;
+  final DateTime arrivalTime;
+  final List<String> seatNumbers;
+  final double totalPaid;
+  final String status; // 'Confirmed', 'Completed', 'Cancelled'
+  final DateTime bookedAt;
+  final double? refundAmount;
+  final double? refundPercentage;
+  final String? cancellationReason;
+
+  const HistoricalBookingItem({
+    required this.bookingId,
+    required this.bookingReference,
+    required this.serviceCode,
+    required this.routeTitle,
+    required this.originCity,
+    required this.destinationCity,
+    required this.departureTime,
+    required this.arrivalTime,
+    required this.seatNumbers,
+    required this.totalPaid,
+    required this.status,
+    required this.bookedAt,
+    this.refundAmount,
+    this.refundPercentage,
+    this.cancellationReason,
+  });
+
+  bool get isUpcoming => departureTime.isAfter(DateTime.now()) && status == 'Confirmed';
+  bool get isCancelled => status == 'Cancelled';
+  bool get isCompleted => status == 'Completed' || (departureTime.isBefore(DateTime.now()) && status != 'Cancelled');
+
+  /// Hours until departure from current clock.
+  int get hoursUntilDeparture => departureTime.difference(DateTime.now()).inHours;
+
+  /// Deterministic BR-REFUND-001 Tiered Policy
+  double get refundTierPercentage {
+    if (hoursUntilDeparture > 24) return 0.90; // 90%
+    if (hoursUntilDeparture >= 12) return 0.50; // 50%
+    return 0.0; // 0% non-refundable
+  }
+
+  double get estimatedRefundAmount => totalPaid * refundTierPercentage;
+
+  HistoricalBookingItem copyWith({
+    String? status,
+    double? refundAmount,
+    double? refundPercentage,
+    String? cancellationReason,
+  }) {
+    return HistoricalBookingItem(
+      bookingId: bookingId,
+      bookingReference: bookingReference,
+      serviceCode: serviceCode,
+      routeTitle: routeTitle,
+      originCity: originCity,
+      destinationCity: destinationCity,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+      seatNumbers: seatNumbers,
+      totalPaid: totalPaid,
+      status: status ?? this.status,
+      bookedAt: bookedAt,
+      refundAmount: refundAmount ?? this.refundAmount,
+      refundPercentage: refundPercentage ?? this.refundPercentage,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+    );
+  }
+
+  static List<HistoricalBookingItem> sampleBookings() {
+    final now = DateTime.now();
+
+    // 1. Upcoming booking (> 24h away - 90% refund eligible)
+    final tomorrow = now.add(const Duration(days: 1, hours: 4));
+    final b1 = HistoricalBookingItem(
+      bookingId: 'BK-10029-LK',
+      bookingReference: 'WP-7B92K1',
+      serviceCode: 'SRV-COL-ELLA-0800',
+      routeTitle: 'Colombo - Ella Highland Scenic Corridor',
+      originCity: 'Makumbura MMC (Colombo)',
+      destinationCity: 'Ella City Station',
+      departureTime: tomorrow,
+      arrivalTime: tomorrow.add(const Duration(hours: 5)),
+      seatNumbers: const ['4A', '4B'],
+      totalPaid: 5700.0,
+      status: 'Confirmed',
+      bookedAt: now.subtract(const Duration(hours: 2)),
+    );
+
+    // 2. Upcoming booking (14h away - 50% refund eligible)
+    final soon = now.add(const Duration(hours: 14));
+    final b2 = HistoricalBookingItem(
+      bookingId: 'BK-10044-LK',
+      bookingReference: 'WP-5D11K8',
+      serviceCode: 'SRV-COL-GAL-0930',
+      routeTitle: 'Colombo - Galle Southern Expressway Direct',
+      originCity: 'Makumbura MMC (Colombo)',
+      destinationCity: 'Pinnaduwa (Galle)',
+      departureTime: soon,
+      arrivalTime: soon.add(const Duration(hours: 1, minutes: 15)),
+      seatNumbers: const ['12C'],
+      totalPaid: 1150.0,
+      status: 'Confirmed',
+      bookedAt: now.subtract(const Duration(hours: 10)),
+    );
+
+    // 3. Completed Past booking
+    final past = now.subtract(const Duration(days: 3));
+    final b3 = HistoricalBookingItem(
+      bookingId: 'BK-09822-LK',
+      bookingReference: 'WP-3X88M9',
+      serviceCode: 'SRV-COL-KDY-0700',
+      routeTitle: 'Colombo - Kandy Intercity Express',
+      originCity: 'Colombo Fort Central Terminal',
+      destinationCity: 'Kandy Goodshed Terminal',
+      departureTime: past,
+      arrivalTime: past.add(const Duration(hours: 3)),
+      seatNumbers: const ['2C'],
+      totalPaid: 1450.0,
+      status: 'Completed',
+      bookedAt: past.subtract(const Duration(days: 2)),
+    );
+
+    // 4. Cancelled / Refunded booking
+    final cancelledPast = now.subtract(const Duration(days: 7));
+    final b4 = HistoricalBookingItem(
+      bookingId: 'BK-09110-LK',
+      bookingReference: 'WP-1A99Z3',
+      serviceCode: 'SRV-COL-SIG-0630',
+      routeTitle: 'Colombo - Sigiriya Heritage Express',
+      originCity: 'Colombo Fort Central Terminal',
+      destinationCity: 'Sigiriya Cultural Junction',
+      departureTime: cancelledPast,
+      arrivalTime: cancelledPast.add(const Duration(hours: 4)),
+      seatNumbers: const ['3B'],
+      totalPaid: 2400.0,
+      status: 'Cancelled',
+      bookedAt: cancelledPast.subtract(const Duration(days: 3)),
+      refundAmount: 2160.0,
+      refundPercentage: 0.90,
+      cancellationReason: 'Change of travel plans',
+    );
+
+    return [b1, b2, b3, b4];
+  }
+
+  @override
+  List<Object?> get props => [
+        bookingId,
+        bookingReference,
+        status,
+        totalPaid,
+        refundAmount,
+      ];
+}
+
+

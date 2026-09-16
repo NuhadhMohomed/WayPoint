@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 
 import 'features/booking/models/booking_models.dart';
+import 'features/booking/screens/booking_history_screen.dart';
 import 'features/booking/screens/payment_checkout_screen.dart';
 import 'features/booking/screens/ticket_wallet_screen.dart';
 import 'core/widgets/waypoint_button.dart';
@@ -159,6 +160,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const TicketWalletScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                WayPointButton(
+                  text: 'Open MOB-08 Booking History & Refunds',
+                  variant: WayPointButtonVariant.outline,
+                  icon: Icons.history,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BookingHistoryScreen(),
                       ),
                     );
                   },
