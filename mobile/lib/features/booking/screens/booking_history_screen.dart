@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../models/booking_models.dart';
+import '../services/booking_api_service.dart';
 import '../widgets/tiered_refund_modal.dart';
 import 'ticket_wallet_screen.dart';
 
@@ -45,6 +46,19 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     _bookings = widget.initialBookings != null
         ? List.from(widget.initialBookings!)
         : HistoricalBookingItem.sampleBookings();
+
+    if (widget.initialBookings == null) {
+      _loadLiveBookings();
+    }
+  }
+
+  Future<void> _loadLiveBookings() async {
+    final live = await BookingApiService().fetchBookingHistory();
+    if (mounted && live.isNotEmpty) {
+      setState(() {
+        _bookings = live;
+      });
+    }
   }
 
   @override
@@ -106,6 +120,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         totalPaid: booking.totalPaid,
         hoursUntilDeparture: booking.hoursUntilDeparture,
         onConfirm: (reason, refundAmount, refundPercent) {
+          // Trigger live backend refund API
+          BookingApiService().cancelBookingAndRefund(
+            bookingReference: booking.bookingReference,
+            reason: reason,
+          );
+
           setState(() {
             final index = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
             if (index != -1) {

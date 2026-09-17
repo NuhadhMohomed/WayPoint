@@ -6,6 +6,7 @@ import '../../../core/widgets/transit_badge.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../../../core/widgets/waypoint_card.dart';
 import '../models/booking_models.dart';
+import '../services/booking_api_service.dart';
 import '../widgets/hold_countdown_bar.dart';
 import 'ticket_wallet_screen.dart';
 
@@ -151,8 +152,13 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _isProcessing = true;
     });
 
-    // Simulate network round-trip & IDbContextTransaction latency (1.5 seconds)
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // 1. Process payment charge via live API / sandbox gateway
+    final apiService = BookingApiService();
+    final chargeResult = await apiService.processSandboxCharge(
+      cardNumber: _cardNumberController.text,
+      amount: widget.holdInfo.totalAmount,
+      cardholderName: _nameController.text,
+    );
 
     if (!mounted) return;
 
@@ -160,56 +166,61 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _isProcessing = false;
     });
 
-    // Handle outcome according to the selected sandbox test card
-    switch (_selectedPreset.expectedOutcome) {
-      case SandboxOutcome.success:
-        _countdownTimer?.cancel();
-        final bookingRef = 'WP-${DateTime.now().millisecondsSinceEpoch.toString().substring(7).toUpperCase()}';
-        final qrPayload = 'WP|REF:$bookingRef|SRV:${widget.holdInfo.serviceCode}|SEATS:${widget.holdInfo.seatNumbers.join(",")}|HMAC:a8f4c2e7';
-        _showSuccessDialog(bookingRef, qrPayload);
-        break;
+    final isSuccess = chargeResult['isSuccess'] == true;
+    final gatewayStatus = chargeResult['gatewayStatus']?.toString() ?? 'Error';
 
-      case SandboxOutcome.declined:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            content: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Payment Declined: Simulated Insufficient Funds (HTTP 402). Your hold is still active, please try another card.',
-                    style: TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-        break;
+    if (isSuccess) {
+      _countdownTimer?.cancel();
+      final txnId = chargeResult['transactionId']?.toString() ?? 'TXN-CONFIRMED';
+      
+      // 2. Execute transactional atomic checkout on backend API
+      final confirmation = await apiService.executeCheckout(
+        holdId: widget.holdInfo.holdId,
+        paymentTxnId: txnId,
+        passengerName: _nameController.text.isNotEmpty ? _nameController.text : 'Nimal Silva',
+      );
 
-      case SandboxOutcome.timeout:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppTheme.secondaryColor,
-            behavior: SnackBarBehavior.floating,
-            content: Row(
-              children: [
-                Icon(Icons.wifi_off_rounded, color: Color(0xFF191C1D)),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Gateway Timeout (HTTP 504): Simulated network delay. Please retry transaction.',
-                    style: TextStyle(color: Color(0xFF191C1D), fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
+      if (!mounted) return;
+      _showSuccessDialog(confirmation.bookingReference, confirmation.ticketQrPayload);
+    } else if (gatewayStatus == 'Timeout') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppTheme.secondaryColor,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, color: Color(0xFF191C1D)),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Gateway Timeout (HTTP 504): Simulated network delay. Please retry transaction.',
+                  style: TextStyle(color: Color(0xFF191C1D), fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-        break;
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  chargeResult['message']?.toString() ??
+                      'Payment Declined: Simulated Insufficient Funds (HTTP 402). Your hold is still active, please try another card.',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
   }
 

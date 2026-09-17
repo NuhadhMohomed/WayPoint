@@ -79,6 +79,28 @@ class SeatHoldInfo extends Equatable {
     );
   }
 
+  factory SeatHoldInfo.fromJson(Map<String, dynamic> json) {
+    final heldAt = json['heldAt'] != null ? DateTime.parse(json['heldAt'] as String) : DateTime.now();
+    final heldUntil = json['heldUntil'] != null ? DateTime.parse(json['heldUntil'] as String) : heldAt.add(const Duration(minutes: 10));
+    final seats = (json['seatNumbers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['4A', '4B'];
+
+    return SeatHoldInfo(
+      holdId: json['holdId']?.toString() ?? '',
+      serviceId: json['serviceId']?.toString() ?? '',
+      serviceCode: json['serviceCode']?.toString() ?? 'SRV-COL-ELLA-0800',
+      routeTitle: json['routeTitle']?.toString() ?? 'Colombo - Ella Highland Scenic Corridor',
+      originCity: json['originCity']?.toString() ?? 'Makumbura MMC (Colombo)',
+      destinationCity: json['destinationCity']?.toString() ?? 'Ella City Station',
+      departureTime: json['departureTime'] != null ? DateTime.parse(json['departureTime'] as String) : DateTime.now().add(const Duration(days: 1)),
+      arrivalTime: json['arrivalTime'] != null ? DateTime.parse(json['arrivalTime'] as String) : DateTime.now().add(const Duration(days: 1, hours: 5)),
+      seatNumbers: seats,
+      farePerSeat: (json['baseFarePerSeat'] as num?)?.toDouble() ?? 2700.0,
+      serviceFee: 150.0,
+      heldAt: heldAt,
+      heldUntil: heldUntil,
+    );
+  }
+
   @override
   List<Object?> get props => [
         holdId,
@@ -200,6 +222,18 @@ class BookingConfirmationResult extends Equatable {
       isSuccess: false,
       confirmedAt: DateTime.now(),
       errorMessage: error,
+    );
+  }
+
+  factory BookingConfirmationResult.fromJson(Map<String, dynamic> json) {
+    return BookingConfirmationResult(
+      isSuccess: true,
+      bookingReference: json['bookingReference']?.toString() ?? '',
+      serviceCode: json['serviceCode']?.toString() ?? '',
+      seatNumbers: (json['seatNumbers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      totalAmount: (json['totalFareAmount'] as num?)?.toDouble() ?? 0.0,
+      ticketQrPayload: json['qrCodePayload']?.toString() ?? '',
+      confirmedAt: json['confirmedAt'] != null ? DateTime.parse(json['confirmedAt'] as String) : DateTime.now(),
     );
   }
 
@@ -391,6 +425,30 @@ class HistoricalBookingItem extends Equatable {
       refundAmount: refundAmount ?? this.refundAmount,
       refundPercentage: refundPercentage ?? this.refundPercentage,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+    );
+  }
+
+  factory HistoricalBookingItem.fromJson(Map<String, dynamic> json) {
+    final dep = json['departureTime'] != null ? DateTime.parse(json['departureTime'] as String) : DateTime.now();
+    final arr = json['arrivalTime'] != null ? DateTime.parse(json['arrivalTime'] as String) : dep.add(const Duration(hours: 4));
+    final bookedAt = json['bookedAt'] != null ? DateTime.parse(json['bookedAt'] as String) : DateTime.now();
+
+    return HistoricalBookingItem(
+      bookingId: json['bookingId']?.toString() ?? '',
+      bookingReference: json['bookingReference']?.toString() ?? '',
+      serviceCode: json['serviceCode']?.toString() ?? '',
+      routeTitle: json['routeTitle']?.toString() ?? '',
+      originCity: json['originCity']?.toString() ?? '',
+      destinationCity: json['destinationCity']?.toString() ?? '',
+      departureTime: dep,
+      arrivalTime: arr,
+      seatNumbers: (json['seatNumbers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      totalPaid: (json['totalFareAmount'] as num?)?.toDouble() ?? 0.0,
+      status: json['status']?.toString() ?? 'Confirmed',
+      bookedAt: bookedAt,
+      refundAmount: (json['refundAmount'] as num?)?.toDouble(),
+      refundPercentage: (json['refundPercentage'] as num?)?.toDouble(),
+      cancellationReason: json['cancellationReason']?.toString(),
     );
   }
 
