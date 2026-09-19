@@ -14,6 +14,7 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
 | **`UC-04`** | Manager Disruption Review & Approval Execution | Transport Manager | `FR-DISRUPTION-003`, `FR-APPROVAL-001`, `FR-DISRUPTION-004`, `FR-AUDIT-001` |
 | **`UC-05`** | Operator Fleet & Timetable Administration | Operator / Dispatcher | `FR-JOURNEY-001`, `FR-JOURNEY-002`, `FR-FLEET-001`, `FR-FLEET-002` |
 | **`UC-06`** | QR E-Ticket Boarding Verification | Passenger / Operator | `FR-BOOKING-003`, `FR-OPERATOR-001`, `FR-FE-11`, `FR-FE-13` |
+| **`UC-07`** | Post-Trip Review & Rating Submission | Passenger | `FR-REVIEW-001`, `FR-REVIEW-002`, `FR-REVIEW-003`, `FR-REVIEW-004` |
 
 ---
 
@@ -221,3 +222,40 @@ This document details the major use cases for the **WayPoint** AI-Powered Interc
   - Scanner screen displays warning: "Already Boarded at 10:15 AM".
 
 - **Postconditions**: Passenger marked as `Boarded` in database; manifest updated.
+
+---
+
+## 7. `UC-07`: Post-Trip Review & Rating Submission
+
+- **Primary Actor**: Passenger
+- **Secondary Actors**: ASP.NET Core Backend, PostgreSQL Database
+- **Preconditions**: Passenger has a `Confirmed` booking whose service's arrival time is in the past (trip completed).
+- **Trigger**: Passenger taps "Rate This Trip" from their booking history in the Flutter mobile app.
+
+### Main Success Scenario
+1. Flutter app displays the Review Submission Screen with two sections: Bus Rating and Driver Rating.
+2. Passenger selects 1-5 stars for the bus and optionally enters a text comment.
+3. Passenger selects 1-5 stars for the driver and optionally enters a text comment.
+4. Passenger optionally checks "Submit Anonymously" for either review.
+5. Passenger taps "Submit Reviews".
+6. Flutter app sends `POST /api/v1/reviews/buses` and `POST /api/v1/reviews/drivers` to the ASP.NET Core Web API.
+7. Backend validates: booking ownership, `Confirmed` status, trip completion, 7-day window, no duplicate reviews, profanity filter on comments.
+8. Backend persists `BusReview` and `DriverReview` records to PostgreSQL.
+9. API returns `201 Created` with the review DTOs.
+10. Flutter app displays success confirmation and navigates back to booking history.
+
+### Extensions / Alternate Flows
+- **7a. Booking is not confirmed or trip not completed**:
+  - Backend returns `409 Conflict`: "Only confirmed bookings can be reviewed" or "Trip has not completed yet".
+- **7b. 7-day review window expired**:
+  - Backend returns `409 Conflict`: "Review window has expired."
+- **7c. Duplicate review for same booking/entity**:
+  - Backend returns `409 Conflict`: "You have already reviewed this bus/driver for this booking."
+- **7d. Comment contains profanity**:
+  - Backend returns `400 Bad Request`: "Review contains inappropriate language."
+- **7e. Passenger edits a review within window**:
+  - `PUT /api/v1/reviews/buses/{id}` updates rating and comment; returns `200 OK`.
+- **7f. Passenger deletes a review (anytime)**:
+  - `DELETE /api/v1/reviews/buses/{id}` removes the review; returns `204 No Content`.
+
+- **Postconditions**: Review records stored in database; bus/driver average ratings updated in real-time for operator dashboards.

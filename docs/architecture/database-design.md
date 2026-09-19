@@ -277,5 +277,6 @@ The proposed 32-entity database schema was systematically reviewed against every
 - `FR-DISRUPTION` (Disruptions & Approvals): Supported by `ServiceAlerts`, `DisruptionCases`, `RebookingProposals`, `ApprovalDecisions`.
 - `FR-AI` (Agent Workflows & Tools): Supported by `AiWorkflows`, `AiWorkflowSteps`, `AiToolCalls`, `AiValidationResults`.
 - `FR-AUDIT` (Auditability): Supported by `AuditLogs`.
+- `FR-REVIEW` (Reviews & Ratings): Supported by `BusReviews`, `DriverReviews`.
 
 *Conclusion: The database design completely covers all functional requirements without unnecessary bloat.*

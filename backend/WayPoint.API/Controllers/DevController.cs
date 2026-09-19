@@ -60,6 +60,45 @@ public class DevController : ControllerBase
         }
     }
 
+    [HttpPost("mock-trip-for-review")]
+    public async Task<IActionResult> CreateMockTripForReview([FromBody] WayPoint.Application.Features.FleetManagement.DTOs.CreateBusReviewDto request)
+    {
+        // This is a dev-only mock to satisfy ReviewService business rules
+        var route = await _context.Routes.FirstOrDefaultAsync();
+        if (route == null) return NotFound("No routes available.");
+
+        var service = new WayPoint.Domain.Entities.Journey.Service
+        {
+            ServiceCode = "MOCK-SRV-" + Guid.NewGuid().ToString()[..4],
+            RouteId = route.Id,
+            BusId = request.BusId,
+            DriverId = request.BookingId, // Hack to pass driverId through BookingId field in this mock payload
+            DepartureTime = DateTime.UtcNow.AddHours(-10),
+            ArrivalTime = DateTime.UtcNow.AddHours(-5),
+            BaseFare = 1000,
+            Status = WayPoint.Domain.Enums.ServiceStatus.Completed
+        };
+        await _context.Services.AddAsync(service);
+        await _context.SaveChangesAsync();
+
+        var passengerProfile = await _context.Set<WayPoint.Domain.Entities.Identity.PassengerProfile>().FirstOrDefaultAsync(p => p.UserId == request.PassengerId);
+        if (passengerProfile == null) return NotFound("Passenger profile not found for user.");
+
+        var booking = new WayPoint.Domain.Entities.Booking.Booking
+        {
+            BookingReference = "MOCK-" + Guid.NewGuid().ToString()[..6],
+            PassengerId = passengerProfile.Id,
+            ServiceId = service.Id,
+            Status = WayPoint.Domain.Enums.BookingStatus.Confirmed,
+            TotalFareAmount = 1000,
+            SeatNumbers = "1A"
+        };
+        await _context.Bookings.AddAsync(booking);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { bookingId = booking.Id });
+    }
+
     [HttpGet("status")]
     public async Task<IActionResult> GetDatabaseStatus()
     {

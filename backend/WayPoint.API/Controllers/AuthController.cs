@@ -120,6 +120,8 @@ public class AuthController : ControllerBase
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var user = await _context.Users
             .Include(u => u.Role)
+            .Include(u => u.PassengerProfile)
+            .Include(u => u.OperatorProfile)
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))

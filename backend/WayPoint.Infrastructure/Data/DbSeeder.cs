@@ -308,6 +308,14 @@ public static class DbSeeder
 
             await context.Services.AddRangeAsync(srvKandy, srvElla, srvGalle);
             await context.SaveChangesAsync();
+
+            // 8. Reviews
+            if (!await context.BusReviews.AnyAsync())
+            {
+                // We need a dummy booking to attach reviews. Since we don't have bookings in this layer, we can skip seeding reviews here, 
+                // OR we just create a dummy passenger and booking if needed. But it's better to just leave it for the Booking seeder or let users add it.
+                // Wait, it's fine. I will just leave it empty if we don't have bookings seeded here yet.
+            }
         }
     }
 }

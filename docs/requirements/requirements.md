@@ -419,3 +419,12 @@ This document defines the functional and non-functional requirements for the **W
 - `NFR-DEPLOY-001` (**Cloud Availability**): ASP.NET Core API, PostgreSQL database, and React web app MUST be deployed to cloud hosting platforms (e.g., Render, Azure, Railway) with live URLs.
 - `NFR-DEPLOY-002` (**Mobile Deliverable**): Flutter mobile application MUST be delivered as a runnable compiled Android APK (`.apk`).
 - `NFR-DEPLOY-003` (**No-Cost Services**): System deployment MUST operate within institution-provided or free-tier cloud resources without requiring paid subscriptions.
+
+### 2.5 Review & Rating Requirements (`FR-REVIEW`)
+
+- `FR-REVIEW-001` (**Submit Reviews**): Passengers MUST be able to submit a 1-5 star rating and optional text comment for buses and drivers associated with their completed bookings.
+- `FR-REVIEW-002` (**Anonymous Reviews**): Passengers MUST have the option to submit reviews anonymously, in which case their name is obfuscated.
+- `FR-REVIEW-003` (**Profanity Filtering**): The system MUST automatically filter or reject reviews containing basic profanity before storage.
+- `FR-REVIEW-004` (**Review Window**): Passengers MUST only be able to submit or edit reviews within 7 days after the trip's arrival time.
+- `FR-REVIEW-005` (**Review Deletion**): Passengers MUST be able to delete their own reviews at any time.
+- `FR-REVIEW-006` (**Dashboard Summaries**): The system MUST provide average rating and distribution summaries for buses and drivers.

@@ -142,3 +142,29 @@ This document outlines the user stories for the **WayPoint** AI-Powered Intercit
   1. Audit trail displays timestamp, actor ID/agent name, action type, entity ID, and state diff.
   2. Audit logs are immutable and cannot be deleted or altered via the UI.
 - **Priority**: Must Have
+
+## 9. Review and Rating Management
+
+### `US-REVIEW-001`: Passenger Submits Trip Review
+- **User Story**: *As a Passenger*, I want to rate and review the bus and driver after my trip is completed, *so that* I can share my feedback.
+- **Mapped Requirement**: `FR-REVIEW-001`, `FR-REVIEW-002`
+- **Acceptance Criteria**:
+  1. Only confirmed and completed bookings can be reviewed.
+  2. Passenger can submit anonymously.
+- **Priority**: Should Have
+
+### `US-REVIEW-002`: Review Modification and Deletion
+- **User Story**: *As a Passenger*, I want to edit or delete my submitted review, *so that* I can correct my feedback or remove it entirely.
+- **Mapped Requirement**: `FR-REVIEW-004`, `FR-REVIEW-005`
+- **Acceptance Criteria**:
+  1. Edits are only permitted within 7 days of the trip's arrival.
+  2. Deletions are permitted at any time.
+- **Priority**: Should Have
+
+### `US-REVIEW-003`: Operational Review Dashboards
+- **User Story**: *As an Operator*, I want to view aggregate ratings and individual reviews for buses and drivers, *so that* I can monitor fleet and staff quality.
+- **Mapped Requirement**: `FR-REVIEW-006`
+- **Acceptance Criteria**:
+  1. Dashboard displays average rating and distribution (1-5 stars) for an entity.
+  2. Reviews can be filtered by rating.
+- **Priority**: Should Have

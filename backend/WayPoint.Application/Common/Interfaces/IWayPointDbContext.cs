@@ -36,6 +36,8 @@ public interface IWayPointDbContext
     DbSet<MaintenanceRecord> MaintenanceRecords { get; }
     DbSet<Amenity> Amenities { get; }
     DbSet<ServiceAmenity> ServiceAmenities { get; }
+    DbSet<BusReview> BusReviews { get; }
+    DbSet<DriverReview> DriverReviews { get; }
 
     // Component 3: Booking, Ticketing & Passenger Options (Mithila)
     DbSet<SeatHold> SeatHolds { get; }
