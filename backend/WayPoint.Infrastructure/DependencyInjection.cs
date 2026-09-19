@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IWayPointDbContext>(provider => provider.GetRequiredService<WayPointDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IBookingService, BookingService>();
 
         // Component 2: Fleet, Seat & Resource Feasibility Services (Nuhadh)
         services.AddScoped<IBusService, BusService>();
@@ -59,6 +60,7 @@ public static class DependencyInjection
         {
             var uri = new Uri(databaseUrl);
             var userInfo = uri.UserInfo.Split(':');
+            var isLocal = uri.Host == "localhost" || uri.Host == "127.0.0.1";
             var builder = new NpgsqlConnectionStringBuilder
             {
                 Host = uri.Host,
@@ -66,11 +68,14 @@ public static class DependencyInjection
                 Username = userInfo.Length > 0 ? userInfo[0] : "",
                 Password = userInfo.Length > 1 ? userInfo[1] : "",
                 Database = uri.AbsolutePath.TrimStart('/'),
-                SslMode = SslMode.Require,
-                SslNegotiation = SslNegotiation.Direct,
+                SslMode = isLocal ? SslMode.Prefer : SslMode.Require,
                 Timeout = 15,
                 CommandTimeout = 60
             };
+            if (!isLocal)
+            {
+                builder.SslNegotiation = SslNegotiation.Direct;
+            }
             return builder.ToString();
         }
 
