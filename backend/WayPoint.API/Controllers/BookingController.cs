@@ -63,6 +63,16 @@ public class BookingController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all scheduled transit corridors and services with their IDs for booking and seat hold operations.
+    /// </summary>
+    [HttpGet("services")]
+    public async Task<ActionResult<List<ServiceSummaryDto>>> GetServices(CancellationToken cancellationToken)
+    {
+        var services = await _bookingService.GetAvailableServicesAsync(cancellationToken);
+        return Ok(services);
+    }
+
+    /// <summary>
     /// Retrieves booking history for a passenger or operational manifest (US-PASS-005).
     /// </summary>
     [HttpGet]

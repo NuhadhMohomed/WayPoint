@@ -64,6 +64,13 @@ export function DashboardLayout() {
       roles: ['Admin', 'TransportManager', 'Operator']
     },
     {
+      to: '/operator',
+      label: 'Operator NOC (WEB-01)',
+      subtext: 'Mithila • Component 3',
+      icon: LayoutDashboard,
+      roles: ['Admin', 'TransportManager', 'Operator', 'Passenger']
+    },
+    {
       to: '/bookings',
       label: 'Bookings & Ticketing',
       subtext: 'Mithila • Component 3',

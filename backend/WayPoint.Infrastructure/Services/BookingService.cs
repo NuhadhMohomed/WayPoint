@@ -21,6 +21,29 @@ public class BookingService : IBookingService
         _configuration = configuration;
     }
 
+    public async Task<List<ServiceSummaryDto>> GetAvailableServicesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Services
+            .Include(s => s.Route)
+            .Include(s => s.Bus)
+            .OrderBy(s => s.DepartureTime)
+            .Select(s => new ServiceSummaryDto
+            {
+                Id = s.Id,
+                ServiceCode = s.ServiceCode,
+                RouteName = s.Route.Name,
+                OriginCity = s.Route.OriginCity,
+                DestinationCity = s.Route.DestinationCity,
+                DepartureTime = s.DepartureTime,
+                ArrivalTime = s.ArrivalTime,
+                BaseFare = s.BaseFare,
+                BusRegistration = s.Bus.RegistrationNumber,
+                BusClass = s.Bus.BusClass.ToString(),
+                TotalSeats = s.Bus.TotalSeatCapacity
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<SeatHoldResponseDto> CreateSeatHoldAsync(SeatHoldRequestDto request, CancellationToken cancellationToken = default)
     {
         if (request.SeatNumbers == null || request.SeatNumbers.Count == 0)
@@ -28,11 +51,17 @@ public class BookingService : IBookingService
             throw new ArgumentException("At least one seat number must be specified.", nameof(request));
         }
 
-        var service = await _context.Services
-            .Include(s => s.Route)
-            .Include(s => s.Bus)
-                .ThenInclude(b => b.SeatLayout)
-            .FirstOrDefaultAsync(s => s.Id == request.ServiceId, cancellationToken);
+        var service = request.ServiceId != Guid.Empty
+            ? await _context.Services
+                .Include(s => s.Route)
+                .Include(s => s.Bus)
+                    .ThenInclude(b => b.SeatLayout)
+                .FirstOrDefaultAsync(s => s.Id == request.ServiceId, cancellationToken)
+            : await _context.Services
+                .Include(s => s.Route)
+                .Include(s => s.Bus)
+                    .ThenInclude(b => b.SeatLayout)
+                .FirstOrDefaultAsync(cancellationToken);
 
         if (service == null)
         {
@@ -228,9 +257,12 @@ public class BookingService : IBookingService
 
     public async Task<BookingConfirmationDto> ExecuteCheckoutAsync(BookingCheckoutRequestDto request, CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
             // 1. Fetch the primary hold
             var hold = await _context.SeatHolds
                 .Include(h => h.Service)
@@ -350,6 +382,7 @@ public class BookingService : IBookingService
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+        });
     }
 
     public async Task<List<HistoricalBookingDto>> GetPassengerBookingsAsync(Guid? passengerId = null, CancellationToken cancellationToken = default)

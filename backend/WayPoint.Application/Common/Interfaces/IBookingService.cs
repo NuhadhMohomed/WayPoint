@@ -4,6 +4,9 @@ namespace WayPoint.Application.Common.Interfaces;
 
 public interface IBookingService
 {
+    // Services & Corridors
+    Task<List<ServiceSummaryDto>> GetAvailableServicesAsync(CancellationToken cancellationToken = default);
+
     // Seat Holds (US-PASS-003)
     Task<SeatHoldResponseDto> CreateSeatHoldAsync(SeatHoldRequestDto request, CancellationToken cancellationToken = default);
     Task<bool> ReleaseSeatHoldAsync(Guid holdId, CancellationToken cancellationToken = default);

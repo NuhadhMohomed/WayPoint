@@ -21,12 +21,16 @@ export const bookingApi = {
     const res = await apiClient.get(`/bookings/${id}`)
     return res.data
   },
+  checkout: async (checkoutData) => {
+    const res = await apiClient.post('/bookings/checkout', checkoutData)
+    return res.data
+  },
   cancelBooking: async (cancelData) => {
     const res = await apiClient.post('/bookings/cancel', cancelData)
     return res.data
   },
-  verifyTicketQr: async (qrPayload) => {
-    const res = await apiClient.post('/tickets/verify-qr', { qrPayload })
+  verifyTicketQr: async (qrCodePayload) => {
+    const res = await apiClient.post('/tickets/verify-qr', { qrCodePayload })
     return res.data
   },
 }

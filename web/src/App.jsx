@@ -7,7 +7,8 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
 import { RoutesPlaceholderPage } from './pages/RoutesPlaceholderPage'
 import { FleetPlaceholderPage } from './pages/FleetPlaceholderPage'
-import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
+import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
+import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
 import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
 
 export function App() {
@@ -29,7 +30,8 @@ export function App() {
           <Route path="/fleet" element={<FleetPlaceholderPage />} />
 
           {/* Component 3: Mithila */}
-          <Route path="/bookings" element={<BookingsPlaceholderPage />} />
+          <Route path="/operator" element={<OperatorDashboardPage />} />
+          <Route path="/bookings" element={<BookingManifestMonitorPage />} />
 
           {/* Component 4: Dineth */}
           <Route path="/disruptions" element={<DisruptionsPlaceholderPage />} />

@@ -1,5 +1,20 @@
 namespace WayPoint.Application.DTOs.Booking;
 
+public class ServiceSummaryDto
+{
+    public Guid Id { get; set; }
+    public string ServiceCode { get; set; } = string.Empty;
+    public string RouteName { get; set; } = string.Empty;
+    public string OriginCity { get; set; } = string.Empty;
+    public string DestinationCity { get; set; } = string.Empty;
+    public DateTime DepartureTime { get; set; }
+    public DateTime ArrivalTime { get; set; }
+    public decimal BaseFare { get; set; }
+    public string BusRegistration { get; set; } = string.Empty;
+    public string BusClass { get; set; } = string.Empty;
+    public int TotalSeats { get; set; }
+}
+
 public class SeatHoldRequestDto
 {
     public Guid ServiceId { get; set; }
