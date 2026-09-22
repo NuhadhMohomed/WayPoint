@@ -306,9 +306,18 @@ public class BookingService : IBookingService
                 ? request.PassengerName
                 : (hold.Passenger?.User?.FullName ?? "Nimal Silva");
 
-            // 5. Create Booking Entity
+            // 5. Payment Validation & Failure Simulation
+            if (string.IsNullOrWhiteSpace(request.PaymentTransactionId) ||
+                request.PaymentTransactionId.StartsWith("FAIL", StringComparison.OrdinalIgnoreCase) ||
+                request.PaymentTransactionId.StartsWith("DECLINE", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Payment failed or card was declined. Transaction rolled back.");
+            }
+
+            // 6. Create Booking Entity
             var booking = new Booking
             {
+                Id = Guid.NewGuid(),
                 BookingReference = bookingRef,
                 PassengerId = hold.PassengerId,
                 ServiceId = hold.ServiceId,
@@ -317,9 +326,8 @@ public class BookingService : IBookingService
                 Status = BookingStatus.Confirmed
             };
             await _context.Bookings.AddAsync(booking, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
 
-            // 6. Record Payment Attempt
+            // 7. Record Payment Attempt
             var payment = new PaymentAttempt
             {
                 BookingId = booking.Id,
