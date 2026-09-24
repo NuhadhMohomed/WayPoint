@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.Features.AiWorkflows.DTOs;
+using WayPoint.Application.Common.Interfaces.Disruption;
+using WayPoint.Application.Features.DisruptionManagement.DTOs;
 
 namespace WayPoint.API.Controllers;
 
 /// <summary>
-/// AI Workflow persistence endpoints (FR-AI-005, FR-AI-007).
-/// Called by the AI microservice to persist workflow execution traces.
+/// AI Workflow persistence endpoints (FR-AI-005, FR-AI-007) and observability (FR-AI-007).
+/// Called by the AI microservice to persist workflow execution traces,
+/// and by frontend operators to view executions.
 /// 
 /// Endpoints:
 ///   POST   /api/v1/ai/workflows                         - Create workflow
@@ -15,16 +18,21 @@ namespace WayPoint.API.Controllers;
 ///   POST   /api/v1/ai/workflows/{id}/steps               - Add step
 ///   POST   /api/v1/ai/workflows/steps/{stepId}/tool-calls      - Add tool call
 ///   POST   /api/v1/ai/workflows/steps/{stepId}/validations     - Add validation
+///   GET    /api/v1/ai/workflows                         - List workflows (observability)
 /// </summary>
 [ApiController]
 [Route("api/v1/ai/workflows")]
 public class AiWorkflowController : ControllerBase
 {
     private readonly IAiWorkflowService _aiWorkflowService;
+    private readonly IAiWorkflowQueryService _workflowQueryService;
 
-    public AiWorkflowController(IAiWorkflowService aiWorkflowService)
+    public AiWorkflowController(
+        IAiWorkflowService aiWorkflowService,
+        IAiWorkflowQueryService workflowQueryService)
     {
         _aiWorkflowService = aiWorkflowService;
+        _workflowQueryService = workflowQueryService;
     }
 
     /// <summary>
@@ -165,5 +173,16 @@ public class AiWorkflowController : ControllerBase
                 Detail = ex.Message
             });
         }
+    }
+
+    /// <summary>
+    /// List AI workflow executions with optional status filtering and pagination.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetWorkflows([FromQuery] WorkflowFilterParams filter)
+    {
+        var result = await _workflowQueryService.GetWorkflowsAsync(filter);
+        return Ok(result);
     }
 }
