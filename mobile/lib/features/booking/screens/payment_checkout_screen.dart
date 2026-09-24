@@ -543,7 +543,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.2),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppTheme.primaryColor),
                     ),
@@ -663,7 +663,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? chipColor.withOpacity(0.18) : const Color(0xFF1E293B),
+                    color: isSelected ? chipColor.withValues(alpha: 0.18) : const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected ? chipColor : const Color(0xFF334155),
