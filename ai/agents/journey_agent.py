@@ -13,14 +13,16 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from agents.state import WorkflowState
 from config import GEMINI_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from guardrails.safe_failure import execute_with_safe_failure
+from guardrails.input_sanitizer import sanitize_user_input, wrap_user_input
 from prompts.agent_prompts import JOURNEY_AGENT_PROMPT
 from tools.registry import JOURNEY_AGENT_TOOLS
 
 logger = logging.getLogger("waypoint.ai.journey_agent")
 
 
-async def journey_agent_node(state: WorkflowState) -> dict:
-    """Journey Analysis Agent node — searches routes and evaluates transfers."""
+async def _journey_core(state: WorkflowState) -> dict:
+    """Core journey analysis logic — isolated for safe failure wrapping."""
     logger.info("Journey Analysis Agent started")
 
     llm = ChatGoogleGenerativeAI(
@@ -32,11 +34,14 @@ async def journey_agent_node(state: WorkflowState) -> dict:
     # Bind journey-specific tools
     llm_with_tools = llm.bind_tools(JOURNEY_AGENT_TOOLS)
 
+    # Sanitize user-provided objective (FR-AI-008)
+    objective = sanitize_user_input(state.get("objective", ""))
+
     messages = [
         SystemMessage(content=JOURNEY_AGENT_PROMPT),
         HumanMessage(
             content=(
-                f"Objective: {state.get('objective', '')}\n\n"
+                f"Objective: {wrap_user_input(objective)}\n\n"
                 f"Workflow type: {state.get('workflow_type', '')}\n\n"
                 f"Disruption case ID: "
                 f"{state.get('disruption_case_id', 'N/A')}\n\n"
@@ -90,3 +95,12 @@ async def journey_agent_node(state: WorkflowState) -> dict:
             }
         ],
     }
+
+
+async def journey_agent_node(state: WorkflowState) -> dict:
+    """Journey Analysis Agent node — wrapped with safe failure (FR-AI-004)."""
+    return await execute_with_safe_failure(
+        agent_name="JourneyAnalysisAgent",
+        core_fn=_journey_core,
+        state=state,
+    )

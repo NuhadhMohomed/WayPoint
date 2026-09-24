@@ -16,48 +16,17 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from agents.state import WorkflowState
 from config import GEMINI_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from guardrails.safe_failure import execute_with_safe_failure
+from guardrails.input_sanitizer import sanitize_user_input, wrap_user_input
+from guardrails.output_validator import validate_impact_classification
 from prompts.agent_prompts import SAFETY_AGENT_PROMPT
 from tools.registry import SAFETY_AGENT_TOOLS
 
 logger = logging.getLogger("waypoint.ai.safety_agent")
 
 
-def _deterministic_impact_classification(
-    llm_classification: str,
-    affected_count: int,
-    delay_minutes: float,
-    *,
-    is_cancellation: bool = False,
-) -> str:
-    """
-    Deterministic override of LLM impact classification (FR-AI-003).
-
-    The LLM may suggest 'Low' impact, but business rules require 'High'
-    classification if any of these triggers are met:
-    - Service cancellation (always High)
-    - Timetable shift > 15 minutes
-    - Affected passenger count > 0 in a cancellation scenario
-
-    Returns:
-        'Low' or 'High'
-    """
-    # BR-APPROVAL-001: cancellation is always High-Impact
-    if is_cancellation:
-        return "High"
-
-    # Delay > 15 minutes is High-Impact
-    if delay_minutes > 15:
-        return "High"
-
-    # Otherwise trust the LLM (bounded to 'Low' or 'High')
-    if llm_classification in ("Low", "High"):
-        return llm_classification
-
-    return "Low"
-
-
-async def safety_agent_node(state: WorkflowState) -> dict:
-    """Validation & Safety Agent node — validates, classifies, gates."""
+async def _safety_core(state: WorkflowState) -> dict:
+    """Core safety validation logic — isolated for safe failure wrapping."""
     logger.info("Validation & Safety Agent started")
 
     llm = ChatGoogleGenerativeAI(
@@ -68,12 +37,15 @@ async def safety_agent_node(state: WorkflowState) -> dict:
 
     llm_with_tools = llm.bind_tools(SAFETY_AGENT_TOOLS)
 
+    # Sanitize user-provided objective (FR-AI-008)
+    objective = sanitize_user_input(state.get("objective", ""))
+
     # Comprehensive context from all previous agents
     messages = [
         SystemMessage(content=SAFETY_AGENT_PROMPT),
         HumanMessage(
             content=(
-                f"Objective: {state.get('objective', '')}\n\n"
+                f"Objective: {wrap_user_input(objective)}\n\n"
                 f"Workflow type: {state.get('workflow_type', '')}\n\n"
                 f"Disruption case ID: "
                 f"{state.get('disruption_case_id', 'N/A')}\n\n"
@@ -113,14 +85,14 @@ async def safety_agent_node(state: WorkflowState) -> dict:
     except (json.JSONDecodeError, AttributeError):
         impact_assessment = {"raw_response": str(response.content)}
 
-    # Deterministic override (FR-AI-003, BR-APPROVAL-001)
+    # Deterministic override via shared guardrail (FR-AI-003, BR-APPROVAL-001)
     is_cancellation = (
         state.get("workflow_type", "") == "disruption_rebooking"
     )
     affected_count = impact_assessment.get("affected_passenger_count", 0)
     delay_minutes = impact_assessment.get("total_delay_minutes", 0)
 
-    impact_classification = _deterministic_impact_classification(
+    impact_classification = validate_impact_classification(
         llm_classification,
         affected_count,
         delay_minutes,
@@ -181,3 +153,12 @@ async def safety_agent_node(state: WorkflowState) -> dict:
             }
         ],
     }
+
+
+async def safety_agent_node(state: WorkflowState) -> dict:
+    """Validation & Safety Agent node — wrapped with safe failure (FR-AI-004)."""
+    return await execute_with_safe_failure(
+        agent_name="ValidationSafetyAgent",
+        core_fn=_safety_core,
+        state=state,
+    )

@@ -13,14 +13,16 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from agents.state import WorkflowState
 from config import GEMINI_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from guardrails.safe_failure import execute_with_safe_failure
+from guardrails.input_sanitizer import sanitize_user_input, wrap_user_input
 from prompts.agent_prompts import BOOKING_AGENT_PROMPT
 from tools.registry import BOOKING_AGENT_TOOLS
 
 logger = logging.getLogger("waypoint.ai.booking_agent")
 
 
-async def booking_agent_node(state: WorkflowState) -> dict:
-    """Booking & Policy Agent node — analyses fares and notifications."""
+async def _booking_core(state: WorkflowState) -> dict:
+    """Core booking & policy logic — isolated for safe failure wrapping."""
     logger.info("Booking & Policy Agent started")
 
     llm = ChatGoogleGenerativeAI(
@@ -35,11 +37,14 @@ async def booking_agent_node(state: WorkflowState) -> dict:
     feasibility = state.get("feasibility_result", {})
     candidates = state.get("candidate_routes", [])
 
+    # Sanitize user-provided objective (FR-AI-008)
+    objective = sanitize_user_input(state.get("objective", ""))
+
     messages = [
         SystemMessage(content=BOOKING_AGENT_PROMPT),
         HumanMessage(
             content=(
-                f"Objective: {state.get('objective', '')}\n\n"
+                f"Objective: {wrap_user_input(objective)}\n\n"
                 f"Workflow type: {state.get('workflow_type', '')}\n\n"
                 f"Candidate routes: "
                 f"{json.dumps(candidates, indent=2)}\n\n"
@@ -86,3 +91,12 @@ async def booking_agent_node(state: WorkflowState) -> dict:
             }
         ],
     }
+
+
+async def booking_agent_node(state: WorkflowState) -> dict:
+    """Booking & Policy Agent node — wrapped with safe failure (FR-AI-004)."""
+    return await execute_with_safe_failure(
+        agent_name="BookingPolicyAgent",
+        core_fn=_booking_core,
+        state=state,
+    )

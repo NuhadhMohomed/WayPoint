@@ -13,14 +13,16 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from agents.state import WorkflowState
 from config import GEMINI_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from guardrails.safe_failure import execute_with_safe_failure
+from guardrails.input_sanitizer import sanitize_user_input, wrap_user_input
 from prompts.agent_prompts import RESOURCE_AGENT_PROMPT
 from tools.registry import RESOURCE_AGENT_TOOLS
 
 logger = logging.getLogger("waypoint.ai.resource_agent")
 
 
-async def resource_agent_node(state: WorkflowState) -> dict:
-    """Resource Feasibility Agent node — checks seat/resource availability."""
+async def _resource_core(state: WorkflowState) -> dict:
+    """Core resource feasibility logic — isolated for safe failure wrapping."""
     logger.info("Resource Feasibility Agent started")
 
     llm = ChatGoogleGenerativeAI(
@@ -40,11 +42,14 @@ async def resource_agent_node(state: WorkflowState) -> dict:
         else "No candidate routes provided yet.\n\n"
     )
 
+    # Sanitize user-provided objective (FR-AI-008)
+    objective = sanitize_user_input(state.get("objective", ""))
+
     messages = [
         SystemMessage(content=RESOURCE_AGENT_PROMPT),
         HumanMessage(
             content=(
-                f"Objective: {state.get('objective', '')}\n\n"
+                f"Objective: {wrap_user_input(objective)}\n\n"
                 f"Workflow type: {state.get('workflow_type', '')}\n\n"
                 f"{candidate_ctx}"
                 f"Please check seat availability for the candidate "
@@ -91,3 +96,12 @@ async def resource_agent_node(state: WorkflowState) -> dict:
             }
         ],
     }
+
+
+async def resource_agent_node(state: WorkflowState) -> dict:
+    """Resource Feasibility Agent node — wrapped with safe failure (FR-AI-004)."""
+    return await execute_with_safe_failure(
+        agent_name="ResourceFeasibilityAgent",
+        core_fn=_resource_core,
+        state=state,
+    )
