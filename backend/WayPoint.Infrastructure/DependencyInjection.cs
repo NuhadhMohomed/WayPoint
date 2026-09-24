@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Application.Common.Interfaces.Disruption;
 using WayPoint.Application.Common.Interfaces.Fleet;
 using WayPoint.Infrastructure.Data;
 using WayPoint.Infrastructure.Services;
+using WayPoint.Infrastructure.Services.Disruption;
 using WayPoint.Infrastructure.Services.Fleet;
 
 namespace WayPoint.Infrastructure;
@@ -36,6 +38,13 @@ public static class DependencyInjection
         services.AddScoped<ISeatAvailabilityService, SeatAvailabilityService>();
         services.AddScoped<IResourceFeasibilityService, ResourceFeasibilityService>();
         services.AddScoped<IReviewService, ReviewService>();
+
+        // Component 4: Disruption, Rebooking & Approval Services (Dineth)
+        services.AddScoped<IDisruptionService, DisruptionService>();
+        services.AddScoped<IRebookingService, RebookingService>();
+        services.AddScoped<IApprovalService, ApprovalService>();
+        services.AddScoped<IServiceAlertService, ServiceAlertService>();
+        services.AddScoped<IAiWorkflowQueryService, AiWorkflowQueryService>();
 
         return services;
     }
