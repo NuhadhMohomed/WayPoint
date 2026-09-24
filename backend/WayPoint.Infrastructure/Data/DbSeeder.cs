@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Domain.Entities.Ai;
+using WayPoint.Domain.Entities.Disruption;
 using WayPoint.Domain.Entities.Fleet;
 using WayPoint.Domain.Entities.Identity;
 using WayPoint.Domain.Entities.Journey;
@@ -316,6 +318,236 @@ public static class DbSeeder
                 // OR we just create a dummy passenger and booking if needed. But it's better to just leave it for the Booking seeder or let users add it.
                 // Wait, it's fine. I will just leave it empty if we don't have bookings seeded here yet.
             }
+        }
+
+        // 9. Component 4: Disruption, Rebooking & Approval Seed Data (Dineth)
+        if (!await context.DisruptionCases.AnyAsync() && await context.Services.AnyAsync())
+        {
+            var srvKandySeed = await context.Services.FirstAsync(s => s.ServiceCode == "SRV-COL-KDY-0700");
+            var srvEllaSeed = await context.Services.FirstAsync(s => s.ServiceCode == "SRV-COL-ELLA-0800");
+            var srvGalleSeed = await context.Services.FirstAsync(s => s.ServiceCode == "SRV-COL-GAL-0930");
+
+            // Disruption Case 1: Critical - service cancellation on Kandy route
+            var disruption1 = new DisruptionCase
+            {
+                DisruptedServiceId = srvKandySeed.Id,
+                Reason = "Engine failure on ND-5421 - service cancelled at Kadawatha Interchange. Passengers stranded.",
+                Severity = DisruptionSeverity.Critical,
+                AffectedPassengerCount = 32,
+                Status = DisruptionStatus.PendingApproval
+            };
+
+            // Disruption Case 2: Major - significant delay on Ella route
+            var disruption2 = new DisruptionCase
+            {
+                DisruptedServiceId = srvEllaSeed.Id,
+                Reason = "Heavy landslide debris near Balangoda - route blocked, estimated 45-minute delay.",
+                Severity = DisruptionSeverity.Major,
+                AffectedPassengerCount = 18,
+                Status = DisruptionStatus.Analyzing
+            };
+
+            // Disruption Case 3: Minor - slight delay on Galle expressway
+            var disruption3 = new DisruptionCase
+            {
+                DisruptedServiceId = srvGalleSeed.Id,
+                Reason = "Minor accident at Kurundugahahetekma Interchange - expected 10-minute delay.",
+                Severity = DisruptionSeverity.Minor,
+                AffectedPassengerCount = 5,
+                Status = DisruptionStatus.Resolved
+            };
+
+            await context.DisruptionCases.AddRangeAsync(disruption1, disruption2, disruption3);
+            await context.SaveChangesAsync();
+
+            // Rebooking Proposals
+            // Proposal 1: For critical disruption - pending manager approval (bus reassignment to Galle service)
+            var proposal1 = new RebookingProposal
+            {
+                DisruptionCaseId = disruption1.Id,
+                ReplacementServiceId = srvGalleSeed.Id,
+                ProposedByAgent = "Manual",
+                Status = RebookingStatus.PendingManagerApproval
+            };
+
+            // Proposal 2: For major disruption - approved (rebook to Kandy service)
+            var proposal2 = new RebookingProposal
+            {
+                DisruptionCaseId = disruption2.Id,
+                ReplacementServiceId = srvKandySeed.Id,
+                ProposedByAgent = "ResourceBookingAgent",
+                Status = RebookingStatus.Approved
+            };
+
+            await context.RebookingProposals.AddRangeAsync(proposal1, proposal2);
+            await context.SaveChangesAsync();
+
+            // Approval Decision - for the approved proposal
+            var managerUser = await context.Users.FirstAsync(u => u.Email == "manager@waypoint.lk");
+            var approvalDecision = new ApprovalDecision
+            {
+                RebookingProposalId = proposal2.Id,
+                ManagerId = managerUser.Id,
+                Decision = ApprovalDecisionType.Approve,
+                Comments = "Approved - Kandy service has sufficient capacity for 18 passengers. Fare difference will be refunded.",
+                DecidedAt = DateTime.UtcNow
+            };
+
+            await context.ApprovalDecisions.AddAsync(approvalDecision);
+            await context.SaveChangesAsync();
+
+            // Service Alerts
+            var alert1 = new ServiceAlert
+            {
+                ServiceId = srvKandySeed.Id,
+                Title = "SRV-COL-KDY-0700 Cancelled",
+                Message = "The 07:00 Colombo - Kandy Intercity Express (ND-5421) has been cancelled due to engine failure. Affected passengers are being rebooked to alternative services.",
+                PostedAt = DateTime.UtcNow.AddMinutes(-45)
+            };
+
+            var alert2 = new ServiceAlert
+            {
+                ServiceId = srvEllaSeed.Id,
+                Title = "SRV-COL-ELLA-0800 Delayed ~45 min",
+                Message = "The 08:00 Colombo - Ella Highland Scenic Corridor is experiencing a 45-minute delay due to a landslide near Balangoda. We apologise for the inconvenience.",
+                PostedAt = DateTime.UtcNow.AddMinutes(-30)
+            };
+
+            var alert3 = new ServiceAlert
+            {
+                ServiceId = srvGalleSeed.Id,
+                Title = "SRV-COL-GAL-0930 Minor Delay",
+                Message = "The 09:30 Colombo - Galle Southern Expressway Direct is experiencing a minor 10-minute delay at Kurundugahahetekma Interchange.",
+                PostedAt = DateTime.UtcNow.AddMinutes(-15)
+            };
+
+            await context.ServiceAlerts.AddRangeAsync(alert1, alert2, alert3);
+            await context.SaveChangesAsync();
+        }
+
+        // 10. Agentic AI Workflow Observability Seed Data
+        if (!await context.AiWorkflows.AnyAsync() && await context.Services.AnyAsync())
+        {
+            var srvKandyRef = await context.Services.FirstAsync(s => s.ServiceCode == "SRV-COL-KDY-0700");
+
+            var workflow = new AiWorkflow
+            {
+                Objective = "Assess disruption impact and generate rebooking proposal for SRV-COL-KDY-0700 cancellation",
+                Status = AiWorkflowStatus.Completed,
+                StartedAt = DateTime.UtcNow.AddMinutes(-30),
+                CompletedAt = DateTime.UtcNow.AddMinutes(-25)
+            };
+
+            await context.AiWorkflows.AddAsync(workflow);
+            await context.SaveChangesAsync();
+
+            // Step 1: Impact Assessment
+            var step1 = new AiWorkflowStep
+            {
+                AiWorkflowId = workflow.Id,
+                AgentName = "ImpactAnalysisAgent",
+                StepOrder = 1,
+                StepDescription = "Analyse disruption impact: query confirmed bookings, compute revenue at risk, classify severity",
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-30)
+            };
+
+            // Step 2: Alternative Search
+            var step2 = new AiWorkflowStep
+            {
+                AiWorkflowId = workflow.Id,
+                AgentName = "AlternativeSearchAgent",
+                StepOrder = 2,
+                StepDescription = "Search for available replacement services with sufficient seat capacity on the Colombo-Kandy corridor",
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-28)
+            };
+
+            // Step 3: Proposal Generation
+            var step3 = new AiWorkflowStep
+            {
+                AiWorkflowId = workflow.Id,
+                AgentName = "ResourceBookingAgent",
+                StepOrder = 3,
+                StepDescription = "Generate rebooking proposal with fare protection guarantee and submit for manager approval",
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-26)
+            };
+
+            await context.AiWorkflowSteps.AddRangeAsync(step1, step2, step3);
+            await context.SaveChangesAsync();
+
+            // Tool Calls for Step 1
+            var toolCall1 = new AiToolCall
+            {
+                AiWorkflowStepId = step1.Id,
+                ToolName = "GetConfirmedBookings",
+                ArgumentsJson = "{\"serviceId\": \"" + srvKandyRef.Id + "\", \"status\": \"Confirmed\"}",
+                ResultJson = "{\"count\": 32, \"totalRevenue\": 46400.00}",
+                DurationMs = 120,
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-30)
+            };
+
+            var toolCall2 = new AiToolCall
+            {
+                AiWorkflowStepId = step1.Id,
+                ToolName = "ClassifyDisruptionSeverity",
+                ArgumentsJson = "{\"disruptionType\": \"ServiceCancellation\", \"affectedPassengers\": 32}",
+                ResultJson = "{\"severity\": \"Critical\", \"requiresManagerApproval\": true}",
+                DurationMs = 45,
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-29)
+            };
+
+            // Tool Call for Step 2
+            var toolCall3 = new AiToolCall
+            {
+                AiWorkflowStepId = step2.Id,
+                ToolName = "SearchAvailableServices",
+                ArgumentsJson = "{\"routeCode\": \"RT-01\", \"dateRange\": \"today\", \"minCapacity\": 32}",
+                ResultJson = "{\"alternatives\": [{\"serviceCode\": \"SRV-COL-GAL-0930\", \"availableSeats\": 38}]}",
+                DurationMs = 230,
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-28)
+            };
+
+            // Tool Call for Step 3
+            var toolCall4 = new AiToolCall
+            {
+                AiWorkflowStepId = step3.Id,
+                ToolName = "CreateRebookingProposal",
+                ArgumentsJson = "{\"disruptionCaseId\": \"auto\", \"replacementServiceId\": \"auto\", \"proposedByAgent\": \"ResourceBookingAgent\"}",
+                ResultJson = "{\"proposalId\": \"auto\", \"status\": \"PendingManagerApproval\", \"fareProtection\": true}",
+                DurationMs = 95,
+                ExecutedAt = DateTime.UtcNow.AddMinutes(-26)
+            };
+
+            await context.AiToolCalls.AddRangeAsync(toolCall1, toolCall2, toolCall3, toolCall4);
+            await context.SaveChangesAsync();
+
+            // Validation Results for Step 1
+            var validation1 = new AiValidationResult
+            {
+                AiWorkflowStepId = step1.Id,
+                RuleName = "BR-DISRUPT-001: Disruption case must reference an active service",
+                Passed = true,
+                ValidationDetails = "Service SRV-COL-KDY-0700 exists and is in Scheduled status."
+            };
+
+            var validation2 = new AiValidationResult
+            {
+                AiWorkflowStepId = step1.Id,
+                RuleName = "BR-APPROVAL-001: Impact severity classification",
+                Passed = true,
+                ValidationDetails = "Service cancellation -> classified as Critical/High Impact -> requires manager approval."
+            };
+
+            // Validation Result for Step 3
+            var validation3 = new AiValidationResult
+            {
+                AiWorkflowStepId = step3.Id,
+                RuleName = "BR-REBOOK-002: Fare protection guarantee",
+                Passed = true,
+                ValidationDetails = "Replacement service fare (LKR 1,150) <= original fare (LKR 1,450). Fare difference of LKR 300 will be refunded."
+            };
+
+            await context.AiValidationResults.AddRangeAsync(validation1, validation2, validation3);
+            await context.SaveChangesAsync();
         }
     }
 }
