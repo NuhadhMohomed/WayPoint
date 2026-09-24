@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<IResourceFeasibilityService, ResourceFeasibilityService>();
         services.AddScoped<IReviewService, ReviewService>();
 
+        // Agentic AI Persistence Services
+        services.AddScoped<IAiWorkflowService, AiWorkflowService>();
+
         return services;
     }
 
