@@ -41,8 +41,10 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
     public DbSet<Amenity> Amenities => Set<Amenity>();
     public DbSet<ServiceAmenity> ServiceAmenities => Set<ServiceAmenity>();
+    public DbSet<BusReview> BusReviews => Set<BusReview>();
+    public DbSet<DriverReview> DriverReviews => Set<DriverReview>();
 
-    // Component 3: Booking, Ticketing & Passenger Options (Mithila)
+    // Component 3: Booking, Ticketing & Payments (Mithila)
     public DbSet<SeatHold> SeatHolds => Set<SeatHold>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
@@ -261,6 +263,44 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
                   .WithMany(a => a.ServiceAmenities)
                   .HasForeignKey(sa => sa.AmenityId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BusReview>(entity =>
+        {
+            entity.HasIndex(br => new { br.BusId, br.BookingId }).IsUnique(); // One review per booking per bus
+            entity.Property(br => br.Rating).IsRequired();
+            entity.Property(br => br.Comment).HasMaxLength(1000);
+            entity.HasOne(br => br.Bus)
+                  .WithMany(b => b.Reviews)
+                  .HasForeignKey(br => br.BusId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(br => br.Passenger)
+                  .WithMany()
+                  .HasForeignKey(br => br.PassengerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(br => br.Booking)
+                  .WithMany()
+                  .HasForeignKey(br => br.BookingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DriverReview>(entity =>
+        {
+            entity.HasIndex(dr => new { dr.DriverId, dr.BookingId }).IsUnique();
+            entity.Property(dr => dr.Rating).IsRequired();
+            entity.Property(dr => dr.Comment).HasMaxLength(1000);
+            entity.HasOne(dr => dr.Driver)
+                  .WithMany(d => d.Reviews)
+                  .HasForeignKey(dr => dr.DriverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(dr => dr.Passenger)
+                  .WithMany()
+                  .HasForeignKey(dr => dr.PassengerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(dr => dr.Booking)
+                  .WithMany()
+                  .HasForeignKey(dr => dr.BookingId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Component 3: Booking, Ticketing & Payments (Mithila)

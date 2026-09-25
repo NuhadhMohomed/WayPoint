@@ -449,3 +449,16 @@ sequenceDiagram
 - All endpoints use DTOs (zero raw entity exposure).
 - All DTO payloads follow camelCase naming conventions.
 - All error responses follow standard RFC 7807 `ProblemDetails` structures.
+
+## 8. Review and Rating API Endpoints
+
+- `POST /api/v1/reviews/buses` - Submit a review for a bus (`RequirePassenger`)
+- `POST /api/v1/reviews/drivers` - Submit a review for a driver (`RequirePassenger`)
+- `PUT /api/v1/reviews/buses/{id}` - Update a bus review (`RequirePassenger`)
+- `PUT /api/v1/reviews/drivers/{id}` - Update a driver review (`RequirePassenger`)
+- `DELETE /api/v1/reviews/buses/{id}` - Delete a bus review (`RequirePassenger`)
+- `DELETE /api/v1/reviews/drivers/{id}` - Delete a driver review (`RequirePassenger`)
+- `GET /api/v1/reviews/buses/{busId}` - List reviews for a bus (`RequireOperator`)
+- `GET /api/v1/reviews/drivers/{driverId}` - List reviews for a driver (`RequireOperator`)
+- `GET /api/v1/reviews/buses/{busId}/summary` - Get bus average rating summary (Public)
+- `GET /api/v1/reviews/drivers/{driverId}/summary` - Get driver average rating summary (Public)

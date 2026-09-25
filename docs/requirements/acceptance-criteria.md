@@ -214,3 +214,29 @@ Then backend inserts an immutable row into AuditLogs table
 And contains Timestamp, ActorId, ActionType, EntityId, BeforeState, and AfterState JSON
 And record is read-only and cannot be updated or deleted via API
 ```
+
+## 11. Reviews & Ratings (`FR-REVIEW`)
+
+### Scenario 11.1: Submit Valid Review (`FR-REVIEW-001`)
+```gherkin
+Given a passenger has a "Confirmed" booking
+And the trip's arrival time is in the past (completed)
+When they submit a review with a 1-5 star rating
+Then the review is saved successfully
+And linked to the specified bus or driver
+```
+
+### Scenario 11.2: Enforce Profanity Filter (`FR-REVIEW-003`)
+```gherkin
+When a passenger submits a review containing banned words
+Then the backend returns a 400 Bad Request
+And the review is not saved to the database
+```
+
+### Scenario 11.3: Enforce 7-Day Window (`FR-REVIEW-004`)
+```gherkin
+Given a passenger has a review submitted 8 days ago
+When they attempt to update the rating or comment
+Then the system returns a 400 Bad Request
+And displays "Review window has expired"
+```

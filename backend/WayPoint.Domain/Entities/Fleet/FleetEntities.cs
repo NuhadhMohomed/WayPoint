@@ -1,4 +1,5 @@
 using WayPoint.Domain.Common;
+using WayPoint.Domain.Entities.Identity;
 using WayPoint.Domain.Entities.Journey;
 using WayPoint.Domain.Enums;
 
@@ -16,6 +17,7 @@ public class Bus : BaseEntity
     public SeatLayout SeatLayout { get; set; } = null!;
     public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
     public ICollection<Service> Services { get; set; } = new List<Service>();
+    public ICollection<BusReview> Reviews { get; set; } = new List<BusReview>();
 }
 
 public class SeatLayout : BaseEntity
@@ -52,6 +54,7 @@ public class Driver : BaseEntity
     // Navigation properties
     public ICollection<DriverAssignment> Assignments { get; set; } = new List<DriverAssignment>();
     public ICollection<Service> Services { get; set; } = new List<Service>();
+    public ICollection<DriverReview> Reviews { get; set; } = new List<DriverReview>();
 }
 
 public class DriverAssignment : BaseEntity
@@ -94,4 +97,34 @@ public class ServiceAmenity : BaseEntity
     // Navigation properties
     public Service Service { get; set; } = null!;
     public Amenity Amenity { get; set; } = null!;
+}
+
+public class BusReview : BaseEntity
+{
+    public Guid BusId { get; set; }
+    public Guid PassengerId { get; set; }
+    public Guid BookingId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsAnonymous { get; set; } = false;
+
+    // Navigation properties
+    public Bus Bus { get; set; } = null!;
+    public PassengerProfile Passenger { get; set; } = null!;
+    public WayPoint.Domain.Entities.Booking.Booking Booking { get; set; } = null!;
+}
+
+public class DriverReview : BaseEntity
+{
+    public Guid DriverId { get; set; }
+    public Guid PassengerId { get; set; }
+    public Guid BookingId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsAnonymous { get; set; } = false;
+
+    // Navigation properties
+    public Driver Driver { get; set; } = null!;
+    public PassengerProfile Passenger { get; set; } = null!;
+    public WayPoint.Domain.Entities.Booking.Booking Booking { get; set; } = null!;
 }

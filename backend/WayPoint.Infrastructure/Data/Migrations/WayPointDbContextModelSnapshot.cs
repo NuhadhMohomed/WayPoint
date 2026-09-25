@@ -17,7 +17,7 @@ namespace WayPoint.Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -626,6 +626,49 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.ToTable("Buses");
                 });
 
+            modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.BusReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PassengerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("PassengerId");
+
+                    b.HasIndex("BusId", "BookingId")
+                        .IsUnique();
+
+                    b.ToTable("BusReviews");
+                });
+
             modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.Driver", b =>
                 {
                     b.Property<Guid>("Id")
@@ -694,6 +737,49 @@ namespace WayPoint.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("DriverAssignments");
+                });
+
+            modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.DriverReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DriverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PassengerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("PassengerId");
+
+                    b.HasIndex("DriverId", "BookingId")
+                        .IsUnique();
+
+                    b.ToTable("DriverReviews");
                 });
 
             modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.MaintenanceRecord", b =>
@@ -1473,6 +1559,33 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.Navigation("SeatLayout");
                 });
 
+            modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.BusReview", b =>
+                {
+                    b.HasOne("WayPoint.Domain.Entities.Booking.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Fleet.Bus", "Bus")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Identity.PassengerProfile", "Passenger")
+                        .WithMany()
+                        .HasForeignKey("PassengerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Bus");
+
+                    b.Navigation("Passenger");
+                });
+
             modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.DriverAssignment", b =>
                 {
                     b.HasOne("WayPoint.Domain.Entities.Fleet.Driver", "Driver")
@@ -1490,6 +1603,33 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.Navigation("Driver");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.DriverReview", b =>
+                {
+                    b.HasOne("WayPoint.Domain.Entities.Booking.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Fleet.Driver", "Driver")
+                        .WithMany("Reviews")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Identity.PassengerProfile", "Passenger")
+                        .WithMany()
+                        .HasForeignKey("PassengerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Passenger");
                 });
 
             modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.MaintenanceRecord", b =>
@@ -1696,12 +1836,16 @@ namespace WayPoint.Infrastructure.Data.Migrations
                 {
                     b.Navigation("MaintenanceRecords");
 
+                    b.Navigation("Reviews");
+
                     b.Navigation("Services");
                 });
 
             modelBuilder.Entity("WayPoint.Domain.Entities.Fleet.Driver", b =>
                 {
                     b.Navigation("Assignments");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("Services");
                 });
