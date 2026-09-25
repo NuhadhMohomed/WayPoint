@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Application.Features.JourneyPlanning;
 using WayPoint.Infrastructure.Data;
 using WayPoint.Infrastructure.Services;
 
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IWayPointDbContext>(provider => provider.GetRequiredService<WayPointDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IJourneyPlanningService, JourneyPlanningService>();
 
         return services;
     }
