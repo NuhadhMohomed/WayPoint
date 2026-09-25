@@ -11,6 +11,23 @@ public class RouteDto
     public List<RouteStopDto> Stops { get; set; } = new();
 }
 
+public class BoardingPointDto
+{
+    public Guid Id { get; set; }
+    public string PointName { get; set; } = string.Empty;
+    public string? Landmark { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+}
+
+public class TouristDestinationDto
+{
+    public Guid Id { get; set; }
+    public string AttractionName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? ImageUrl { get; set; }
+}
+
 public class RouteStopDto
 {
     public Guid Id { get; set; }
@@ -57,8 +74,15 @@ public class CandidateJourneyDto
     public DateTime DepartureTime { get; set; }
     public DateTime ArrivalTime { get; set; }
     public decimal TotalFare { get; set; }
+    public int TotalDurationMinutes { get; set; }
     public string BusClass { get; set; } = string.Empty;
     public bool IsConnecting { get; set; }
     public int AvailableSeatsCount { get; set; }
     public decimal MatchScore { get; set; }
+}
+
+public class JourneySearchResponseDto
+{
+    public Guid SearchId { get; set; }
+    public List<CandidateJourneyDto> Candidates { get; set; } = new();
 }
