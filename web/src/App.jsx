@@ -7,6 +7,13 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
 import { RoutesPlaceholderPage } from './pages/RoutesPlaceholderPage'
 import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
+import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
+import { FleetPlaceholderPage } from './pages/FleetPlaceholderPage'
+import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
+import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
+import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
+
+>>>>>>> 7503deb75fa02bb488804a82f2bebcfcc21d935c
 // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
 import { FleetHubLayout } from './features/fleet/FleetHubLayout'
 import { FleetMatrixBuilderPage } from './features/fleet/FleetMatrixBuilderPage'
@@ -47,7 +54,8 @@ export function App() {
           <Route path="/manifest" element={<BookingManifestMonitorPage />} />
 
           {/* Component 3: Mithila */}
-          <Route path="/bookings" element={<BookingsPlaceholderPage />} />
+          <Route path="/operator" element={<OperatorDashboardPage />} />
+          <Route path="/bookings" element={<BookingManifestMonitorPage />} />
 
           {/* Component 4: Dineth — Disruption Hub with Tabbed Navigation */}
           <Route path="/disruptions" element={<DisruptionHubLayout />}>
