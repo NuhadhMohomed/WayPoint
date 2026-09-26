@@ -114,7 +114,7 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: tierColor.withOpacity(0.5), width: 1.5),
+              border: Border.all(color: tierColor.withValues(alpha: 0.5), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +124,7 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: tierColor.withOpacity(0.2),
+                        color: tierColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.shield_outlined, color: tierColor, size: 16),
