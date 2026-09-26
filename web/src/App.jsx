@@ -7,14 +7,20 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
 import { RoutesPlaceholderPage } from './pages/RoutesPlaceholderPage'
 import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
-import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
-
 // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
 import { FleetHubLayout } from './features/fleet/FleetHubLayout'
 import { FleetMatrixBuilderPage } from './features/fleet/FleetMatrixBuilderPage'
 import { SeatLayoutDesignerPage } from './features/fleet/SeatLayoutDesignerPage'
 import { DriverRosteringPage } from './features/fleet/DriverRosteringPage'
 import { BookingManifestMonitorPage } from './features/fleet/BookingManifestMonitorPage'
+
+// Component 4: Disruption, Rebooking & Approval (Dineth)
+import { DisruptionHubLayout } from './features/disruptions/DisruptionHubLayout'
+import { DisruptionIntakePage } from './features/disruptions/DisruptionIntakePage'
+import { ManagerApprovalWorkbenchPage } from './features/disruptions/ManagerApprovalWorkbenchPage'
+import { ServiceAlertBroadcastPage } from './features/disruptions/ServiceAlertBroadcastPage'
+import { AiObservabilityPage } from './features/disruptions/AiObservabilityPage'
+import { AdminConsolePage } from './features/disruptions/AdminConsolePage'
 
 export function App() {
   return (
@@ -43,8 +49,15 @@ export function App() {
           {/* Component 3: Mithila */}
           <Route path="/bookings" element={<BookingsPlaceholderPage />} />
 
-          {/* Component 4: Dineth */}
-          <Route path="/disruptions" element={<DisruptionsPlaceholderPage />} />
+          {/* Component 4: Dineth — Disruption Hub with Tabbed Navigation */}
+          <Route path="/disruptions" element={<DisruptionHubLayout />}>
+            <Route index element={<Navigate to="intake" replace />} />
+            <Route path="intake" element={<DisruptionIntakePage />} />
+            <Route path="approvals" element={<ManagerApprovalWorkbenchPage />} />
+            <Route path="alerts" element={<ServiceAlertBroadcastPage />} />
+            <Route path="ai-traces" element={<AiObservabilityPage />} />
+            <Route path="admin" element={<AdminConsolePage />} />
+          </Route>
         </Route>
       </Route>
 
