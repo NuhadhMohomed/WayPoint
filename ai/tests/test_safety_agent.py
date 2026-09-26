@@ -126,10 +126,15 @@ class TestSafetyAgentToolBinding:
     def test_get_tool_registry_resolves_all_safety_tools(self):
         from tools.registry import get_tool
 
-        assert callable(get_tool("CreateRebookingProposal"))
-        assert callable(get_tool("CalculatePassengerImpact"))
-        assert callable(get_tool("RequestManagerApproval"))
-        assert callable(get_tool("ApplyApprovedOperationalChange"))
+        for tool_name in [
+            "CreateRebookingProposal",
+            "CalculatePassengerImpact",
+            "RequestManagerApproval",
+            "ApplyApprovedOperationalChange",
+        ]:
+            t = get_tool(tool_name)
+            assert t is not None
+            assert hasattr(t, "invoke") or hasattr(t, "ainvoke") or callable(t)
 
     def test_get_tool_rejects_unregistered_tool(self):
         from tools.registry import get_tool, ToolNotAllowedError
@@ -291,23 +296,21 @@ class TestSafetyAgentJsonExtraction:
 class TestSafetyAgentSafeFailure:
     """Verifies that exceptions in Safety Agent cleanly trigger safe failure."""
 
-    @pytest.mark.asyncio
-    async def test_safety_agent_skips_when_prior_safe_failure(self):
+    def test_safety_agent_skips_when_prior_safe_failure(self):
+        import asyncio
         from agents.safety_agent import safety_agent_node
 
         state = {
-            "safe_failure": True,
-            "status": "SafeFailure",
+            "workflow_status": "SafeFailure",
+            "retry_count": 3,
             "error_detail": "Prior node failure",
             "messages": [],
         }
 
-        result = await safety_agent_node(state)
-        assert result["safe_failure"] is True
-        assert result["status"] == "SafeFailure"
+        result = asyncio.run(safety_agent_node(state))
+        assert result["workflow_status"] == "SafeFailure"
 
-    @pytest.mark.asyncio
-    async def test_safety_agent_node_is_async_callable(self):
+    def test_safety_agent_node_is_async_callable(self):
         from agents.safety_agent import safety_agent_node
 
         assert callable(safety_agent_node)

@@ -183,7 +183,7 @@ class CreateRebookingProposalInput(BaseModel):
     """Input schema for the CreateRebookingProposal tool."""
 
     disruption_case_id: str = Field(
-        ..., description="UUID of the disruption case"
+        ..., min_length=1, description="UUID of the disruption case"
     )
     replacement_service_id: str = Field(
         ..., description="UUID of the replacement service"

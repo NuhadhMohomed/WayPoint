@@ -25,6 +25,13 @@ This document provides complete end-to-end traceability connecting **SE3090 Assi
 | **`REQ-DB-03`** (Seat Hold Transactions) | `FR-BOOKING-001`, `BR-HOLD-001` | Transactional Seat Lock | `IDbContextTransaction` protecting seat status and `SeatHold` locks. | Concurrency load tests (duplicate holds). | Database & Technical Report. |
 | **`REQ-DB-05`** (AI State Persistence) | `FR-AI-001`, `FR-AI-007` | AI Persistence Tables | Tables `AiWorkflow`, `AiWorkflowStep`, `AiToolCall`, `AiValidationResult`. | DB persistence unit tests. | Agentic AI & Database Report. |
 | **FR-AUDIT-001** | Audit Log Generation | US-ADMIN-002 | SC-10.1 | 4. Disruption, Rebooking & Approval (Dineth) | `AuditLog` entity, `SaveChangesInterceptor` |
+| **FR-DISRUPT-001** | Disruption Case Intake & Logging | US-OP-003 | SC-10.2 | 4. Disruption, Rebooking & Approval (Dineth) | `DisruptionController.LogDisruption`, `DisruptionService`, `DisruptionCase` entity |
+| **FR-DISRUPT-002** | Passenger Impact Calculation | US-MGR-001 | SC-10.3 | 4. Disruption, Rebooking & Approval (Dineth) | `DisruptionController.GetDisruptionImpact`, `CalculatePassengerImpact` tool |
+| **FR-DISRUPT-003** | Manager Approval Boundary Enforcement | US-MGR-002 | SC-10.4 | 4. Disruption, Rebooking & Approval (Dineth) | `ApprovalController.SubmitDecision`, `BR-APPROVAL-001`, `PendingManagerApproval` gate |
+| **FR-REBOOK-001** | Atomic Transactional Rebooking | US-PASS-006 | SC-10.5 | 4. Disruption, Rebooking & Approval (Dineth) | `RebookingController.ExecuteRebooking`, `IDbContextTransaction`, ticket re-issuance |
+| **FR-ALERT-001** | Public Service Alert Broadcast | US-MGR-001 | SC-10.6 | 4. Disruption, Rebooking & Approval (Dineth) | `ServiceAlertController.BroadcastAlert`, `ServiceAlert` entity |
+| **FR-AI-004** | AI Safe Failure & Guardrail Fallback | US-MGR-003 | SC-10.7 | 4. Disruption, Rebooking & Approval (Dineth) | `safe_failure.py`, 3-attempt limit, degraded state fallback |
+| **FR-AI-005** | Relational AI Observability Audit | US-MGR-003 | SC-10.8 | 4. Disruption, Rebooking & Approval (Dineth) | `AiWorkflowController`, `AiToolCall` JSONB persistence (ADR-004) |
 | **FR-REVIEW-001** | Submit Reviews | US-REVIEW-001 | SC-11.1 | 2. Fleet & Resource Feasibility (Nuhadh) | `ReviewController.SubmitBusReview`, `ReviewService`, `BusReview` entity |
 | **FR-REVIEW-002** | Anonymous Reviews | US-REVIEW-001 | N/A | 2. Fleet & Resource Feasibility (Nuhadh) | `IsAnonymous` boolean flag in DB & DTO |
 | **FR-REVIEW-003** | Profanity Filtering | N/A | SC-11.2 | 2. Fleet & Resource Feasibility (Nuhadh) | `ReviewService.SanitizeComment` |
