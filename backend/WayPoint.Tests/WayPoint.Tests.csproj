@@ -13,6 +13,7 @@
     <ProjectReference Include="..\WayPoint.Domain\WayPoint.Domain.csproj" />
     <ProjectReference Include="..\WayPoint.Application\WayPoint.Application.csproj" />
     <ProjectReference Include="..\WayPoint.Infrastructure\WayPoint.Infrastructure.csproj" />
+    <ProjectReference Include="..\WayPoint.API\WayPoint.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
