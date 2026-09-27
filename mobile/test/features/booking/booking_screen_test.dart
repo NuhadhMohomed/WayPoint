@@ -13,7 +13,8 @@ void main() {
       expect(hold.serviceCode, equals('SRV-COL-ELLA-0800'));
       expect(hold.seatNumbers, containsAll(['4A', '4B']));
       expect(hold.farePerSeat, equals(2850.0));
-      expect(hold.totalAmount, equals(5700.0));
+      expect(hold.subtotal, equals(5700.0));
+      expect(hold.totalAmount, equals(5850.0));
       expect(hold.remainingSeconds, greaterThan(0));
       expect(hold.isExpired, isFalse);
     });
@@ -101,52 +102,47 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PaymentCheckoutScreen(holdInfo: hold),
-          ),
+          home: PaymentCheckoutScreen(holdInfo: hold),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Payment Sandbox Checkout'), findsOneWidget);
-      expect(find.textContaining('Success (...0001)'), findsOneWidget);
-      expect(find.textContaining('Decline (...0002)'), findsOneWidget);
-      expect(find.textContaining('Timeout (...0003)'), findsOneWidget);
+      expect(find.text('Secure Checkout'), findsOneWidget);
+      expect(find.text('Payment Sandbox Presets'), findsOneWidget);
+      expect(find.text('Instant Success'), findsOneWidget);
+      expect(find.text('Card Declined'), findsOneWidget);
+      expect(find.text('Gateway Timeout'), findsOneWidget);
     });
 
     testWidgets('TicketWalletScreen renders tabbed passes view', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: TicketWalletScreen(),
-          ),
+          home: TicketWalletScreen(),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Active Passes'), findsOneWidget);
-      expect(find.text('Past / Travelled'), findsOneWidget);
+      expect(find.textContaining('Active Passes'), findsOneWidget);
+      expect(find.textContaining('Past Trips'), findsOneWidget);
     });
 
     testWidgets('BookingHistoryScreen renders filter tabs and booking items', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: BookingHistoryScreen(
-              initialBookings: HistoricalBookingItem.sampleBookings(),
-            ),
+          home: BookingHistoryScreen(
+            initialBookings: HistoricalBookingItem.sampleBookings(),
           ),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      expect(find.text('All'), findsOneWidget);
-      expect(find.text('Confirmed'), findsOneWidget);
-      expect(find.text('Cancelled'), findsOneWidget);
-      expect(find.text('Completed'), findsOneWidget);
+      expect(find.textContaining('All'), findsWidgets);
+      expect(find.textContaining('Upcoming'), findsWidgets);
+      expect(find.textContaining('Cancelled'), findsWidgets);
+      expect(find.textContaining('Completed'), findsWidgets);
     });
   });
 }

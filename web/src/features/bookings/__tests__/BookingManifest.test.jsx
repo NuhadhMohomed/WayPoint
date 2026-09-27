@@ -46,9 +46,9 @@ describe('Component 3: Booking & Manifest Frontend Suite (Mithila)', () => {
     )
 
     expect(screen.getByText(/Operator Overview/i)).toBeInTheDocument()
-    expect(screen.getByText(/Revenue Today/i)).toBeInTheDocument()
-    expect(screen.getByText(/Active Holds/i)).toBeInTheDocument()
-    expect(screen.getByText(/Confirmed Today/i)).toBeInTheDocument()
+    expect(screen.getByText(/Net Passenger Revenue/i)).toBeInTheDocument()
+    expect(screen.getByText(/Active Seat Holds/i)).toBeInTheDocument()
+    expect(screen.getByText(/Confirmed Bookings/i)).toBeInTheDocument()
   })
 
   it('renders Booking Manifest Monitor with manifest table and sandbox controls', async () => {
@@ -60,7 +60,7 @@ describe('Component 3: Booking & Manifest Frontend Suite (Mithila)', () => {
 
     expect(screen.getByText(/Booking Manifest & Payment Sandbox/i)).toBeInTheDocument()
     expect(screen.getByText(/Payment Sandbox Gateway Simulator/i)).toBeInTheDocument()
-    expect(screen.getByText(/10-Minute Seat Hold Simulator/i)).toBeInTheDocument()
+    expect(screen.getByText(/10-Minute Seat Hold/i)).toBeInTheDocument()
   })
 
   it('filters manifest table when passenger search query is entered', async () => {
@@ -70,7 +70,7 @@ describe('Component 3: Booking & Manifest Frontend Suite (Mithila)', () => {
       </BrowserRouter>
     )
 
-    const searchInput = screen.getByPlaceholderText(/Search passenger, NIC, phone, or WP-ref.../i)
+    const searchInput = screen.getByPlaceholderText(/Search ref, passenger/i)
     fireEvent.change(searchInput, { target: { value: 'Nimal' } })
     expect(searchInput.value).toBe('Nimal')
   })

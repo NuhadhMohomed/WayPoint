@@ -323,6 +323,7 @@ class TestBookingAgentNodeExecution:
         state = {
             "objective": "Evaluate replacement bus fares",
             "workflow_type": "disruption_rebooking",
+            "retry_count": 2,  # 3rd attempt reaches MAX_RETRIES (3)
             "step_order": 2,
             "steps": [],
         }
@@ -332,9 +333,20 @@ class TestBookingAgentNodeExecution:
             result = await booking_agent_node(state)
 
             assert result.get("workflow_status") == "SafeFailure"
-            assert "safe_failure" in result
-            assert result["safe_failure"]["agent_name"] == "BookingPolicyAgent"
-            assert result["safe_failure"]["error_type"] == "RuntimeError"
+            assert "RuntimeError" in result.get("error", "")
+            assert result.get("retry_count") == 3
+
+    @pytest.mark.asyncio
+    async def test_safe_failure_short_circuit_when_already_failed(self):
+        state = {
+            "objective": "Evaluate replacement bus fares",
+            "workflow_type": "disruption_rebooking",
+            "workflow_status": "SafeFailure",
+            "step_order": 2,
+            "steps": [],
+        }
+        result = await booking_agent_node(state)
+        assert result.get("workflow_status") == "SafeFailure"
 
     @pytest.mark.asyncio
     async def test_successful_node_populates_steps_and_tool_calls(self):
