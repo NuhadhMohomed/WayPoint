@@ -197,14 +197,14 @@ export function ManagerApprovalWorkbenchPage() {
           <div className="space-y-4">
             {pendingApprovals.map((p) => (
               <div
-                key={p.rebookingProposalId}
+                key={p.rebookingProposalId || p.id}
                 className="bg-slate-950 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-all space-y-4"
               >
                 {/* Proposal Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-sky-400">Proposal #{p.rebookingProposalId.substring(0, 8)}</span>
+                      <span className="font-mono text-xs text-sky-400">Proposal #{(p.rebookingProposalId || p.id || '').substring(0, 8)}</span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                         PendingManagerApproval
                       </span>
