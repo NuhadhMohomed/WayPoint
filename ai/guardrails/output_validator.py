@@ -244,6 +244,73 @@ def validate_impact_classification(
     return "Low"
 
 
+def validate_fare_difference_arithmetic(
+    original_fare: float,
+    replacement_fare: float,
+    reported_fare_diff: float,
+) -> tuple[bool, str]:
+    """
+    Validate fare difference calculation consistency (Student 3 / Mithila).
+
+    Rule: fare_difference == round(replacement_fare - original_fare, 2)
+
+    Args:
+        original_fare: Base fare of the original disrupted service.
+        replacement_fare: Base fare of the proposed replacement service.
+        reported_fare_diff: Difference reported by LLM / tool.
+
+    Returns:
+        Tuple of (is_valid, error_message).
+    """
+    expected_diff = round(replacement_fare - original_fare, 2)
+    reported_rounded = round(reported_fare_diff, 2)
+    if abs(expected_diff - reported_rounded) > 0.01:
+        return (
+            False,
+            f"Fare difference mismatch: replacement ({replacement_fare:.2f}) - "
+            f"original ({original_fare:.2f}) = {expected_diff:.2f}, "
+            f"but reported = {reported_rounded:.2f}",
+        )
+    return True, ""
+
+
+def validate_cancellation_refund_schedule(
+    hours_until_departure: float,
+    reported_refund_percent: float,
+) -> tuple[bool, float, str]:
+    """
+    Validate cancellation refund percentage against BR-REFUND-001 (Student 3 / Mithila).
+
+    Rules:
+    - hours > 24: 0.90 (90%)
+    - 12 <= hours <= 24: 0.50 (50%)
+    - hours < 12: 0.0 (0% non-refundable)
+
+    Args:
+        hours_until_departure: Hours remaining until scheduled service departure.
+        reported_refund_percent: Percentage reported (0.0 to 1.0).
+
+    Returns:
+        Tuple of (is_valid, expected_percent, error_message).
+    """
+    if hours_until_departure > 24:
+        expected_percent = 0.90
+    elif hours_until_departure >= 12:
+        expected_percent = 0.50
+    else:
+        expected_percent = 0.0
+
+    reported_rounded = round(reported_refund_percent, 2)
+    if abs(expected_percent - reported_rounded) > 0.01:
+        return (
+            False,
+            expected_percent,
+            f"Refund schedule violation (BR-REFUND-001): {hours_until_departure:.1f}h until departure "
+            f"entitles {int(expected_percent * 100)}% refund, but reported {int(reported_rounded * 100)}%",
+        )
+    return True, expected_percent, ""
+
+
 # ---------------------------------------------------------------------------
 # Batch Validator
 # ---------------------------------------------------------------------------
@@ -281,6 +348,43 @@ def run_all_validators(
                 "rule_name": "SeatCountArithmetic",
                 "passed": passed,
                 "validation_details": detail if not passed else "OK",
+            }
+        )
+
+    # Fare difference arithmetic validation (if present in output)
+    if all(
+        k in agent_output
+        for k in ("original_fare", "replacement_fare", "fare_difference")
+    ):
+        passed, detail = validate_fare_difference_arithmetic(
+            float(agent_output["original_fare"]),
+            float(agent_output["replacement_fare"]),
+            float(agent_output["fare_difference"]),
+        )
+        results.append(
+            {
+                "rule_name": "FareDifferenceArithmetic",
+                "passed": passed,
+                "validation_details": detail if not passed else "OK",
+            }
+        )
+
+    # Cancellation refund schedule validation (if present in output)
+    if all(
+        k in agent_output
+        for k in ("hours_until_departure", "refund_percentage")
+    ):
+        passed, expected_pct, detail = validate_cancellation_refund_schedule(
+            float(agent_output["hours_until_departure"]),
+            float(agent_output["refund_percentage"]),
+        )
+        results.append(
+            {
+                "rule_name": "TieredRefundScheduleBR001",
+                "passed": passed,
+                "validation_details": (
+                    detail if not passed else f"OK ({int(expected_pct * 100)}% verified)"
+                ),
             }
         )
 
