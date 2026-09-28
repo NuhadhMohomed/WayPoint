@@ -54,9 +54,9 @@ class QrTicketPassCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.18),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5)),
+                        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         ticket.serviceCode,
