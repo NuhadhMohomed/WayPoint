@@ -25,4 +25,8 @@ export const journeyApi = {
     const res = await apiClient.post('/journeys/search', searchParams)
     return res.data
   },
+  getAiRecommendations: async (objective) => {
+    const res = await apiClient.post('/ai/journey-recommendation', { objective })
+    return res.data
+  },
 }

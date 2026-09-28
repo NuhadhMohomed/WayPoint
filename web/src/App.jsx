@@ -5,10 +5,22 @@ import { RegisterPage } from './pages/RegisterPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
+Sethum/Planning
+import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
+import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
+import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
+
+// Component 1: Journey Planning & Route Catalogue (Sethum)
+import { JourneyHubLayout } from './features/journey/JourneyHubLayout'
+import { RouteManagerPage } from './features/journey/RouteManagerPage'
+import { ServiceSchedulerPage } from './features/journey/ServiceSchedulerPage'
+import { TouristCorridorsPage } from './features/journey/TouristCorridorsPage'
+
 import { RoutesPlaceholderPage } from './pages/RoutesPlaceholderPage'
 import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
 import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
 import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
+Dev
 
 // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
 import { FleetHubLayout } from './features/fleet/FleetHubLayout'
@@ -36,8 +48,13 @@ export function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<OverviewPage />} />
           
-          {/* Component 1: Sethum */}
-          <Route path="/routes" element={<RoutesPlaceholderPage />} />
+          {/* Component 1: Sethum — Journey Hub with Tabbed Navigation */}
+          <Route path="/routes" element={<JourneyHubLayout />}>
+            <Route index element={<Navigate to="catalog" replace />} />
+            <Route path="catalog" element={<RouteManagerPage />} />
+            <Route path="scheduler" element={<ServiceSchedulerPage />} />
+            <Route path="corridors" element={<TouristCorridorsPage />} />
+          </Route>
 
           {/* Component 2: Nuhadh — Fleet Hub with Tabbed Navigation */}
           <Route path="/fleet" element={<FleetHubLayout />}>
