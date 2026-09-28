@@ -5,7 +5,6 @@ import { RegisterPage } from './pages/RegisterPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
-import { BookingsPlaceholderPage } from './pages/BookingsPlaceholderPage'
 import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
 import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
 
@@ -21,13 +20,7 @@ import { FleetMatrixBuilderPage } from './features/fleet/FleetMatrixBuilderPage'
 import { SeatLayoutDesignerPage } from './features/fleet/SeatLayoutDesignerPage'
 import { DriverRosteringPage } from './features/fleet/DriverRosteringPage'
 
-// Component 4: Disruption, Rebooking & Approval (Dineth)
-import { DisruptionHubLayout } from './features/disruptions/DisruptionHubLayout'
-import { DisruptionIntakePage } from './features/disruptions/DisruptionIntakePage'
-import { ManagerApprovalWorkbenchPage } from './features/disruptions/ManagerApprovalWorkbenchPage'
-import { ServiceAlertBroadcastPage } from './features/disruptions/ServiceAlertBroadcastPage'
-import { AiObservabilityPage } from './features/disruptions/AiObservabilityPage'
-import { AdminConsolePage } from './features/disruptions/AdminConsolePage'
+import { DisruptionsPlaceholderPage } from './pages/DisruptionsPlaceholderPage'
 
 export function App() {
   return (
@@ -62,15 +55,8 @@ export function App() {
           <Route path="/operator" element={<OperatorDashboardPage />} />
           <Route path="/bookings" element={<BookingManifestMonitorPage />} />
 
-          {/* Component 4: Dineth — Disruption Hub with Tabbed Navigation */}
-          <Route path="/disruptions" element={<DisruptionHubLayout />}>
-            <Route index element={<Navigate to="intake" replace />} />
-            <Route path="intake" element={<DisruptionIntakePage />} />
-            <Route path="approvals" element={<ManagerApprovalWorkbenchPage />} />
-            <Route path="alerts" element={<ServiceAlertBroadcastPage />} />
-            <Route path="ai-traces" element={<AiObservabilityPage />} />
-            <Route path="admin" element={<AdminConsolePage />} />
-          </Route>
+          {/* Component 4: Dineth */}
+          <Route path="/disruptions" element={<DisruptionsPlaceholderPage />} />
         </Route>
       </Route>
 
