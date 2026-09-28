@@ -10,6 +10,9 @@ import 'core/widgets/waypoint_card.dart';
 import 'core/widgets/transit_badge.dart';
 import 'features/journey/screens/journey_search_screen.dart';
 
+import 'features/disruption/models/disruption_models.dart';
+import 'features/disruption/screens/disruption_alert_screen.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const WayPointApp());
@@ -37,7 +40,7 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 2; // Default to Component 3 for testing
+  int _currentIndex = 3; // Default to Component 4 for testing
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +48,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const JourneySearchScreen(),
       const Center(child: Text('Component 2: Seat Picker & Fleet (Nuhadh)', style: TextStyle(fontSize: 16))),
       _buildComponent3Hub(context),
-      const Center(child: Text('Component 4: Disruption Alerts (Dineth)', style: TextStyle(fontSize: 16))),
+      _buildComponent4Hub(context),
     ];
 
     return Scaffold(
@@ -174,6 +177,86 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const BookingHistoryScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComponent4Hub(BuildContext context) {
+    final sampleAlert = DisruptionAlertModel.sampleColomboToElla();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              TransitBadge(status: TransitStatus.disrupted, customLabel: 'Component 4'),
+              SizedBox(width: 8),
+              Text(
+                'Dineth',
+                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Disruption Recovery Hub',
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Live incident monitoring, multi-agent AI rebooking proposals, passenger compensation, and automated schedule remedies.',
+            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+          ),
+          const SizedBox(height: 24),
+
+          // Active Disruption Alert Card
+          WayPointCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ACTIVE INCIDENT ALERT',
+                      style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    TransitBadge(status: TransitStatus.delayed, customLabel: 'Mechanical Delay'),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Colombo (Bastion Hill) → Ella Town',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Service: EX-08 (06:30 AM) • Bus ND-8821 Mechanical Failure',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'AI Remedy: Replacement Super Line Luxury Coach Ready',
+                  style: TextStyle(color: Color(0xFF60A5FA), fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                WayPointButton(
+                  text: 'Open MOB-09 Disruption Push Alert',
+                  icon: Icons.warning_amber_rounded,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => DisruptionAlertScreen(disruption: sampleAlert),
                       ),
                     );
                   },

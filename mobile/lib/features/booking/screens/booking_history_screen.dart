@@ -353,7 +353,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isUpcoming ? AppTheme.primaryColor.withOpacity(0.4) : const Color(0xFF334155),
+          color: isUpcoming ? AppTheme.primaryColor.withValues(alpha: 0.4) : const Color(0xFF334155),
           width: isUpcoming ? 1.5 : 1.0,
         ),
         boxShadow: const [
@@ -403,9 +403,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withOpacity(0.4)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

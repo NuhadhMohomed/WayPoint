@@ -126,4 +126,53 @@ public class DevController : ControllerBase
             }
         });
     }
+
+    [HttpGet("services")]
+    public async Task<IActionResult> GetServices()
+    {
+        var services = await _context.Services
+            .Include(s => s.Route)
+            .Include(s => s.Bus)
+            .OrderBy(s => s.DepartureTime)
+            .Select(s => new
+            {
+                s.Id,
+                s.ServiceCode,
+                s.RouteId,
+                RouteName = s.Route.OriginCity + " - " + s.Route.DestinationCity + " (" + s.Route.RouteCode + ")",
+                s.BusId,
+                BusPlate = s.Bus != null ? s.Bus.RegistrationNumber : "Unassigned",
+                BusClass = s.Bus != null ? s.Bus.BusClass.ToString() : "Standard",
+                s.DepartureTime,
+                s.ArrivalTime,
+                s.BaseFare,
+                Status = s.Status.ToString()
+            })
+            .ToListAsync();
+
+        return Ok(services);
+    }
+
+    [HttpGet("audit-logs")]
+    public async Task<IActionResult> GetAuditLogs([FromQuery] int limit = 50)
+    {
+        var logs = await _context.AuditLogs
+            .OrderByDescending(a => a.Timestamp)
+            .Take(limit)
+            .Select(a => new
+            {
+                a.Id,
+                a.Timestamp,
+                a.ActorId,
+                a.ActionType,
+                a.EntityName,
+                a.EntityId,
+                a.BeforeStateJson,
+                a.AfterStateJson
+            })
+            .ToListAsync();
+
+        return Ok(logs);
+    }
 }
+
