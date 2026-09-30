@@ -167,6 +167,9 @@ class PaymentSandboxCard extends Equatable {
     description: 'Simulates 504 Gateway Timeout for resilience testing.',
   );
 
+  /// Alias for declineCard
+  static const declinedCard = declineCard;
+
   static const List<PaymentSandboxCard> allPresets = [
     successCard,
     declineCard,
@@ -402,6 +405,7 @@ class HistoricalBookingItem extends Equatable {
   }
 
   double get estimatedRefundAmount => totalPaid * refundTierPercentage;
+  double get refundTierAmount => estimatedRefundAmount;
 
   HistoricalBookingItem copyWith({
     String? status,
