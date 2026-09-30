@@ -171,17 +171,21 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
     if (isSuccess) {
       _countdownTimer?.cancel();
-      final txnId = chargeResult['transactionId']?.toString() ?? 'TXN-CONFIRMED';
-      
+      final txnId =
+          chargeResult['transactionId']?.toString() ?? 'TXN-CONFIRMED';
+
       // 2. Execute transactional atomic checkout on backend API
       final confirmation = await apiService.executeCheckout(
         holdId: widget.holdInfo.holdId,
         paymentTxnId: txnId,
-        passengerName: _nameController.text.isNotEmpty ? _nameController.text : 'Nimal Silva',
+        passengerName: _nameController.text.isNotEmpty
+            ? _nameController.text
+            : 'Nimal Silva',
       );
 
       if (!mounted) return;
-      _showSuccessDialog(confirmation.bookingReference, confirmation.ticketQrPayload);
+      _showSuccessDialog(
+          confirmation.bookingReference, confirmation.ticketQrPayload);
     } else if (gatewayStatus == 'Timeout') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -194,7 +198,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               Expanded(
                 child: Text(
                   'Gateway Timeout (HTTP 504): Simulated network delay. Please retry transaction.',
-                  style: TextStyle(color: Color(0xFF191C1D), fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      color: Color(0xFF191C1D),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -278,13 +285,16 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               ),
               child: Column(
                 children: [
-                  _buildSummaryRow('Booking Reference', reference, isHighlight: true),
+                  _buildSummaryRow('Booking Reference', reference,
+                      isHighlight: true),
                   const Divider(color: Color(0xFF334155), height: 20),
                   _buildSummaryRow('Service', widget.holdInfo.serviceCode),
                   const SizedBox(height: 8),
-                  _buildSummaryRow('Reserved Seats', widget.holdInfo.seatNumbers.join(', ')),
+                  _buildSummaryRow(
+                      'Reserved Seats', widget.holdInfo.seatNumbers.join(', ')),
                   const SizedBox(height: 8),
-                  _buildSummaryRow('Total Paid', _currencyFormatter.format(widget.holdInfo.totalAmount)),
+                  _buildSummaryRow('Total Paid',
+                      _currencyFormatter.format(widget.holdInfo.totalAmount)),
                 ],
               ),
             ),
@@ -299,13 +309,15 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                     builder: (_) => TicketWalletScreen(
                       initialTickets: [
                         DigitalTicketPass(
-                          ticketId: 'TCK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                          ticketId:
+                              'TCK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
                           bookingReference: reference,
                           serviceCode: widget.holdInfo.serviceCode,
                           routeTitle: widget.holdInfo.routeTitle,
                           originCity: widget.holdInfo.originCity,
                           destinationCity: widget.holdInfo.destinationCity,
-                          boardingPointName: 'Platform 3, Makumbura Highway Terminal',
+                          boardingPointName:
+                              'Platform 3, Makumbura Highway Terminal',
                           departureTime: widget.holdInfo.departureTime,
                           arrivalTime: widget.holdInfo.arrivalTime,
                           busRegistration: 'NC-8890',
@@ -341,13 +353,15 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         backgroundColor: const Color(0xFF0F172A),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.white, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_outline_rounded, color: Color(0xFF22C55E), size: 18),
+            Icon(Icons.lock_outline_rounded,
+                color: Color(0xFF22C55E), size: 18),
             SizedBox(width: 8),
             Text(
               'Secure Checkout',
@@ -407,7 +421,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
                     // 5. Security & Gateway Note
                     _buildSecurityNote(),
-                    const SizedBox(height: 80), // Padding for sticky bottom button
+                    const SizedBox(
+                        height: 80), // Padding for sticky bottom button
                   ],
                 ),
               ),
@@ -460,7 +475,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   text: _isHoldExpired ? 'Hold Expired' : 'Pay & Confirm',
                   icon: _isHoldExpired ? Icons.lock_clock : Icons.credit_card,
                   isLoading: _isProcessing,
-                  onPressed: (_isHoldExpired || _isProcessing) ? null : _processPayment,
+                  onPressed: (_isHoldExpired || _isProcessing)
+                      ? null
+                      : _processPayment,
                 ),
               ),
             ],
@@ -508,12 +525,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.departure_board, color: Color(0xFF94A3B8), size: 16),
+              const Icon(Icons.departure_board,
+                  color: Color(0xFF94A3B8), size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '${widget.holdInfo.originCity}  ➔  ${widget.holdInfo.destinationCity}',
-                  style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
+                  style:
+                      const TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
                 ),
               ),
             ],
@@ -541,9 +560,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 spacing: 6,
                 children: widget.holdInfo.seatNumbers.map((seat) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.2),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppTheme.primaryColor),
                     ),
@@ -624,7 +644,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               ),
               child: const Text(
                 'TEST MODE',
-                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -661,9 +684,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? chipColor.withOpacity(0.18) : const Color(0xFF1E293B),
+                    color: isSelected
+                        ? chipColor.withValues(alpha: 0.18)
+                        : const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected ? chipColor : const Color(0xFF334155),
@@ -685,7 +711,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                       Text(
                         preset.name,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF94A3B8),
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -707,12 +735,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline, color: Color(0xFF94A3B8), size: 16),
+              const Icon(Icons.info_outline,
+                  color: Color(0xFF94A3B8), size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _selectedPreset.description,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                  style:
+                      const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                 ),
               ),
             ],
@@ -744,7 +774,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             label: 'Card Number',
             hintText: '4000 0000 0000 0001',
             prefixIcon: Icons.credit_card,
-            validator: (val) => (val == null || val.isEmpty) ? 'Enter card number' : null,
+            validator: (val) =>
+                (val == null || val.isEmpty) ? 'Enter card number' : null,
           ),
           const SizedBox(height: 12),
 
@@ -757,7 +788,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   label: 'Expiry Date',
                   hintText: 'MM/YY',
                   prefixIcon: Icons.calendar_today,
-                  validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
+                  validator: (val) =>
+                      (val == null || val.isEmpty) ? 'Required' : null,
                 ),
               ),
               const SizedBox(width: 12),
@@ -768,7 +800,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   hintText: '123',
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
-                  validator: (val) => (val == null || val.length < 3) ? '3 digits' : null,
+                  validator: (val) =>
+                      (val == null || val.length < 3) ? '3 digits' : null,
                 ),
               ),
             ],
@@ -781,7 +814,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             label: 'Cardholder Name',
             hintText: 'NIMAL SILVA',
             prefixIcon: Icons.person_outline,
-            validator: (val) => (val == null || val.isEmpty) ? 'Enter cardholder name' : null,
+            validator: (val) =>
+                (val == null || val.isEmpty) ? 'Enter cardholder name' : null,
           ),
         ],
       ),
@@ -818,9 +852,11 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+          borderSide:
+              const BorderSide(color: AppTheme.primaryColor, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
       validator: validator,
     );
@@ -836,12 +872,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       ),
       child: const Row(
         children: [
-          Icon(Icons.verified_user_outlined, color: Color(0xFF22C55E), size: 20),
+          Icon(Icons.verified_user_outlined,
+              color: Color(0xFF22C55E), size: 20),
           SizedBox(width: 10),
           Expanded(
             child: Text(
               'Encrypted 256-bit sandbox simulation. No real credit card charges are made. Concurrency lock is protected server-side via IDbContextTransaction.',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, height: 1.4),
+              style: TextStyle(
+                  color: Color(0xFF94A3B8), fontSize: 11, height: 1.4),
             ),
           ),
         ],
@@ -849,7 +887,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isHighlight = false}) {
+  Widget _buildSummaryRow(String label, String value,
+      {bool isHighlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

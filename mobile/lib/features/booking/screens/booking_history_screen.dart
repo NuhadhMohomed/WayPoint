@@ -30,7 +30,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  final currencyFormat = NumberFormat.currency(locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
+  final currencyFormat =
+      NumberFormat.currency(locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
   final dateFormat = DateFormat('EEE, dd MMM yyyy • hh:mm a');
   final shortDateFormat = DateFormat('dd MMM, hh:mm a');
 
@@ -127,7 +128,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           );
 
           setState(() {
-            final index = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
+            final index =
+                _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
             if (index != -1) {
               _bookings[index] = booking.copyWith(
                 status: 'Cancelled',
@@ -175,11 +177,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         ),
         title: const Text(
           'Booking History & Refunds',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.confirmation_number_outlined, color: Color(0xFF818CF8)),
+            icon: const Icon(Icons.confirmation_number_outlined,
+                color: Color(0xFF818CF8)),
             tooltip: 'Open Ticket Wallet',
             onPressed: () {
               Navigator.of(context).push(
@@ -205,11 +209,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'Search by Ref (e.g. WP-7B92K1), city, or route...',
-                hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8), size: 20),
+                hintStyle:
+                    const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                prefixIcon: const Icon(Icons.search,
+                    color: Color(0xFF94A3B8), size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 18),
+                        icon: const Icon(Icons.clear,
+                            color: Color(0xFF94A3B8), size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -218,7 +225,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     : null,
                 filled: true,
                 fillColor: const Color(0xFF1E293B),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -237,7 +245,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               indicatorWeight: 3,
               labelColor: AppTheme.primaryColor,
               unselectedLabelColor: const Color(0xFF94A3B8),
-              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              labelStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               tabs: [
                 Tab(text: 'All (${_bookings.length})'),
                 Tab(text: 'Upcoming ($_upcomingCount)'),
@@ -302,7 +311,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color, IconData icon) {
+  Widget _buildStatItem(
+      String label, String value, Color color, IconData icon) {
     return Column(
       children: [
         Row(
@@ -319,7 +329,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: color, fontSize: 13, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -353,7 +364,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isUpcoming ? AppTheme.primaryColor.withOpacity(0.4) : const Color(0xFF334155),
+          color: isUpcoming
+              ? AppTheme.primaryColor.withValues(alpha: 0.4)
+              : const Color(0xFF334155),
           width: isUpcoming ? 1.5 : 1.0,
         ),
         boxShadow: const [
@@ -386,13 +399,16 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.copy, size: 14, color: Color(0xFF94A3B8)),
+                      icon: const Icon(Icons.copy,
+                          size: 14, color: Color(0xFF94A3B8)),
                       tooltip: 'Copy Reference',
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: booking.bookingReference));
+                        Clipboard.setData(
+                            ClipboardData(text: booking.bookingReference));
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Copied ${booking.bookingReference} to clipboard'),
+                            content: Text(
+                                'Copied ${booking.bookingReference} to clipboard'),
                             duration: const Duration(seconds: 1),
                           ),
                         );
@@ -401,11 +417,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withOpacity(0.4)),
+                    border:
+                        Border.all(color: statusColor.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -446,7 +464,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                 const SizedBox(height: 4),
                 Text(
                   'Service: ${booking.serviceCode} • Booked on ${shortDateFormat.format(booking.bookedAt)}',
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                  style:
+                      const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                 ),
                 const SizedBox(height: 14),
 
@@ -457,40 +476,59 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('DEPARTURE', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
+                          const Text('DEPARTURE',
+                              style: TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
                           Text(
                             booking.originCity,
-                            style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                color: Color(0xFFE2E8F0),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             dateFormat.format(booking.departureTime),
-                            style: const TextStyle(color: AppTheme.secondaryColor, fontSize: 11, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                                color: AppTheme.secondaryColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.arrow_forward, color: Color(0xFF64748B), size: 16),
+                      child: Icon(Icons.arrow_forward,
+                          color: Color(0xFF64748B), size: 16),
                     ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('ARRIVAL', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
+                          const Text('ARRIVAL',
+                              style: TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
                           Text(
                             booking.destinationCity,
-                            style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                color: Color(0xFFE2E8F0),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             dateFormat.format(booking.arrivalTime),
-                            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                            style: const TextStyle(
+                                color: Color(0xFF94A3B8), fontSize: 11),
                           ),
                         ],
                       ),
@@ -507,16 +545,19 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       children: [
                         const Text(
                           'Seats: ',
-                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                          style:
+                              TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                         ),
                         ...booking.seatNumbers.map(
                           (s) => Container(
                             margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFF0F172A),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFF475569)),
+                              border:
+                                  Border.all(color: const Color(0xFF475569)),
                             ),
                             child: Text(
                               s,
@@ -535,7 +576,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                       children: [
                         const Text(
                           'Total Paid',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 10),
+                          style:
+                              TextStyle(color: Color(0xFF64748B), fontSize: 10),
                         ),
                         Text(
                           currencyFormat.format(booking.totalPaid),
@@ -569,11 +611,15 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.currency_exchange, color: Color(0xFFFCA5A5), size: 14),
+                                Icon(Icons.currency_exchange,
+                                    color: Color(0xFFFCA5A5), size: 14),
                                 SizedBox(width: 6),
                                 Text(
                                   'Refund Processed',
-                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 12, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      color: Color(0xFFFCA5A5),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -594,7 +640,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                           const SizedBox(height: 4),
                           Text(
                             'Reason: ${booking.cancellationReason}',
-                            style: const TextStyle(color: Color(0xFFFECACA), fontSize: 11),
+                            style: const TextStyle(
+                                color: Color(0xFFFECACA), fontSize: 11),
                           ),
                         ],
                       ],
@@ -606,7 +653,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                 if (isUpcoming) ...[
                   const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0F172A),
                       borderRadius: BorderRadius.circular(6),
@@ -614,12 +662,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.shield_outlined, color: AppTheme.secondaryColor, size: 14),
+                        const Icon(Icons.shield_outlined,
+                            color: AppTheme.secondaryColor, size: 14),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'Departs in ${booking.hoursUntilDeparture}h • Eligible for ${(booking.refundTierPercentage * 100).toInt()}% refund under BR-REFUND-001',
-                            style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11),
+                            style: const TextStyle(
+                                color: Color(0xFFCBD5E1), fontSize: 11),
                           ),
                         ),
                       ],
@@ -668,7 +718,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('PDF Tax Receipt downloaded for ${booking.bookingReference}'),
+                                content: Text(
+                                    'PDF Tax Receipt downloaded for ${booking.bookingReference}'),
                                 backgroundColor: const Color(0xFF0F172A),
                               ),
                             );
@@ -691,11 +742,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.history_toggle_off, size: 64, color: Color(0xFF475569)),
+          const Icon(Icons.history_toggle_off,
+              size: 64, color: Color(0xFF475569)),
           const SizedBox(height: 16),
           const Text(
             'No Bookings Found',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(

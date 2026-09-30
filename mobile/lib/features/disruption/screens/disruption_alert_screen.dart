@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
-import '../../../core/widgets/waypoint_card.dart';
 import '../../../core/widgets/transit_badge.dart';
 import '../models/disruption_models.dart';
 
@@ -36,7 +35,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
   @override
   void initState() {
     super.initState();
-    _disruption = widget.disruption ?? DisruptionAlertModel.sampleColomboToElla();
+    _disruption =
+        widget.disruption ?? DisruptionAlertModel.sampleColomboToElla();
     _remainingSeconds = _disruption.remainingSeconds;
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -94,7 +94,10 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
             SizedBox(width: 8),
             Text(
               'Confirm 100% Refund',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -117,10 +120,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total Refund Amount:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const Text('Total Refund Amount:',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
                   Text(
                     'Rs. ${_disruption.originalFarePaid.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Color(0xFF22C55E), fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Color(0xFF22C55E),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -130,12 +137,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Back to Review', style: TextStyle(color: Colors.grey)),
+            child: const Text('Back to Review',
+                style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () {
               Navigator.of(ctx).pop();
@@ -152,7 +161,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 ),
               );
             },
-            child: const Text('Confirm Refund', style: TextStyle(color: Colors.white)),
+            child: const Text('Confirm Refund',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -177,17 +187,23 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.support_agent, color: AppTheme.primaryColor, size: 28),
+                  child: const Icon(Icons.support_agent,
+                      color: AppTheme.primaryColor, size: 28),
                 ),
                 const SizedBox(width: 12),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('WayPoint Transit Support', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Disruption Incident Response Desk', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text('WayPoint Transit Support',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
+                    Text('Disruption Incident Response Desk',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
                   ],
                 ),
               ],
@@ -200,17 +216,25 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.phone_in_talk, color: Color(0xFF22C55E)),
-              title: const Text('Emergency Transit Hotline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-              subtitle: const Text('+94 11 234 5678 (Toll Free)', style: TextStyle(color: Colors.grey)),
+              leading:
+                  const Icon(Icons.phone_in_talk, color: Color(0xFF22C55E)),
+              title: const Text('Emergency Transit Hotline',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: const Text('+94 11 234 5678 (Toll Free)',
+                  style: TextStyle(color: Colors.grey)),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: () => Navigator.of(ctx).pop(),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.chat_bubble_outline, color: AppTheme.secondaryColor),
-              title: const Text('Live Dispatcher Chat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-              subtitle: const Text('Average response time: 2 mins', style: TextStyle(color: Colors.grey)),
+              leading: const Icon(Icons.chat_bubble_outline,
+                  color: AppTheme.secondaryColor),
+              title: const Text('Live Dispatcher Chat',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: const Text('Average response time: 2 mins',
+                  style: TextStyle(color: Colors.grey)),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: () => Navigator.of(ctx).pop(),
             ),
@@ -220,10 +244,12 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFF475569)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Close', style: TextStyle(color: Colors.white)),
+                child:
+                    const Text('Close', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -250,12 +276,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               color: Color(0xFF14532D),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle, color: Color(0xFF4ADE80), size: 36),
+            child: const Icon(Icons.check_circle,
+                color: Color(0xFF4ADE80), size: 36),
           ),
           const SizedBox(height: 16),
           const Text(
             'Rebooking Confirmed!',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
@@ -276,32 +304,47 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Replacement Service', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text(_disruption.replacementBusPlate, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text('Replacement Service',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text(_disruption.replacementBusPlate,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('New Departure', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text('${_disruption.replacementDepartureTime} (${_disruption.replacementOriginStop})', style: const TextStyle(color: AppTheme.secondaryColor, fontWeight: FontWeight.bold)),
+                    const Text('New Departure',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text(
+                        '${_disruption.replacementDepartureTime} (${_disruption.replacementOriginStop})',
+                        style: const TextStyle(
+                            color: AppTheme.secondaryColor,
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Assigned Seats', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text(_disruption.assignedSeats.join(', '), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text('Assigned Seats',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text(_disruption.assignedSeats.join(', '),
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Fare Adjustment', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text('Rs. 0.00 (Fully Covered)', style: TextStyle(color: Color(0xFF4ADE80), fontWeight: FontWeight.bold)),
+                    Text('Fare Adjustment',
+                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text('Rs. 0.00 (Fully Covered)',
+                        style: TextStyle(
+                            color: Color(0xFF4ADE80),
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
               ],
@@ -335,7 +378,10 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
           children: [
             const Text(
               'Service Disruption Notice',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
             Container(
@@ -346,7 +392,10 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               ),
               child: Text(
                 'Ref: ${_disruption.bookingReference}',
-                style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -376,12 +425,16 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.check_circle, color: Color(0xFF4ADE80), size: 20),
+                    Icon(Icons.check_circle,
+                        color: Color(0xFF4ADE80), size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'You accepted the recommended replacement service.',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13),
                       ),
                     ),
                   ],
@@ -403,7 +456,10 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                     Expanded(
                       child: Text(
                         'Booking cancelled. 100% refund initiated to payment method.',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13),
                       ),
                     ),
                   ],
@@ -418,7 +474,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF2C2411),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5)),
+                border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x1AF59E0B),
@@ -433,7 +490,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 28),
+                      const Icon(Icons.warning_amber_rounded,
+                          color: Color(0xFFF59E0B), size: 28),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -471,12 +529,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF0F291E),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFF16A34A).withOpacity(0.4)),
+                border: Border.all(
+                    color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.local_cafe, color: Color(0xFF4ADE80), size: 18),
+                  const Icon(Icons.local_cafe,
+                      color: Color(0xFF4ADE80), size: 18),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -507,7 +567,9 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                     letterSpacing: 1.2,
                   ),
                 ),
-                TransitBadge(status: TransitStatus.delayed, customLabel: 'Schedule Shift: +45m'),
+                TransitBadge(
+                    status: TransitStatus.delayed,
+                    customLabel: 'Schedule Shift: +45m'),
               ],
             ),
             const SizedBox(height: 12),
@@ -516,7 +578,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withOpacity(0.6),
+                color: const Color(0xFF1E293B).withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFF334155)),
               ),
@@ -534,7 +596,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Icon(Icons.directions_bus, color: Colors.grey.shade600, size: 18),
+                      Icon(Icons.directions_bus,
+                          color: Colors.grey.shade600, size: 18),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -596,19 +659,24 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.auto_awesome, color: Color(0xFF60A5FA), size: 13),
+                            Icon(Icons.auto_awesome,
+                                color: Color(0xFF60A5FA), size: 13),
                             SizedBox(width: 4),
                             Text(
                               'Automated Remedy',
-                              style: TextStyle(color: Color(0xFF60A5FA), fontSize: 11, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Color(0xFF60A5FA),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -628,14 +696,18 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFF334155),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _disruption.replacementBusClass,
-                          style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              color: Color(0xFFCBD5E1),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -665,22 +737,32 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Assigned Seats', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                          const Text('Assigned Seats',
+                              style: TextStyle(
+                                  color: Color(0xFF94A3B8), fontSize: 11)),
                           const SizedBox(height: 2),
                           Text(
                             _disruption.assignedSeats.join(', '),
-                            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Fare Difference', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                          const Text('Fare Difference',
+                              style: TextStyle(
+                                  color: Color(0xFF94A3B8), fontSize: 11)),
                           const SizedBox(height: 2),
                           Text(
                             _disruption.fareDifferenceLabel,
-                            style: const TextStyle(color: Color(0xFF4ADE80), fontSize: 14, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                color: Color(0xFF4ADE80),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -701,12 +783,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.schedule, color: AppTheme.secondaryColor, size: 20),
+                  const Icon(Icons.schedule,
+                      color: AppTheme.secondaryColor, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Your seats on the replacement coach are held for: ${_formatTimer(_remainingSeconds)}',
-                      style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
+                      style: const TextStyle(
+                          color: Color(0xFFCBD5E1), fontSize: 12),
                     ),
                   ),
                 ],
@@ -724,7 +808,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               ),
               const SizedBox(height: 12),
               WayPointButton(
-                text: 'Decline & Request 100% Refund (Rs. ${_disruption.originalFarePaid.toStringAsFixed(0)})',
+                text:
+                    'Decline & Request 100% Refund (Rs. ${_disruption.originalFarePaid.toStringAsFixed(0)})',
                 variant: WayPointButtonVariant.outline,
                 onPressed: _handleDecline,
               ),
@@ -760,7 +845,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               Container(
                 width: 2,
                 height: 28,
-                color: accentColor.withOpacity(0.4),
+                color: accentColor.withValues(alpha: 0.4),
               ),
           ],
         ),
@@ -777,15 +862,18 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                     color: isStrikethrough ? Colors.grey : Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    decoration: isStrikethrough ? TextDecoration.lineThrough : null,
+                    decoration:
+                        isStrikethrough ? TextDecoration.lineThrough : null,
                   ),
                 ),
                 Text(
                   location,
                   style: TextStyle(
-                    color: isStrikethrough ? Colors.grey : const Color(0xFFCBD5E1),
+                    color:
+                        isStrikethrough ? Colors.grey : const Color(0xFFCBD5E1),
                     fontSize: 13,
-                    decoration: isStrikethrough ? TextDecoration.lineThrough : null,
+                    decoration:
+                        isStrikethrough ? TextDecoration.lineThrough : null,
                   ),
                 ),
               ],

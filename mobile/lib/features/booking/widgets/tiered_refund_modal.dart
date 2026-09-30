@@ -10,7 +10,8 @@ class TieredRefundModal extends StatefulWidget {
   final String serviceCode;
   final double totalPaid;
   final int hoursUntilDeparture;
-  final void Function(String reason, double refundAmount, double refundPercent) onConfirm;
+  final void Function(String reason, double refundAmount, double refundPercent)
+      onConfirm;
 
   const TieredRefundModal({
     super.key,
@@ -40,7 +41,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+        locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
 
     // Determine refund tier (BR-REFUND-001)
     double refundPercent;
@@ -51,17 +53,20 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
     if (widget.hoursUntilDeparture > 24) {
       refundPercent = 0.90;
       tierTitle = 'Tier 1: 90% Refund Eligible';
-      tierDescription = 'Cancellation requested > 24h prior to departure (10% platform fee retained).';
+      tierDescription =
+          'Cancellation requested > 24h prior to departure (10% platform fee retained).';
       tierColor = const Color(0xFF22C55E);
     } else if (widget.hoursUntilDeparture >= 12) {
       refundPercent = 0.50;
       tierTitle = 'Tier 2: 50% Refund Eligible';
-      tierDescription = 'Cancellation requested 12–24h prior to departure (50% late cancellation penalty).';
+      tierDescription =
+          'Cancellation requested 12–24h prior to departure (50% late cancellation penalty).';
       tierColor = AppTheme.secondaryColor;
     } else {
       refundPercent = 0.0;
       tierTitle = 'Tier 3: 0% Non-Refundable';
-      tierDescription = 'Under 12h before departure: bus operator seats are locked and non-refundable.';
+      tierDescription =
+          'Under 12h before departure: bus operator seats are locked and non-refundable.';
       tierColor = AppTheme.errorColor;
     }
 
@@ -96,7 +101,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                   ),
                   Text(
                     'Ref: ${widget.bookingReference} • ${widget.serviceCode}',
-                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                    style:
+                        const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                   ),
                 ],
               ),
@@ -114,7 +120,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: tierColor.withOpacity(0.5), width: 1.5),
+              border: Border.all(
+                  color: tierColor.withValues(alpha: 0.5), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,10 +131,11 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: tierColor.withOpacity(0.2),
+                        color: tierColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.shield_outlined, color: tierColor, size: 16),
+                      child: Icon(Icons.shield_outlined,
+                          color: tierColor, size: 16),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -136,11 +144,15 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                         children: [
                           Text(
                             tierTitle,
-                            style: TextStyle(color: tierColor, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: TextStyle(
+                                color: tierColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                           ),
                           Text(
                             '${widget.hoursUntilDeparture} hours remaining until scheduled departure',
-                            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                            style: const TextStyle(
+                                color: Color(0xFF94A3B8), fontSize: 11),
                           ),
                         ],
                       ),
@@ -150,7 +162,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                 const SizedBox(height: 10),
                 Text(
                   tierDescription,
-                  style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11, height: 1.3),
+                  style: const TextStyle(
+                      color: Color(0xFFCBD5E1), fontSize: 11, height: 1.3),
                 ),
               ],
             ),
@@ -167,7 +180,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
             ),
             child: Column(
               children: [
-                _buildRow('Original Fare Paid', currencyFormat.format(widget.totalPaid)),
+                _buildRow('Original Fare Paid',
+                    currencyFormat.format(widget.totalPaid)),
                 const SizedBox(height: 8),
                 _buildRow(
                   'Cancellation Fee / Deduction (${((1 - refundPercent) * 100).toInt()}%)',
@@ -189,7 +203,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
           // Reason for Cancellation Dropdown
           const Text(
             'Reason for Cancellation',
-            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Container(
@@ -252,7 +267,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
                     });
                     if (!context.mounted) return;
                     Navigator.of(context).pop();
-                    widget.onConfirm(_selectedReason, refundAmount, refundPercent);
+                    widget.onConfirm(
+                        _selectedReason, refundAmount, refundPercent);
                   },
                 ),
               ),
@@ -263,7 +279,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
     );
   }
 
-  Widget _buildRow(String label, String value, {bool isTotal = false, Color? valueColor}) {
+  Widget _buildRow(String label, String value,
+      {bool isTotal = false, Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -278,7 +295,8 @@ class _TieredRefundModalState extends State<TieredRefundModal> {
         Text(
           value,
           style: TextStyle(
-            color: valueColor ?? (isTotal ? Colors.white : const Color(0xFFE2E8F0)),
+            color: valueColor ??
+                (isTotal ? Colors.white : const Color(0xFFE2E8F0)),
             fontSize: isTotal ? 15 : 12,
             fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
             fontFamily: 'monospace',

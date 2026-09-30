@@ -24,7 +24,8 @@ class QrTicketPassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEE, dd MMM yyyy');
     final timeFormat = DateFormat('hh:mm a');
-    final currencyFormat = NumberFormat.currency(locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+        locale: 'en_LK', symbol: 'Rs. ', decimalDigits: 2);
 
     return Container(
       decoration: BoxDecoration(
@@ -52,11 +53,14 @@ class QrTicketPassCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.18),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5)),
+                        border: Border.all(
+                            color:
+                                AppTheme.primaryColor.withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         ticket.serviceCode,
@@ -69,7 +73,9 @@ class QrTicketPassCard extends StatelessWidget {
                       ),
                     ),
                     TransitBadge(
-                      status: ticket.isBoarded ? TransitStatus.booked : TransitStatus.available,
+                      status: ticket.isBoarded
+                          ? TransitStatus.booked
+                          : TransitStatus.available,
                       customLabel: ticket.isBoarded ? 'BOARDED' : 'CONFIRMED',
                     ),
                   ],
@@ -133,7 +139,8 @@ class QrTicketPassCard extends StatelessWidget {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.zoom_in_rounded, size: 16, color: Color(0xFF475569)),
+                      Icon(Icons.zoom_in_rounded,
+                          size: 16, color: Color(0xFF475569)),
                       SizedBox(width: 6),
                       Text(
                         'Tap to enlarge for conductor scanning',
@@ -165,9 +172,14 @@ class QrTicketPassCard extends StatelessWidget {
                   children: [
                     Column(
                       children: [
-                        const Icon(Icons.radio_button_checked, size: 16, color: Color(0xFF22C55E)),
-                        Container(width: 1.5, height: 32, color: const Color(0xFF334155)),
-                        const Icon(Icons.location_on, size: 16, color: AppTheme.secondaryColor),
+                        const Icon(Icons.radio_button_checked,
+                            size: 16, color: Color(0xFF22C55E)),
+                        Container(
+                            width: 1.5,
+                            height: 32,
+                            color: const Color(0xFF334155)),
+                        const Icon(Icons.location_on,
+                            size: 16, color: AppTheme.secondaryColor),
                       ],
                     ),
                     const SizedBox(width: 14),
@@ -180,11 +192,17 @@ class QrTicketPassCard extends StatelessWidget {
                             children: [
                               Text(
                                 ticket.originCity,
-                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 timeFormat.format(ticket.departureTime),
-                                style: const TextStyle(color: Color(0xFF22C55E), fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Color(0xFF22C55E),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -194,11 +212,17 @@ class QrTicketPassCard extends StatelessWidget {
                             children: [
                               Text(
                                 ticket.destinationCity,
-                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 timeFormat.format(ticket.arrivalTime),
-                                style: const TextStyle(color: AppTheme.secondaryColor, fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: AppTheme.secondaryColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -219,12 +243,14 @@ class QrTicketPassCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.directions_bus_outlined, color: Color(0xFF94A3B8), size: 16),
+                      const Icon(Icons.directions_bus_outlined,
+                          color: Color(0xFF94A3B8), size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Boarding: ${ticket.boardingPointName}',
-                          style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11),
+                          style: const TextStyle(
+                              color: Color(0xFFCBD5E1), fontSize: 11),
                         ),
                       ),
                     ],
@@ -241,15 +267,21 @@ class QrTicketPassCard extends StatelessWidget {
                       children: [
                         const Text(
                           'BOOKING REFERENCE',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 4),
                         GestureDetector(
                           onTap: () {
-                            Clipboard.setData(ClipboardData(text: ticket.bookingReference));
+                            Clipboard.setData(
+                                ClipboardData(text: ticket.bookingReference));
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Copied reference ${ticket.bookingReference} to clipboard'),
+                                content: Text(
+                                    'Copied reference ${ticket.bookingReference} to clipboard'),
                                 behavior: SnackBarBehavior.floating,
                                 duration: const Duration(seconds: 2),
                               ),
@@ -267,7 +299,8 @@ class QrTicketPassCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.copy_rounded, size: 14, color: AppTheme.secondaryColor),
+                              const Icon(Icons.copy_rounded,
+                                  size: 14, color: AppTheme.secondaryColor),
                             ],
                           ),
                         ),
@@ -278,21 +311,29 @@ class QrTicketPassCard extends StatelessWidget {
                       children: [
                         const Text(
                           'ASSIGNED SEATS',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: ticket.seatNumbers.map((s) {
                             return Container(
                               margin: const EdgeInsets.only(left: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: AppTheme.primaryColor,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 s,
-                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold),
                               ),
                             );
                           }).toList(),
@@ -310,25 +351,49 @@ class QrTicketPassCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('PASSENGER', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
+                        const Text('PASSENGER',
+                            style: TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
                         const SizedBox(height: 2),
-                        Text(ticket.passengerName, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text(ticket.passengerName,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TRAVEL DATE', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
+                        const Text('TRAVEL DATE',
+                            style: TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
                         const SizedBox(height: 2),
-                        Text(dateFormat.format(ticket.departureTime), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text(dateFormat.format(ticket.departureTime),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('PAID TOTAL', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
+                        const Text('PAID TOTAL',
+                            style: TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
                         const SizedBox(height: 2),
-                        Text(currencyFormat.format(ticket.totalFare), style: const TextStyle(color: Color(0xFF22C55E), fontSize: 13, fontWeight: FontWeight.w800)),
+                        Text(currencyFormat.format(ticket.totalFare),
+                            style: const TextStyle(
+                                color: Color(0xFF22C55E),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800)),
                       ],
                     ),
                   ],
@@ -339,12 +404,16 @@ class QrTicketPassCard extends StatelessWidget {
                 // Cryptographic HMAC Security Footnote
                 Row(
                   children: [
-                    const Icon(Icons.verified_outlined, size: 14, color: Color(0xFF22C55E)),
+                    const Icon(Icons.verified_outlined,
+                        size: 14, color: Color(0xFF22C55E)),
                     const SizedBox(width: 6),
                     const Expanded(
                       child: Text(
                         'HMAC-SHA256 Signed • Offline Boarding Guaranteed',
-                        style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                     if (ticket.isUpcoming && onCancelTap != null)
@@ -389,14 +458,17 @@ class QrTicketPassCard extends StatelessWidget {
             builder: (context, constraints) {
               const dashWidth = 6.0;
               const dashSpace = 4.0;
-              final dashCount = (constraints.constrainWidth() / (dashWidth + dashSpace)).floor();
+              final dashCount =
+                  (constraints.constrainWidth() / (dashWidth + dashSpace))
+                      .floor();
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(dashCount, (_) {
                   return const SizedBox(
                     width: dashWidth,
                     height: 1.2,
-                    child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFF475569))),
+                    child: DecoratedBox(
+                        decoration: BoxDecoration(color: Color(0xFF475569))),
                   );
                 }),
               );
@@ -445,7 +517,8 @@ class QrTicketPassCard extends StatelessWidget {
                       ),
                       Text(
                         'Service: ${ticket.serviceCode}',
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                        style: const TextStyle(
+                            color: Color(0xFF64748B), fontSize: 12),
                       ),
                     ],
                   ),
@@ -461,12 +534,16 @@ class QrTicketPassCard extends StatelessWidget {
                 version: QrVersions.auto,
                 size: 260.0,
                 backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
+                eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square, color: Colors.black),
+                dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Colors.black),
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
@@ -474,11 +551,15 @@ class QrTicketPassCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.qr_code_scanner, size: 16, color: Color(0xFF0F172A)),
+                    const Icon(Icons.qr_code_scanner,
+                        size: 16, color: Color(0xFF0F172A)),
                     const SizedBox(width: 8),
                     Text(
                       'Ready for Conductor Scanner (${ticket.seatNumbers.join(", ")})',
-                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

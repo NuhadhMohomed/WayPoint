@@ -7,7 +7,9 @@ import 'package:waypoint_mobile/features/booking/screens/booking_history_screen.
 
 void main() {
   group('Component 3: Booking Models Unit Tests (Mithila)', () {
-    test('SeatHoldInfo.sampleColomboToElla initializes with correct sample data', () {
+    test(
+        'SeatHoldInfo.sampleColomboToElla initializes with correct sample data',
+        () {
       final hold = SeatHoldInfo.sampleColomboToElla();
 
       expect(hold.serviceCode, equals('SRV-COL-ELLA-0800'));
@@ -20,16 +22,17 @@ void main() {
     });
 
     test('PaymentSandboxCard presets have required test card numbers', () {
-      final success = PaymentSandboxCard.successCard;
-      final declined = PaymentSandboxCard.declinedCard;
-      final timeout = PaymentSandboxCard.timeoutCard;
+      const success = PaymentSandboxCard.successCard;
+      const declined = PaymentSandboxCard.declinedCard;
+      const timeout = PaymentSandboxCard.timeoutCard;
 
       expect(success.cardNumber.endsWith('0001'), isTrue);
       expect(declined.cardNumber.endsWith('0002'), isTrue);
       expect(timeout.cardNumber.endsWith('0003'), isTrue);
     });
 
-    test('DigitalTicketPass.sampleColomboToElla generates valid signed pass', () {
+    test('DigitalTicketPass.sampleColomboToElla generates valid signed pass',
+        () {
       final pass = DigitalTicketPass.sampleColomboToElla();
 
       expect(pass.bookingReference, equals('WP-7B92K1'));
@@ -39,7 +42,9 @@ void main() {
       expect(pass.qrCodePayload, contains('HMAC:'));
     });
 
-    test('HistoricalBookingItem calculates tiered refund eligibility accurately', () {
+    test(
+        'HistoricalBookingItem calculates tiered refund eligibility accurately',
+        () {
       // Tier 1: > 24 hours -> 90% refund
       final itemTier1 = HistoricalBookingItem(
         bookingId: 'b-1',
@@ -97,7 +102,8 @@ void main() {
   });
 
   group('Component 3: Booking Screen Widget Tests (Mithila)', () {
-    testWidgets('PaymentCheckoutScreen renders hold bar and preset test chips', (tester) async {
+    testWidgets('PaymentCheckoutScreen renders hold bar and preset test chips',
+        (tester) async {
       final hold = SeatHoldInfo.sampleColomboToElla();
 
       await tester.pumpWidget(
@@ -115,7 +121,8 @@ void main() {
       expect(find.text('Gateway Timeout'), findsOneWidget);
     });
 
-    testWidgets('TicketWalletScreen renders tabbed passes view', (tester) async {
+    testWidgets('TicketWalletScreen renders tabbed passes view',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: TicketWalletScreen(),
@@ -128,7 +135,8 @@ void main() {
       expect(find.textContaining('Past Trips'), findsOneWidget);
     });
 
-    testWidgets('BookingHistoryScreen renders filter tabs and booking items', (tester) async {
+    testWidgets('BookingHistoryScreen renders filter tabs and booking items',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: BookingHistoryScreen(
