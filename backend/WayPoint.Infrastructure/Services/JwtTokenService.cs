@@ -19,7 +19,12 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateToken(User user, string roleName)
     {
-        var secret = _configuration["Jwt:Secret"] ?? "WayPoint_Super_Secret_Key_For_Jwt_Token_Authentication_2026";
+        var secretEnv = Environment.GetEnvironmentVariable("JWT_SECRET");
+        var secretConfig = _configuration["Jwt:Secret"];
+        var secret = !string.IsNullOrWhiteSpace(secretEnv) ? secretEnv
+            : !string.IsNullOrWhiteSpace(secretConfig) ? secretConfig
+            : throw new InvalidOperationException(
+                "JWT signing secret is not configured. Set JWT_SECRET environment variable or Jwt:Secret in appsettings.");
         var issuer = _configuration["Jwt:Issuer"] ?? "WayPoint";
         var audience = _configuration["Jwt:Audience"] ?? "WayPointClients";
         var expiryMinutes = int.TryParse(_configuration["Jwt:ExpiryMinutes"], out var minutes) ? minutes : 120;

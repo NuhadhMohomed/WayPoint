@@ -48,8 +48,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// 3. JWT Authentication & Authorization
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "WayPoint_Super_Secret_Key_For_Jwt_Token_Authentication_2026";
+// 3. JWT Authentication & Authorization — fail fast if secret is missing
+var jwtSecretEnv = Environment.GetEnvironmentVariable("JWT_SECRET");
+var jwtSecretConfig = builder.Configuration["Jwt:Secret"];
+var jwtSecret = !string.IsNullOrWhiteSpace(jwtSecretEnv) ? jwtSecretEnv
+    : !string.IsNullOrWhiteSpace(jwtSecretConfig) ? jwtSecretConfig
+    : throw new InvalidOperationException(
+        "FATAL: JWT signing secret is not configured. "
+        + "Set the JWT_SECRET environment variable in .env or configure Jwt:Secret in appsettings.json.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "WayPoint";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "WayPointClients";
 
