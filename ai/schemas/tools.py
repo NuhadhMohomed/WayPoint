@@ -6,9 +6,20 @@ Each input model maps to a backend API endpoint DTO from api-design.md.
 All tool invocations must pass schema validation before execution (BR-AITOOL-002).
 
 Backend DTO naming convention: camelCase JSON ↔ snake_case Python.
+Models use alias_generator for camelCase serialization via model_dump(by_alias=True).
 """
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic.alias_generators import to_camel
+
+
+# UUID v4 pattern for input validation (BR-AITOOL-002)
+_UUID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
 
 
 # ===========================================================================
@@ -180,13 +191,26 @@ class CalculateFareDifferenceOutput(BaseModel):
 # ===========================================================================
 
 class CreateRebookingProposalInput(BaseModel):
-    """Input schema for the CreateRebookingProposal tool."""
+    """Input schema for the CreateRebookingProposal tool.
+
+    Validates:
+      - disruption_case_id: non-empty string (UUID format recommended).
+      - replacement_service_id: non-empty string.
+      - proposed_by_agent: defaults to 'ValidationSafetyAgent'.
+
+    Backend DTO: CreateRebookingProposalDto (DisruptionDtos.cs L21-L26).
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     disruption_case_id: str = Field(
         ..., min_length=1, description="UUID of the disruption case"
     )
     replacement_service_id: str = Field(
-        ..., description="UUID of the replacement service"
+        ..., min_length=1, description="UUID of the replacement service"
     )
     proposed_by_agent: str = Field(
         default="ValidationSafetyAgent",
@@ -195,7 +219,12 @@ class CreateRebookingProposalInput(BaseModel):
 
 
 class CreateRebookingProposalOutput(BaseModel):
-    """Output schema — mirrors RebookingProposalDto."""
+    """Output schema — mirrors RebookingProposalDto (DisruptionDtos.cs L90-L101)."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     proposal_id: str
     disruption_case_id: str
@@ -211,15 +240,42 @@ class CreateRebookingProposalOutput(BaseModel):
 # ===========================================================================
 
 class CalculatePassengerImpactInput(BaseModel):
-    """Input schema for the CalculatePassengerImpact tool."""
+    """Input schema for the CalculatePassengerImpact tool.
+
+    Validates disrupted_service_id is a valid UUID format string.
+    Backend: GET /api/v1/disruptions/{id}.
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     disrupted_service_id: str = Field(
-        ..., description="UUID of the disrupted service"
+        ..., min_length=1, description="UUID of the disrupted service"
     )
+
+    @field_validator("disrupted_service_id")
+    @classmethod
+    def validate_uuid_format(cls, v: str) -> str:
+        """Enforce UUID v4 format for disrupted service ID (BR-AITOOL-002)."""
+        if not _UUID_PATTERN.match(v):
+            raise ValueError(
+                f"disrupted_service_id must be a valid UUID, got: '{v}'"
+            )
+        return v
 
 
 class CalculatePassengerImpactOutput(BaseModel):
-    """Output schema for the CalculatePassengerImpact tool."""
+    """Output schema for the CalculatePassengerImpact tool.
+
+    Maps to DisruptionImpactDto (DisruptionDtos.cs L77-L88).
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     affected_passenger_count: int = 0
     total_delay_minutes: float = 0.0
@@ -235,10 +291,19 @@ class CalculatePassengerImpactOutput(BaseModel):
 # ===========================================================================
 
 class RequestManagerApprovalInput(BaseModel):
-    """Input schema for the RequestManagerApproval tool."""
+    """Input schema for the RequestManagerApproval tool.
+
+    Transitions a rebooking proposal to PendingManagerApproval status.
+    Backend: PUT /api/v1/approvals/{id}/request.
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     rebooking_proposal_id: str = Field(
-        ..., description="UUID of the rebooking proposal requiring approval"
+        ..., min_length=1, description="UUID of the rebooking proposal requiring approval"
     )
     impact_classification: str = Field(
         default="High", description="Impact level: 'Low' or 'High'"
@@ -250,6 +315,11 @@ class RequestManagerApprovalInput(BaseModel):
 
 class RequestManagerApprovalOutput(BaseModel):
     """Output schema for the RequestManagerApproval tool."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     proposal_id: str
     new_status: str = "PendingManagerApproval"
@@ -264,15 +334,33 @@ class RequestManagerApprovalOutput(BaseModel):
 # ===========================================================================
 
 class ApplyApprovedChangeInput(BaseModel):
-    """Input schema for the ApplyApprovedOperationalChange tool."""
+    """Input schema for the ApplyApprovedOperationalChange tool.
+
+    Can ONLY be executed after a Transport Manager has submitted an
+    Approved decision via the backend API (BR-APPLY-001).
+    Backend: POST /api/v1/rebooking/{id}/execute.
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     rebooking_proposal_id: str = Field(
-        ..., description="UUID of the approved rebooking proposal"
+        ..., min_length=1, description="UUID of the approved rebooking proposal"
     )
 
 
 class ApplyApprovedChangeOutput(BaseModel):
-    """Output schema for the ApplyApprovedOperationalChange tool."""
+    """Output schema for the ApplyApprovedOperationalChange tool.
+
+    Maps to RebookingExecutionResultDto (DisruptionDtos.cs L128-L137).
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
     success: bool
     passengers_rebooked: int = 0

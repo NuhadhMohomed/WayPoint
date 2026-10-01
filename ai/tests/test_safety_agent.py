@@ -174,8 +174,10 @@ class TestSafetyAgentSchemaValidation:
     def test_calculate_passenger_impact_input_valid(self):
         from schemas.tools import CalculatePassengerImpactInput
 
-        dto = CalculatePassengerImpactInput(disrupted_service_id="srv-disrupted-1")
-        assert dto.disrupted_service_id == "srv-disrupted-1"
+        dto = CalculatePassengerImpactInput(
+            disrupted_service_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        )
+        assert dto.disrupted_service_id == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
     def test_request_manager_approval_input_valid(self):
         from schemas.tools import RequestManagerApprovalInput
@@ -193,6 +195,192 @@ class TestSafetyAgentSchemaValidation:
 
         dto = ApplyApprovedChangeInput(rebooking_proposal_id="prop-approved-99")
         assert dto.rebooking_proposal_id == "prop-approved-99"
+
+
+# ============================================================================
+# 2b. Phase 1: Tool Schema Contracts & UUID Validation (BR-AITOOL-002)
+# ============================================================================
+
+class TestSafetyAgentToolSchemas:
+    """Phase 1 verification: strongly typed Pydantic schemas for all 4 disruption tools.
+
+    Covers:
+      - UUID format validation on CalculatePassengerImpactInput
+      - Empty string / non-UUID rejection raises pydantic.ValidationError
+      - camelCase serialization via model_dump(by_alias=True) matches backend DTOs
+      - Output schema round-trip serialization via model_dump_json()
+    """
+
+    # --- CalculatePassengerImpactInput UUID validation ---
+
+    def test_calculate_passenger_impact_rejects_non_uuid(self):
+        """Non-UUID string must raise ValidationError (BR-AITOOL-002)."""
+        from pydantic import ValidationError
+        from schemas.tools import CalculatePassengerImpactInput
+
+        with pytest.raises(ValidationError, match="UUID"):
+            CalculatePassengerImpactInput(disrupted_service_id="not-a-uuid")
+
+    def test_calculate_passenger_impact_rejects_empty_string(self):
+        """Empty string must raise ValidationError (BR-AITOOL-002)."""
+        from pydantic import ValidationError
+        from schemas.tools import CalculatePassengerImpactInput
+
+        with pytest.raises(ValidationError):
+            CalculatePassengerImpactInput(disrupted_service_id="")
+
+    def test_calculate_passenger_impact_accepts_valid_uuid(self):
+        """Valid UUID v4 format string must be accepted."""
+        from schemas.tools import CalculatePassengerImpactInput
+
+        uuid_str = "91532418-794f-46b0-89e3-1a1f8125be4c"
+        dto = CalculatePassengerImpactInput(disrupted_service_id=uuid_str)
+        assert dto.disrupted_service_id == uuid_str
+
+    # --- CreateRebookingProposalInput validation ---
+
+    def test_create_rebooking_proposal_rejects_empty_replacement_service(self):
+        """Empty replacement_service_id must raise ValidationError."""
+        from pydantic import ValidationError
+        from schemas.tools import CreateRebookingProposalInput
+
+        with pytest.raises(ValidationError):
+            CreateRebookingProposalInput(
+                disruption_case_id="dc-valid-123",
+                replacement_service_id="",
+            )
+
+    def test_create_rebooking_proposal_default_agent_name(self):
+        """proposed_by_agent should default to 'ValidationSafetyAgent'."""
+        from schemas.tools import CreateRebookingProposalInput
+
+        dto = CreateRebookingProposalInput(
+            disruption_case_id="dc-123",
+            replacement_service_id="srv-456",
+        )
+        assert dto.proposed_by_agent == "ValidationSafetyAgent"
+
+    # --- RequestManagerApprovalInput validation ---
+
+    def test_request_manager_approval_rejects_empty_proposal_id(self):
+        """Empty rebooking_proposal_id must raise ValidationError."""
+        from pydantic import ValidationError
+        from schemas.tools import RequestManagerApprovalInput
+
+        with pytest.raises(ValidationError):
+            RequestManagerApprovalInput(rebooking_proposal_id="")
+
+    # --- ApplyApprovedChangeInput validation ---
+
+    def test_apply_approved_change_rejects_empty_proposal_id(self):
+        """Empty rebooking_proposal_id must raise ValidationError."""
+        from pydantic import ValidationError
+        from schemas.tools import ApplyApprovedChangeInput
+
+        with pytest.raises(ValidationError):
+            ApplyApprovedChangeInput(rebooking_proposal_id="")
+
+    # --- camelCase serialization alignment ---
+
+    def test_calculate_passenger_impact_output_camel_case_serialization(self):
+        """model_dump(by_alias=True) must produce camelCase keys matching backend DTOs."""
+        from schemas.tools import CalculatePassengerImpactOutput
+
+        output = CalculatePassengerImpactOutput(
+            affected_passenger_count=28,
+            total_delay_minutes=45.0,
+            net_fare_delta=0.0,
+            affected_booking_ids=["bk-001", "bk-002"],
+        )
+        camel_dict = output.model_dump(by_alias=True)
+
+        # Must produce camelCase keys matching DisruptionImpactDto
+        assert "affectedPassengerCount" in camel_dict
+        assert "totalDelayMinutes" in camel_dict
+        assert "netFareDelta" in camel_dict
+        assert "affectedBookingIds" in camel_dict
+        assert camel_dict["affectedPassengerCount"] == 28
+
+    def test_create_rebooking_proposal_output_camel_case_serialization(self):
+        """model_dump(by_alias=True) must produce camelCase for RebookingProposalDto."""
+        from schemas.tools import CreateRebookingProposalOutput
+
+        output = CreateRebookingProposalOutput(
+            proposal_id="prop-001",
+            disruption_case_id="dc-001",
+            replacement_service_id="srv-001",
+            status="PendingManagerApproval",
+        )
+        camel_dict = output.model_dump(by_alias=True)
+
+        assert "proposalId" in camel_dict
+        assert "disruptionCaseId" in camel_dict
+        assert "replacementServiceId" in camel_dict
+        assert camel_dict["status"] == "PendingManagerApproval"
+
+    def test_request_manager_approval_output_camel_case_serialization(self):
+        """model_dump(by_alias=True) must produce camelCase keys."""
+        from schemas.tools import RequestManagerApprovalOutput
+
+        output = RequestManagerApprovalOutput(
+            proposal_id="prop-001",
+            new_status="PendingManagerApproval",
+            message="Awaiting manager review",
+        )
+        camel_dict = output.model_dump(by_alias=True)
+
+        assert "proposalId" in camel_dict
+        assert "newStatus" in camel_dict
+        assert camel_dict["newStatus"] == "PendingManagerApproval"
+
+    def test_apply_approved_change_output_camel_case_serialization(self):
+        """model_dump(by_alias=True) must produce camelCase for RebookingExecutionResultDto."""
+        from schemas.tools import ApplyApprovedChangeOutput
+
+        output = ApplyApprovedChangeOutput(
+            success=True,
+            passengers_rebooked=28,
+            message="Rebooking applied successfully",
+        )
+        camel_dict = output.model_dump(by_alias=True)
+
+        assert "passengersRebooked" in camel_dict
+        assert camel_dict["passengersRebooked"] == 28
+
+    # --- model_dump_json() round-trip serialization ---
+
+    def test_calculate_passenger_impact_output_json_roundtrip(self):
+        """model_dump_json() must produce valid JSON that can be re-parsed."""
+        from schemas.tools import CalculatePassengerImpactOutput
+
+        output = CalculatePassengerImpactOutput(
+            affected_passenger_count=28,
+            total_delay_minutes=45.0,
+            net_fare_delta=-200.50,
+            affected_booking_ids=["bk-001", "bk-002", "bk-003"],
+        )
+        json_str = output.model_dump_json(by_alias=True)
+        parsed = json.loads(json_str)
+
+        assert parsed["affectedPassengerCount"] == 28
+        assert parsed["totalDelayMinutes"] == 45.0
+        assert len(parsed["affectedBookingIds"]) == 3
+
+    def test_create_rebooking_proposal_output_json_roundtrip(self):
+        """model_dump_json() round-trip must preserve all fields."""
+        from schemas.tools import CreateRebookingProposalOutput
+
+        output = CreateRebookingProposalOutput(
+            proposal_id="91532418-794f-46b0-89e3-1a1f8125be4c",
+            disruption_case_id="dc-001",
+            replacement_service_id="srv-001",
+            status="PendingManagerApproval",
+        )
+        json_str = output.model_dump_json(by_alias=True)
+        parsed = json.loads(json_str)
+
+        assert parsed["proposalId"] == "91532418-794f-46b0-89e3-1a1f8125be4c"
+        assert parsed["status"] == "PendingManagerApproval"
 
 
 # ============================================================================
