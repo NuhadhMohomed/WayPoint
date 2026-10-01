@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
@@ -6,6 +7,7 @@ namespace WayPoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/bookings/hold")]
+[Authorize(Policy = "RequirePassenger")]
 public class SeatHoldController : ControllerBase
 {
     private readonly IBookingService _bookingService;

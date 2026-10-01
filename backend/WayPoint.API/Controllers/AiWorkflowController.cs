@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.Features.AiWorkflows.DTOs;
@@ -22,6 +23,7 @@ namespace WayPoint.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/ai/workflows")]
+[Authorize(Policy = "RequireOperator")]
 public class AiWorkflowController : ControllerBase
 {
     private readonly IAiWorkflowService _aiWorkflowService;

@@ -88,14 +88,33 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequirePassenger", policy => policy.RequireRole("Passenger", "Admin"));
 });
 
-// 4. CORS Policy for React Web & Mobile clients
+// 4. CORS Policy — restrict to known client origins
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
+    options.AddPolicy("WayPointClients", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (builder.Environment.IsDevelopment())
+        {
+            // Development: allow localhost React & Flutter web dev servers
+            policy.WithOrigins(
+                    "http://localhost:5173",   // Vite React dev server
+                    "http://localhost:3000",   // Fallback React port
+                    "http://localhost:8080")   // Flutter web dev server
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            // Production: restrict to deployed frontend domain(s)
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -165,7 +184,7 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Ena
     });
 }
 
-app.UseCors("AllowAllOrigins");
+app.UseCors("WayPointClients");
 
 app.UseAuthentication();
 app.UseAuthorization();
