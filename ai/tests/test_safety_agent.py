@@ -144,6 +144,308 @@ class TestSafetyAgentToolBinding:
 
 
 # ============================================================================
+# 1b. Phase 2: Tool HTTP Integration Tests (BR-AITOOL-001, FR-AI-002, BR-APPLY-001)
+# ============================================================================
+
+class TestSafetyAgentToolIntegration:
+    """Phase 2 verification: HTTP bridge integration for all 4 disruption tools.
+
+    Tests use unittest.mock to patch ``make_tool_request`` so no real
+    backend is needed.  Each test verifies:
+      - Correct HTTP method and endpoint path
+      - Correct camelCase payload construction
+      - Correct response mapping to Pydantic output schemas
+      - camelCase serialization in tool return JSON (by_alias=True)
+      - Error propagation when backend returns error dicts
+    """
+
+    # --- CreateRebookingProposal ---
+
+    def test_create_rebooking_proposal_calls_correct_endpoint(self):
+        """POST /rebooking/generate-proposal with camelCase payload."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import create_rebooking_proposal
+
+        mock_response = {
+            "proposalId": "prop-001",
+            "disruptionCaseId": "dc-001",
+            "replacementServiceId": "srv-001",
+            "status": "PendingManagerApproval",
+        }
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            result_json = asyncio.run(
+                create_rebooking_proposal.ainvoke({
+                    "disruption_case_id": "dc-001",
+                    "replacement_service_id": "srv-001",
+                })
+            )
+
+            # Verify correct endpoint
+            mock_req.assert_called_once()
+            call_args = mock_req.call_args
+            assert call_args[0][0] == "POST"
+            assert call_args[0][1] == "/rebooking/generate-proposal"
+
+            # Verify camelCase payload
+            payload = call_args[1]["json_body"]
+            assert "disruptionCaseId" in payload
+            assert "replacementServiceId" in payload
+            assert "proposedByAgent" in payload
+
+        # Verify output is valid JSON with camelCase keys
+        parsed = json.loads(result_json)
+        assert "proposalId" in parsed
+        assert parsed["status"] == "PendingManagerApproval"
+
+    def test_create_rebooking_proposal_propagates_backend_error(self):
+        """Backend error dict must be returned as-is to the LLM."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import create_rebooking_proposal
+
+        error_response = {
+            "error": True,
+            "status_code": 404,
+            "detail": "Disruption case not found",
+        }
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = error_response
+            result_json = asyncio.run(
+                create_rebooking_proposal.ainvoke({
+                    "disruption_case_id": "dc-nonexistent",
+                    "replacement_service_id": "srv-001",
+                })
+            )
+
+        parsed = json.loads(result_json)
+        assert parsed["error"] is True
+        assert parsed["status_code"] == 404
+
+    def test_create_rebooking_proposal_handles_validation_error(self):
+        """Empty disruption_case_id must return structured validation error, not crash."""
+        import asyncio
+        from tools.disruption_tools import create_rebooking_proposal
+
+        result_json = asyncio.run(
+            create_rebooking_proposal.ainvoke({
+                "disruption_case_id": "",
+                "replacement_service_id": "srv-001",
+            })
+        )
+
+        parsed = json.loads(result_json)
+        assert parsed["error"] is True
+        assert "validation_errors" in parsed
+
+    # --- CalculatePassengerImpact ---
+
+    def test_calculate_passenger_impact_calls_correct_endpoint(self):
+        """GET /disruptions/{id} with UUID path parameter."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import calculate_passenger_impact
+
+        mock_response = {
+            "affectedPassengerCount": 28,
+            "totalDelayMinutes": 45,
+            "netFareDelta": -200.50,
+            "affectedBookingIds": ["bk-001", "bk-002"],
+        }
+
+        uuid = "91532418-794f-46b0-89e3-1a1f8125be4c"
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            result_json = asyncio.run(
+                calculate_passenger_impact.ainvoke({
+                    "disrupted_service_id": uuid,
+                })
+            )
+
+            # Verify correct endpoint
+            mock_req.assert_called_once_with("GET", f"/disruptions/{uuid}")
+
+        # Verify output maps to CalculatePassengerImpactOutput with camelCase
+        parsed = json.loads(result_json)
+        assert parsed["affectedPassengerCount"] == 28
+        assert parsed["totalDelayMinutes"] == 45
+        assert parsed["netFareDelta"] == -200.50
+        assert len(parsed["affectedBookingIds"]) == 2
+
+    def test_calculate_passenger_impact_rejects_invalid_uuid(self):
+        """Non-UUID input must return structured validation error (BR-AITOOL-002)."""
+        import asyncio
+        from tools.disruption_tools import calculate_passenger_impact
+
+        result_json = asyncio.run(
+            calculate_passenger_impact.ainvoke({
+                "disrupted_service_id": "not-a-valid-uuid",
+            })
+        )
+
+        parsed = json.loads(result_json)
+        assert parsed["error"] is True
+        assert "validation_errors" in parsed
+        assert parsed["tool"] == "CalculatePassengerImpact"
+
+    # --- RequestManagerApproval ---
+
+    def test_request_manager_approval_calls_correct_endpoint(self):
+        """PUT /approvals/{id}/request with camelCase payload."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import request_manager_approval
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"success": True}
+            result_json = asyncio.run(
+                request_manager_approval.ainvoke({
+                    "rebooking_proposal_id": "prop-001",
+                    "impact_classification": "High",
+                    "justification": "Delay exceeds 15 min threshold",
+                })
+            )
+
+            # Verify correct endpoint
+            mock_req.assert_called_once()
+            call_args = mock_req.call_args
+            assert call_args[0][0] == "PUT"
+            assert call_args[0][1] == "/approvals/prop-001/request"
+
+            # Verify camelCase payload
+            payload = call_args[1]["json_body"]
+            assert "impactClassification" in payload
+            assert payload["impactClassification"] == "High"
+
+        # Verify output
+        parsed = json.loads(result_json)
+        assert parsed["proposalId"] == "prop-001"
+        assert parsed["newStatus"] == "PendingManagerApproval"
+
+    # --- ApplyApprovedOperationalChange ---
+
+    def test_apply_approved_change_calls_correct_endpoint(self):
+        """POST /rebooking/{id}/execute with empty JSON body."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import apply_approved_operational_change
+
+        mock_response = {
+            "passengersRebooked": 28,
+            "summary": "All 28 passengers rebooked successfully",
+        }
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            result_json = asyncio.run(
+                apply_approved_operational_change.ainvoke({
+                    "rebooking_proposal_id": "prop-approved-01",
+                })
+            )
+
+            # Verify correct endpoint
+            mock_req.assert_called_once()
+            call_args = mock_req.call_args
+            assert call_args[0][0] == "POST"
+            assert call_args[0][1] == "/rebooking/prop-approved-01/execute"
+
+        # Verify output with camelCase
+        parsed = json.loads(result_json)
+        assert parsed["success"] is True
+        assert parsed["passengersRebooked"] == 28
+
+    def test_apply_approved_change_propagates_unapproved_rejection(self):
+        """Backend rejection of unapproved proposal must be returned to LLM (BR-APPLY-001).
+
+        The backend's RebookingService.ExecuteApprovedRebookingAsync() checks
+        ``proposal.Status != Approved`` and returns a 400 error. This test
+        verifies the tool faithfully propagates that rejection.
+        """
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+        from tools.disruption_tools import apply_approved_operational_change
+
+        rejection_response = {
+            "error": True,
+            "status_code": 400,
+            "detail": (
+                "Proposal 'prop-pending-01' has status 'PendingManagerApproval'. "
+                "Only proposals with status 'Approved' can be executed (BR-APPLY-001)."
+            ),
+            "title": "Rebooking Execution Failed",
+        }
+
+        with patch("tools.disruption_tools.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = rejection_response
+            result_json = asyncio.run(
+                apply_approved_operational_change.ainvoke({
+                    "rebooking_proposal_id": "prop-pending-01",
+                })
+            )
+
+        parsed = json.loads(result_json)
+        assert parsed["error"] is True
+        assert parsed["status_code"] == 400
+        assert "BR-APPLY-001" in parsed["detail"]
+
+    def test_apply_approved_change_rejects_empty_proposal_id(self):
+        """Empty rebooking_proposal_id must return structured validation error."""
+        import asyncio
+        from tools.disruption_tools import apply_approved_operational_change
+
+        result_json = asyncio.run(
+            apply_approved_operational_change.ainvoke({
+                "rebooking_proposal_id": "",
+            })
+        )
+
+        parsed = json.loads(result_json)
+        assert parsed["error"] is True
+        assert "validation_errors" in parsed
+
+    # --- Tool callable properties ---
+
+    def test_all_disruption_tools_are_async_coroutines(self):
+        """All 4 disruption tools must be async (for ainvoke in tool loop)."""
+        from tools.disruption_tools import (
+            create_rebooking_proposal,
+            calculate_passenger_impact,
+            request_manager_approval,
+            apply_approved_operational_change,
+        )
+
+        for t in [
+            create_rebooking_proposal,
+            calculate_passenger_impact,
+            request_manager_approval,
+            apply_approved_operational_change,
+        ]:
+            assert hasattr(t, "ainvoke"), f"{t.name} missing ainvoke"
+
+    def test_all_disruption_tools_have_docstrings(self):
+        """All 4 disruption tools must have non-empty docstrings for LLM context."""
+        from tools.disruption_tools import (
+            create_rebooking_proposal,
+            calculate_passenger_impact,
+            request_manager_approval,
+            apply_approved_operational_change,
+        )
+
+        for t in [
+            create_rebooking_proposal,
+            calculate_passenger_impact,
+            request_manager_approval,
+            apply_approved_operational_change,
+        ]:
+            assert t.description, f"{t.name} has empty description"
+            assert len(t.description) > 20, f"{t.name} description too short"
+
+
+# ============================================================================
 # 2. Schema Validation Tests (BR-AITOOL-002)
 # ============================================================================
 
