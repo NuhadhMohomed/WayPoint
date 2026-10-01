@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Application.DTOs.Common;
 using WayPoint.Application.Features.JourneyPlanning;
 using WayPoint.Application.Features.JourneyPlanning.DTOs;
 using WayPoint.Domain.Entities.Journey;
@@ -63,6 +64,36 @@ public sealed class JourneyPlanningService : IJourneyPlanningService
         return await query.OrderBy(service => service.DepartureTime).Select(service => new ServiceDto { Id = service.Id, ServiceCode = service.ServiceCode, RouteId = service.RouteId, RouteNumber = service.Route.RouteCode, DepartureTime = service.DepartureTime, ArrivalTime = service.ArrivalTime, BaseFare = service.BaseFare, Status = service.Status.ToString() }).ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<PaginatedResponseDto<ServiceDto>> GetServicesPaginatedAsync(
+        DateTime? date, Guid? routeId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+    {
+        var query = context.Services.AsNoTracking().Include(service => service.Route).AsQueryable();
+        if (routeId.HasValue) query = query.Where(service => service.RouteId == routeId.Value);
+        if (date.HasValue) query = query.Where(service => service.DepartureTime.Date == date.Value.Date);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(service => service.DepartureTime)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(service => new ServiceDto
+            {
+                Id = service.Id,
+                ServiceCode = service.ServiceCode,
+                RouteId = service.RouteId,
+                RouteNumber = service.Route.RouteCode,
+                DepartureTime = service.DepartureTime,
+                ArrivalTime = service.ArrivalTime,
+                BaseFare = service.BaseFare,
+                Status = service.Status.ToString()
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PaginatedResponseDto<ServiceDto>(items, totalCount, pageNumber, pageSize);
+    }
+
     public async Task<ServiceDto?> GetServiceAsync(Guid id, CancellationToken cancellationToken)
     {
         return await context.Services.AsNoTracking().Include(service => service.Route).Where(service => service.Id == id).Select(service => new ServiceDto { Id = service.Id, ServiceCode = service.ServiceCode, RouteId = service.RouteId, RouteNumber = service.Route.RouteCode, DepartureTime = service.DepartureTime, ArrivalTime = service.ArrivalTime, BaseFare = service.BaseFare, Status = service.Status.ToString() }).FirstOrDefaultAsync(cancellationToken);
@@ -107,6 +138,45 @@ public sealed class JourneyPlanningService : IJourneyPlanningService
         await context.JourneySearches.AddAsync(search, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return new JourneySearchResponseDto { SearchId = search.Id, Candidates = candidates };
+    }
+
+    public async Task<ServiceDto> CreateServiceAsync(CreateServiceDto request, CancellationToken cancellationToken)
+    {
+        var route = await context.Routes.FindAsync(new object[] { request.RouteId }, cancellationToken)
+            ?? throw new KeyNotFoundException($"Route '{request.RouteId}' not found.");
+
+        if (request.DepartureTime <= DateTime.UtcNow)
+            throw new ArgumentException("Departure time must be in the future.");
+
+        if (request.ArrivalTime <= request.DepartureTime)
+            throw new ArgumentException("Arrival time must be after departure time.");
+
+        var service = new Service
+        {
+            ServiceCode = request.ServiceCode.Trim(),
+            RouteId = request.RouteId,
+            BusId = request.BusId,
+            DriverId = request.DriverId,
+            DepartureTime = request.DepartureTime,
+            ArrivalTime = request.ArrivalTime,
+            BaseFare = request.BaseFare,
+            Status = ServiceStatus.Scheduled
+        };
+
+        await context.Services.AddAsync(service, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return new ServiceDto
+        {
+            Id = service.Id,
+            ServiceCode = service.ServiceCode,
+            RouteId = service.RouteId,
+            RouteNumber = route.RouteCode,
+            DepartureTime = service.DepartureTime,
+            ArrivalTime = service.ArrivalTime,
+            BaseFare = service.BaseFare,
+            Status = service.Status.ToString()
+        };
     }
 
     private static bool Matches(Route route, string origin, string destination) => MatchesOrigin(route, origin) && MatchesDestination(route, destination);

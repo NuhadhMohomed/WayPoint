@@ -23,7 +23,7 @@ public class PaymentController : ControllerBase
     /// Processes a simulated payment card charge against the sandbox gateway (US-PASS-004).
     /// Simulates success (ends with 0001), card decline (0002), or timeout (0003).
     /// </summary>
-    [HttpPost("sandbox-charge")]
+    [HttpPost("confirm-sandbox-charge")]
     public async Task<ActionResult<PaymentChargeResponseDto>> ProcessSandboxCharge(
         [FromBody] PaymentChargeRequestDto request,
         CancellationToken cancellationToken)

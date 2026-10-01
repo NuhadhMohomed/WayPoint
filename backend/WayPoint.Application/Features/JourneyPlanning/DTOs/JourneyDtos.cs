@@ -86,3 +86,17 @@ public class JourneySearchResponseDto
     public Guid SearchId { get; set; }
     public List<CandidateJourneyDto> Candidates { get; set; } = new();
 }
+
+/// <summary>
+/// Request DTO for POST /api/v1/services (API §4.6).
+/// </summary>
+public class CreateServiceDto
+{
+    public string ServiceCode { get; set; } = string.Empty;
+    public Guid RouteId { get; set; }
+    public Guid BusId { get; set; }
+    public Guid? DriverId { get; set; }
+    public DateTime DepartureTime { get; set; }
+    public DateTime ArrivalTime { get; set; }
+    public decimal BaseFare { get; set; }
+}

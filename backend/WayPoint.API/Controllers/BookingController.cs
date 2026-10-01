@@ -1,7 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
+using WayPoint.Application.DTOs.Common;
 
 namespace WayPoint.API.Controllers;
 
@@ -11,11 +14,16 @@ namespace WayPoint.API.Controllers;
 public class BookingController : ControllerBase
 {
     private readonly IBookingService _bookingService;
+    private readonly IWayPointDbContext _context;
     private readonly ILogger<BookingController> _logger;
 
-    public BookingController(IBookingService bookingService, ILogger<BookingController> logger)
+    public BookingController(
+        IBookingService bookingService,
+        IWayPointDbContext context,
+        ILogger<BookingController> logger)
     {
         _bookingService = bookingService;
+        _context = context;
         _logger = logger;
     }
 
@@ -75,13 +83,56 @@ public class BookingController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves booking history for a passenger or operational manifest (US-PASS-005).
+    /// Retrieves booking history for the currently authenticated passenger (US-PASS-005, API §4.12).
+    /// Resolves PassengerProfile.Id from JWT NameIdentifier claim before querying.
     /// </summary>
-    [HttpGet]
-    public async Task<ActionResult<List<HistoricalBookingDto>>> GetBookings(
-        [FromQuery] Guid? passengerId,
+    [HttpGet("my-bookings")]
+    public async Task<ActionResult<List<HistoricalBookingDto>>> GetMyBookings(
         CancellationToken cancellationToken)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        // Resolve PassengerProfile.Id from User.Id (Booking.PassengerId references PassengerProfile, not User)
+        var passenger = await _context.PassengerProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        if (passenger == null)
+        {
+            return Ok(new List<HistoricalBookingDto>());
+        }
+
+        var bookings = await _bookingService.GetPassengerBookingsAsync(passenger.Id, cancellationToken);
+        return Ok(bookings);
+    }
+
+    /// <summary>
+    /// Retrieves booking history with optional pagination (API §2 standardized pagination).
+    /// Supports optional passengerId filter and page/pageSize query parameters.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetBookings(
+        [FromQuery] Guid? passengerId,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        CancellationToken cancellationToken)
+    {
+        // When pagination params are provided, return paginated response
+        if (page.HasValue || pageSize.HasValue)
+        {
+            var paginatedResult = await _bookingService.GetPassengerBookingsPaginatedAsync(
+                passengerId,
+                page ?? 1,
+                pageSize ?? 20,
+                cancellationToken);
+            return Ok(paginatedResult);
+        }
+
+        // Backward-compatible: return full list when no pagination params
         var bookings = await _bookingService.GetPassengerBookingsAsync(passengerId, cancellationToken);
         return Ok(bookings);
     }

@@ -522,7 +522,7 @@ export function BookingManifestMonitorPage() {
                 Payment Sandbox Gateway Simulator
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Simulates card charges against the live ASP.NET Core `/payments/sandbox-charge` endpoint.
+                Simulates card charges against the live ASP.NET Core `/payments/confirm-sandbox-charge` endpoint.
               </p>
             </div>
           </div>

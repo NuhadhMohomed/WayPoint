@@ -1,4 +1,5 @@
 using WayPoint.Application.DTOs.Booking;
+using WayPoint.Application.DTOs.Common;
 
 namespace WayPoint.Application.Common.Interfaces;
 
@@ -20,6 +21,11 @@ public interface IBookingService
 
     // Booking History & Management (US-PASS-005)
     Task<List<HistoricalBookingDto>> GetPassengerBookingsAsync(Guid? passengerId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Paginated booking history query (API §2 standardized pagination).
+    /// </summary>
+    Task<PaginatedResponseDto<HistoricalBookingDto>> GetPassengerBookingsPaginatedAsync(Guid? passengerId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<HistoricalBookingDto?> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
     Task<HistoricalBookingDto?> GetBookingByReferenceAsync(string bookingReference, CancellationToken cancellationToken = default);
 

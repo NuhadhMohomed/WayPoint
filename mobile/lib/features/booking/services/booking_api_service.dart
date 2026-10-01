@@ -58,7 +58,7 @@ class BookingApiService {
     return SeatHoldInfo.sampleColomboToElla();
   }
 
-  /// Processes sandbox mock payment charge via POST /api/v1/payments/sandbox-charge (US-PASS-004)
+  /// Processes sandbox mock payment charge via POST /api/v1/payments/confirm-sandbox-charge (US-PASS-004)
   Future<Map<String, dynamic>> processSandboxCharge({
     required String cardNumber,
     required double amount,
@@ -66,7 +66,7 @@ class BookingApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/payments/sandbox-charge',
+        '/payments/confirm-sandbox-charge',
         data: {
           'cardNumber': cardNumber,
           'cardholderName': cardholderName,
@@ -178,11 +178,11 @@ class BookingApiService {
     return null;
   }
 
-  /// Verifies HMAC QR payload via POST /api/v1/tickets/verify-qr
+  /// Verifies HMAC QR payload via POST /api/v1/tickets/verify
   Future<Map<String, dynamic>> verifyTicketQr(String qrPayload) async {
     try {
       final response = await _dio.post(
-        '/tickets/verify-qr',
+        '/tickets/verify',
         data: {'qrCodePayload': qrPayload},
       );
 

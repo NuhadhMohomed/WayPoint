@@ -10,7 +10,7 @@ export const bookingApi = {
     return res.data
   },
   confirmPayment: async (chargeData) => {
-    const res = await apiClient.post('/payments/sandbox-charge', chargeData)
+    const res = await apiClient.post('/payments/confirm-sandbox-charge', chargeData)
     return res.data
   },
   getBookings: async (params) => {
@@ -30,7 +30,7 @@ export const bookingApi = {
     return res.data
   },
   verifyTicketQr: async (qrCodePayload) => {
-    const res = await apiClient.post('/tickets/verify-qr', { qrCodePayload })
+    const res = await apiClient.post('/tickets/verify', { qrCodePayload })
     return res.data
   },
 }

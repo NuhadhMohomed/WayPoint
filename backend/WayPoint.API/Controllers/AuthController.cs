@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
 
         var token = _jwtTokenService.GenerateToken(user, role.RoleName);
 
-        return Ok(new AuthResponseDto
+        return StatusCode(StatusCodes.Status201Created, new AuthResponseDto
         {
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddMinutes(120),

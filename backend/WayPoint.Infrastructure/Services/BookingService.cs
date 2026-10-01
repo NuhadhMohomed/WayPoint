@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
+using WayPoint.Application.DTOs.Common;
 using WayPoint.Domain.Entities.Booking;
 using WayPoint.Domain.Enums;
 using WayPoint.Infrastructure.Data;
@@ -450,6 +451,72 @@ public class BookingService : IBookingService
                 EligibleRefundPercentage = eligibleRefundPercent
             };
         }).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<PaginatedResponseDto<HistoricalBookingDto>> GetPassengerBookingsPaginatedAsync(
+        Guid? passengerId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Bookings
+            .Include(b => b.Service)
+                .ThenInclude(s => s.Route)
+            .Include(b => b.Ticket)
+            .Include(b => b.Refunds)
+            .AsQueryable();
+
+        if (passengerId.HasValue)
+        {
+            query = query.Where(b => b.PassengerId == passengerId.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var bookings = await query
+            .OrderByDescending(b => b.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = bookings.Select(b =>
+        {
+            var route = b.Service?.Route;
+            var departureTime = b.Service?.DepartureTime ?? DateTime.UtcNow;
+            var hoursUntilDeparture = Math.Max(0, (int)(departureTime - DateTime.UtcNow).TotalHours);
+
+            decimal eligibleRefundPercent;
+            if (hoursUntilDeparture > 24) eligibleRefundPercent = 0.90m;
+            else if (hoursUntilDeparture >= 12) eligibleRefundPercent = 0.50m;
+            else eligibleRefundPercent = 0.0m;
+
+            var latestRefund = b.Refunds.OrderByDescending(r => r.ProcessedAt).FirstOrDefault();
+
+            return new HistoricalBookingDto
+            {
+                BookingId = b.Id,
+                BookingReference = b.BookingReference,
+                ServiceId = b.ServiceId,
+                ServiceCode = b.Service?.ServiceCode ?? "SRV-UNKNOWN",
+                RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : "Intercity Transit Corridor",
+                OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
+                DestinationCity = route?.DestinationCity ?? "Destination Terminal",
+                DepartureTime = departureTime,
+                ArrivalTime = b.Service?.ArrivalTime ?? departureTime.AddHours(4),
+                SeatNumbers = b.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+                TotalFareAmount = b.TotalFareAmount,
+                Status = b.Status.ToString(),
+                BookedAt = b.CreatedAt,
+                TicketId = b.Ticket?.Id,
+                QrCodePayload = b.Ticket?.QrCodePayload,
+                IsBoarded = b.Ticket?.IsBoarded ?? false,
+                RefundAmount = latestRefund?.RefundAmount,
+                RefundPercentage = latestRefund?.Percentage,
+                CancellationReason = latestRefund?.Reason,
+                HoursUntilDeparture = hoursUntilDeparture,
+                EligibleRefundPercentage = eligibleRefundPercent
+            };
+        }).ToList();
+
+        return new PaginatedResponseDto<HistoricalBookingDto>(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task<HistoricalBookingDto?> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default)

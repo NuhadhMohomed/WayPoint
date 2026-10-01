@@ -14,7 +14,7 @@ class ApiConstants {
   static const String searchJourneys = '/journeys/search';
   static const String serviceSeats = '/services';
   static const String holdSeat = '/bookings/hold';
-  static const String confirmPayment = '/payments/sandbox-charge';
+  static const String confirmPayment = '/payments/confirm-sandbox-charge';
   static const String bookings = '/bookings';
   static const String disruptionAlerts = '/alerts';
 }

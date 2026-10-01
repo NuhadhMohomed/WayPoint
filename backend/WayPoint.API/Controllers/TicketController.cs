@@ -91,7 +91,7 @@ public class TicketController : ControllerBase
     /// Conductor boarding validation endpoint. Cryptographically verifies HMAC signature and records boarding.
     /// </summary>
     [Authorize(Policy = "RequireOperator")]
-    [HttpPost("verify-qr")]
+    [HttpPost("verify")]
     public async Task<ActionResult<VerifyQrResponseDto>> VerifyQr(
         [FromBody] VerifyQrRequestDto request,
         CancellationToken cancellationToken)
