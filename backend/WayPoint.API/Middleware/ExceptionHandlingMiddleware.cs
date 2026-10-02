@@ -36,7 +36,13 @@ public class ExceptionHandlingMiddleware
         {
             KeyNotFoundException => HttpStatusCode.NotFound,
             UnauthorizedAccessException => HttpStatusCode.Unauthorized,
-            InvalidOperationException => HttpStatusCode.Conflict,
+            InvalidOperationException ex when ex.Message.Contains("conflict", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already assigned", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already booked", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already cancelled", StringComparison.OrdinalIgnoreCase)
+                => HttpStatusCode.Conflict,
+            InvalidOperationException => HttpStatusCode.BadRequest,
             ArgumentException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
         };

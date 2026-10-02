@@ -744,4 +744,37 @@ public class BookingService : IBookingService
             Message = "Valid e-ticket. Passenger cleared for immediate boarding."
         };
     }
+
+    /// <inheritdoc />
+    public async Task<TicketDetailsDto?> GetTicketByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
+    {
+        var ticket = await _context.Tickets
+            .Include(t => t.Booking)
+                .ThenInclude(b => b.Passenger)
+            .Include(t => t.Booking)
+                .ThenInclude(b => b.Service)
+                    .ThenInclude(s => s.Route)
+            .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+
+        if (ticket == null)
+            return null;
+
+        var route = ticket.Booking.Service?.Route;
+
+        return new TicketDetailsDto
+        {
+            TicketId = ticket.Id,
+            BookingReference = ticket.Booking.BookingReference,
+            ServiceCode = ticket.Booking.Service?.ServiceCode,
+            RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity}" : "Intercity Express",
+            SeatNumbers = ticket.Booking.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
+            TotalFare = ticket.Booking.TotalFareAmount,
+            Status = ticket.Status.ToString(),
+            IsBoarded = ticket.IsBoarded,
+            BoardedAt = ticket.BoardedAt,
+            QrCodePayload = ticket.QrCodePayload,
+            IssuedAt = ticket.CreatedAt,
+            PassengerUserId = ticket.Booking.Passenger?.UserId
+        };
+    }
 }

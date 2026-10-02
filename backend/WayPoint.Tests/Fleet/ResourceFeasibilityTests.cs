@@ -41,7 +41,7 @@ public class ResourceFeasibilityTests
             {
                 Id = Guid.NewGuid(),
                 FullName = "Jane Smith",
-                Status = "Active"
+                Status = DriverStatus.Active
             }
         };
 
@@ -85,7 +85,7 @@ public class ResourceFeasibilityTests
 
         var drivers = new List<Driver>
         {
-            new Driver { Id = Guid.NewGuid(), FullName = "Jane Smith", Status = "Active" }
+            new Driver { Id = Guid.NewGuid(), FullName = "Jane Smith", Status = DriverStatus.Active }
         };
 
         var mockContext = CreateMockContext(buses, drivers, new List<Service>(), new List<DriverAssignment>());
@@ -124,7 +124,7 @@ public class ResourceFeasibilityTests
 
         var drivers = new List<Driver>
         {
-            new Driver { Id = Guid.NewGuid(), FullName = "Jane Smith", Status = "Active" }
+            new Driver { Id = Guid.NewGuid(), FullName = "Jane Smith", Status = DriverStatus.Active }
         };
 
         var mockContext = CreateMockContext(buses, drivers, new List<Service>(), new List<DriverAssignment>());
@@ -163,7 +163,7 @@ public class ResourceFeasibilityTests
         var driverId = Guid.NewGuid();
         var drivers = new List<Driver>
         {
-            new Driver { Id = driverId, FullName = "Jane Smith", Status = "Active" }
+            new Driver { Id = driverId, FullName = "Jane Smith", Status = DriverStatus.Active }
         };
 
         var previousService = new Service

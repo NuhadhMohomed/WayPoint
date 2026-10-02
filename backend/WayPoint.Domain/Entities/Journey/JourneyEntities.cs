@@ -103,7 +103,7 @@ public class JourneySearch : BaseEntity
 public class JourneyCandidate : BaseEntity
 {
     public Guid JourneySearchId { get; set; }
-    public string CandidateType { get; set; } = "Direct"; // Direct or Connecting
+    public JourneyCandidateType CandidateType { get; set; } = JourneyCandidateType.Direct;
     public decimal TotalFare { get; set; }
     public int TotalDurationMinutes { get; set; }
     public decimal MatchScore { get; set; }

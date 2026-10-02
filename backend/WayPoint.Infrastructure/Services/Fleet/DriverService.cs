@@ -4,6 +4,7 @@ using WayPoint.Application.Common.Interfaces.Fleet;
 using WayPoint.Application.DTOs.Common;
 using WayPoint.Application.Features.FleetManagement.DTOs;
 using WayPoint.Domain.Entities.Fleet;
+using WayPoint.Domain.Enums;
 
 namespace WayPoint.Infrastructure.Services.Fleet;
 
@@ -22,8 +23,8 @@ public class DriverService : IDriverService
             .Include(d => d.Assignments)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filter.Status))
-            query = query.Where(d => d.Status == filter.Status);
+        if (!string.IsNullOrWhiteSpace(filter.Status) && Enum.TryParse<DriverStatus>(filter.Status, true, out var statusEnum))
+            query = query.Where(d => d.Status == statusEnum);
 
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
@@ -46,7 +47,7 @@ public class DriverService : IDriverService
                 FullName = d.FullName,
                 LicenseNumber = d.LicenseNumber,
                 PhoneNumber = d.PhoneNumber,
-                Status = d.Status,
+                Status = d.Status.ToString(),
                 AssignmentCount = d.Assignments.Count,
                 CreatedAt = d.CreatedAt
             })
@@ -70,7 +71,7 @@ public class DriverService : IDriverService
             FullName = driver.FullName,
             LicenseNumber = driver.LicenseNumber,
             PhoneNumber = driver.PhoneNumber,
-            Status = driver.Status,
+            Status = driver.Status.ToString(),
             AssignmentCount = driver.Assignments.Count,
             CreatedAt = driver.CreatedAt
         };
@@ -90,7 +91,7 @@ public class DriverService : IDriverService
             FullName = dto.FullName.Trim(),
             LicenseNumber = normalizedLicense,
             PhoneNumber = dto.PhoneNumber.Trim(),
-            Status = "Active"
+            Status = DriverStatus.Active
         };
 
         await _context.Drivers.AddAsync(driver);
@@ -102,7 +103,7 @@ public class DriverService : IDriverService
             FullName = driver.FullName,
             LicenseNumber = driver.LicenseNumber,
             PhoneNumber = driver.PhoneNumber,
-            Status = driver.Status,
+            Status = driver.Status.ToString(),
             AssignmentCount = 0,
             CreatedAt = driver.CreatedAt
         };
@@ -119,7 +120,7 @@ public class DriverService : IDriverService
         if (driver == null)
             throw new KeyNotFoundException($"Driver with ID '{dto.DriverId}' was not found.");
 
-        if (driver.Status != "Active")
+        if (driver.Status != DriverStatus.Active)
             throw new InvalidOperationException($"Driver '{driver.FullName}' is not active (current status: {driver.Status}).");
 
         // Validate service exists

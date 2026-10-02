@@ -22,7 +22,7 @@ public class DriverOverlapDetectionTests
         
         var drivers = new List<Driver>
         {
-            new Driver { Id = driverId, FullName = "John Doe", Status = "Active" }
+            new Driver { Id = driverId, FullName = "John Doe", Status = DriverStatus.Active }
         };
 
         var services = new List<Service>
@@ -64,7 +64,7 @@ public class DriverOverlapDetectionTests
         
         var drivers = new List<Driver>
         {
-            new Driver { Id = driverId, FullName = "John Doe", Status = "Active" }
+            new Driver { Id = driverId, FullName = "John Doe", Status = DriverStatus.Active }
         };
 
         var existingService = new Service 
@@ -121,7 +121,7 @@ public class DriverOverlapDetectionTests
         
         var drivers = new List<Driver>
         {
-            new Driver { Id = driverId, FullName = "John Doe", Status = "Active" }
+            new Driver { Id = driverId, FullName = "John Doe", Status = DriverStatus.Active }
         };
 
         var existingService = new Service 
@@ -178,7 +178,7 @@ public class DriverOverlapDetectionTests
         
         var drivers = new List<Driver>
         {
-            new Driver { Id = driverId, FullName = "John Doe", Status = "Active" }
+            new Driver { Id = driverId, FullName = "John Doe", Status = DriverStatus.Active }
         };
 
         var existingService = new Service 

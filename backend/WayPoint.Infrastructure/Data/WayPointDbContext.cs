@@ -187,6 +187,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
         {
             entity.Property(jc => jc.TotalFare).HasPrecision(10, 2);
             entity.Property(jc => jc.MatchScore).HasPrecision(4, 3);
+            entity.Property(jc => jc.CandidateType).HasConversion<string>().HasMaxLength(20);
             entity.HasOne(jc => jc.JourneySearch)
                   .WithMany(js => js.Candidates)
                   .HasForeignKey(jc => jc.JourneySearchId)
@@ -228,6 +229,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
             entity.Property(d => d.FullName).HasMaxLength(100).IsRequired();
             entity.Property(d => d.LicenseNumber).HasMaxLength(50).IsRequired();
             entity.Property(d => d.PhoneNumber).HasMaxLength(20);
+            entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
         });
 
         modelBuilder.Entity<DriverAssignment>(entity =>

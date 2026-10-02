@@ -20,6 +20,7 @@ public sealed class ServiceController : ControllerBase
     public async Task<IActionResult> GetServices(
         [FromQuery] DateTime? date,
         [FromQuery] Guid? routeId,
+        [FromQuery] string? status,
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         CancellationToken cancellationToken)
@@ -28,12 +29,12 @@ public sealed class ServiceController : ControllerBase
         if (page.HasValue || pageSize.HasValue)
         {
             var paginatedResult = await journeyPlanningService.GetServicesPaginatedAsync(
-                date, routeId, page ?? 1, pageSize ?? 20, cancellationToken);
+                date, routeId, status, page ?? 1, pageSize ?? 20, cancellationToken);
             return Ok(paginatedResult);
         }
 
         // Backward-compatible: return full list when no pagination params
-        return Ok(await journeyPlanningService.GetServicesAsync(date, routeId, cancellationToken));
+        return Ok(await journeyPlanningService.GetServicesAsync(date, routeId, status, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]

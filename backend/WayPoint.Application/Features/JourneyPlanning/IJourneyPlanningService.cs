@@ -8,12 +8,12 @@ public interface IJourneyPlanningService
     Task<IReadOnlyList<RouteDto>> GetRoutesAsync(string? origin, string? destination, bool activeOnly, CancellationToken cancellationToken);
     Task<RouteDetailsDto?> GetRouteAsync(Guid id, CancellationToken cancellationToken);
     Task<RouteDto> CreateRouteAsync(CreateRouteDto request, CancellationToken cancellationToken);
-    Task<IReadOnlyList<ServiceDto>> GetServicesAsync(DateTime? date, Guid? routeId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ServiceDto>> GetServicesAsync(DateTime? date, Guid? routeId, string? status, CancellationToken cancellationToken);
 
     /// <summary>
     /// Paginated service listing (API §2 standardized pagination).
     /// </summary>
-    Task<PaginatedResponseDto<ServiceDto>> GetServicesPaginatedAsync(DateTime? date, Guid? routeId, int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<PaginatedResponseDto<ServiceDto>> GetServicesPaginatedAsync(DateTime? date, Guid? routeId, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     Task<ServiceDto?> GetServiceAsync(Guid id, CancellationToken cancellationToken);
     Task<JourneySearchResponseDto> SearchAsync(JourneySearchRequestDto request, Guid? passengerId, CancellationToken cancellationToken);

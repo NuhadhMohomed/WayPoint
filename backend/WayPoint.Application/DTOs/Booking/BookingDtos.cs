@@ -146,3 +146,28 @@ public class VerifyQrResponseDto
     public DateTime? BoardedAt { get; set; }
     public string Message { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Digital boarding pass ticket representation returned by IBookingService.GetTicketByIdAsync.
+/// Includes PassengerUserId for controller-level ownership verification.
+/// </summary>
+public class TicketDetailsDto
+{
+    public Guid TicketId { get; set; }
+    public string BookingReference { get; set; } = string.Empty;
+    public string? ServiceCode { get; set; }
+    public string RouteTitle { get; set; } = "Intercity Express";
+    public List<string> SeatNumbers { get; set; } = new();
+    public decimal TotalFare { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public bool IsBoarded { get; set; }
+    public DateTime? BoardedAt { get; set; }
+    public string QrCodePayload { get; set; } = string.Empty;
+    public DateTime IssuedAt { get; set; }
+
+    /// <summary>
+    /// The UserId of the passenger who owns this ticket.
+    /// Used by the controller for ownership verification — not serialized to the API response.
+    /// </summary>
+    public Guid? PassengerUserId { get; set; }
+}

@@ -5,27 +5,51 @@ using WayPoint.Infrastructure.Data;
 
 namespace WayPoint.API.Controllers;
 
+/// <summary>
+/// Development-only endpoints for seeding, status checks, and diagnostics.
+/// Guarded at runtime: returns 404 in non-Development environments.
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class DevController : ControllerBase
 {
     private readonly WayPointDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<DevController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public DevController(
         WayPointDbContext context,
         IPasswordHasher passwordHasher,
-        ILogger<DevController> logger)
+        ILogger<DevController> logger,
+        IWebHostEnvironment environment)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _environment = environment;
+    }
+
+    /// <summary>
+    /// Runtime environment guard: blocks all DevController actions in non-Development environments.
+    /// </summary>
+    private IActionResult? GuardDevelopmentOnly()
+    {
+        if (!_environment.IsDevelopment())
+        {
+            _logger.LogWarning("DevController endpoint accessed in {Environment} environment — blocked.", _environment.EnvironmentName);
+            return NotFound();
+        }
+        return null;
     }
 
     [HttpPost("seed")]
     public async Task<IActionResult> SeedDatabase()
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         try
         {
             _logger.LogInformation("Applying pending database migrations...");
@@ -63,6 +87,9 @@ public class DevController : ControllerBase
     [HttpPost("mock-trip-for-review")]
     public async Task<IActionResult> CreateMockTripForReview([FromBody] WayPoint.Application.Features.FleetManagement.DTOs.CreateBusReviewDto request)
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         // This is a dev-only mock to satisfy ReviewService business rules
         var route = await _context.Routes.FirstOrDefaultAsync();
         if (route == null) return NotFound("No routes available.");
@@ -102,6 +129,9 @@ public class DevController : ControllerBase
     [HttpGet("status")]
     public async Task<IActionResult> GetDatabaseStatus()
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         var canConnect = await _context.Database.CanConnectAsync();
         if (!canConnect)
         {
@@ -130,6 +160,9 @@ public class DevController : ControllerBase
     [HttpGet("services")]
     public async Task<IActionResult> GetServices()
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         var services = await _context.Services
             .Include(s => s.Route)
             .Include(s => s.Bus)
@@ -156,6 +189,9 @@ public class DevController : ControllerBase
     [HttpGet("audit-logs")]
     public async Task<IActionResult> GetAuditLogs([FromQuery] int limit = 50)
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         var logs = await _context.AuditLogs
             .OrderByDescending(a => a.Timestamp)
             .Take(limit)

@@ -178,7 +178,7 @@ public static class DbSeeder
                 FullName = "Sunimal Perera",
                 LicenseNumber = "DL-98214-SP",
                 PhoneNumber = "+94712345678",
-                Status = "Active"
+                Status = DriverStatus.Active
             };
 
             driver2 = new Driver
@@ -186,7 +186,7 @@ public static class DbSeeder
                 FullName = "Kamal Wickramasinghe",
                 LicenseNumber = "DL-44129-KW",
                 PhoneNumber = "+94713456789",
-                Status = "Active"
+                Status = DriverStatus.Active
             };
 
             await context.Drivers.AddRangeAsync(driver1, driver2);

@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
 
@@ -12,16 +11,13 @@ namespace WayPoint.API.Controllers;
 public class TicketController : ControllerBase
 {
     private readonly IBookingService _bookingService;
-    private readonly IWayPointDbContext _context;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
         IBookingService bookingService,
-        IWayPointDbContext context,
         ILogger<TicketController> logger)
     {
         _bookingService = bookingService;
-        _context = context;
         _logger = logger;
     }
 
@@ -33,13 +29,7 @@ public class TicketController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetTicket(Guid id, CancellationToken cancellationToken)
     {
-        var ticket = await _context.Tickets
-            .Include(t => t.Booking)
-                .ThenInclude(b => b.Passenger)
-            .Include(t => t.Booking)
-                .ThenInclude(b => b.Service)
-                    .ThenInclude(s => s.Route)
-            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        var ticket = await _bookingService.GetTicketByIdAsync(id, cancellationToken);
 
         if (ticket == null)
         {
@@ -56,11 +46,11 @@ public class TicketController : ControllerBase
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (Guid.TryParse(userIdClaim, out var currentUserId))
         {
-            if (ticket.Booking.Passenger?.UserId != currentUserId)
+            if (ticket.PassengerUserId != currentUserId)
             {
                 _logger.LogWarning(
-                    "Ticket ownership violation: User {UserId} attempted to access ticket {TicketId} owned by passenger profile {PassengerId}",
-                    currentUserId, id, ticket.Booking.PassengerId);
+                    "Ticket ownership violation: User {UserId} attempted to access ticket {TicketId}",
+                    currentUserId, id);
                 return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
                 {
                     Status = StatusCodes.Status403Forbidden,
@@ -70,20 +60,19 @@ public class TicketController : ControllerBase
             }
         }
 
-        var route = ticket.Booking.Service?.Route;
         return Ok(new
         {
-            ticketId = ticket.Id,
-            bookingReference = ticket.Booking.BookingReference,
-            serviceCode = ticket.Booking.Service?.ServiceCode,
-            routeTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity}" : "Intercity Express",
-            seatNumbers = ticket.Booking.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
-            totalFare = ticket.Booking.TotalFareAmount,
-            status = ticket.Status.ToString(),
+            ticketId = ticket.TicketId,
+            bookingReference = ticket.BookingReference,
+            serviceCode = ticket.ServiceCode,
+            routeTitle = ticket.RouteTitle,
+            seatNumbers = ticket.SeatNumbers,
+            totalFare = ticket.TotalFare,
+            status = ticket.Status,
             isBoarded = ticket.IsBoarded,
             boardedAt = ticket.BoardedAt,
             qrCodePayload = ticket.QrCodePayload,
-            issuedAt = ticket.CreatedAt
+            issuedAt = ticket.IssuedAt
         });
     }
 

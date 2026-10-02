@@ -104,7 +104,7 @@ public class ResourceFeasibilityService : IResourceFeasibilityService
     {
         // Get all active drivers
         var activeDrivers = await _context.Drivers
-            .Where(d => d.Status == "Active")
+            .Where(d => d.Status == WayPoint.Domain.Enums.DriverStatus.Active)
             .ToListAsync();
 
         var feasibleDrivers = new List<FeasibleDriverDto>();

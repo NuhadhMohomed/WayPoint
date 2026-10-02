@@ -35,4 +35,10 @@ public interface IBookingService
     // Digital QR Tickets & Conductor Verification
     Task<string> GenerateTicketPayloadAsync(string bookingReference, string serviceCode, string seatNumbers, string passengerName);
     Task<VerifyQrResponseDto> VerifyTicketQrAsync(VerifyQrRequestDto request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a digital boarding pass ticket by ID with full booking context.
+    /// Returns null if ticket does not exist.
+    /// </summary>
+    Task<TicketDetailsDto?> GetTicketByIdAsync(Guid ticketId, CancellationToken cancellationToken = default);
 }

@@ -49,7 +49,7 @@ public class Driver : BaseEntity
     public string FullName { get; set; } = string.Empty;
     public string LicenseNumber { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
-    public string Status { get; set; } = "Active";
+    public DriverStatus Status { get; set; } = DriverStatus.Active;
 
     // Navigation properties
     public ICollection<DriverAssignment> Assignments { get; set; } = new List<DriverAssignment>();

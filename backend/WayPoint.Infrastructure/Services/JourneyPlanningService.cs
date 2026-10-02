@@ -56,21 +56,25 @@ public sealed class JourneyPlanningService : IJourneyPlanningService
         return ToRouteDto(route);
     }
 
-    public async Task<IReadOnlyList<ServiceDto>> GetServicesAsync(DateTime? date, Guid? routeId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ServiceDto>> GetServicesAsync(DateTime? date, Guid? routeId, string? status, CancellationToken cancellationToken)
     {
         var query = context.Services.AsNoTracking().Include(service => service.Route).AsQueryable();
         if (routeId.HasValue) query = query.Where(service => service.RouteId == routeId.Value);
         if (date.HasValue) query = query.Where(service => service.DepartureTime.Date == date.Value.Date);
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ServiceStatus>(status, true, out var statusEnum))
+            query = query.Where(service => service.Status == statusEnum);
         return await query.OrderBy(service => service.DepartureTime).Select(service => new ServiceDto { Id = service.Id, ServiceCode = service.ServiceCode, RouteId = service.RouteId, RouteNumber = service.Route.RouteCode, DepartureTime = service.DepartureTime, ArrivalTime = service.ArrivalTime, BaseFare = service.BaseFare, Status = service.Status.ToString() }).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<PaginatedResponseDto<ServiceDto>> GetServicesPaginatedAsync(
-        DateTime? date, Guid? routeId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        DateTime? date, Guid? routeId, string? status, int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         var query = context.Services.AsNoTracking().Include(service => service.Route).AsQueryable();
         if (routeId.HasValue) query = query.Where(service => service.RouteId == routeId.Value);
         if (date.HasValue) query = query.Where(service => service.DepartureTime.Date == date.Value.Date);
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ServiceStatus>(status, true, out var statusEnum))
+            query = query.Where(service => service.Status == statusEnum);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -134,7 +138,7 @@ public sealed class JourneyPlanningService : IJourneyPlanningService
             candidate.AvailableSeatsCount = Math.Max(0, (service?.Bus.TotalSeatCapacity ?? 0) - bookedCount - heldCount);
         }
         candidates = candidates.OrderByDescending(candidate => candidate.MatchScore).ThenBy(candidate => candidate.DepartureTime).Take(20).ToList();
-        search.Candidates = candidates.Select(candidate => new JourneyCandidate { CandidateType = candidate.IsConnecting ? "Connecting" : "Direct", TotalFare = candidate.TotalFare, TotalDurationMinutes = candidate.TotalDurationMinutes, MatchScore = candidate.MatchScore }).ToList();
+        search.Candidates = candidates.Select(candidate => new JourneyCandidate { CandidateType = candidate.IsConnecting ? JourneyCandidateType.Connecting : JourneyCandidateType.Direct, TotalFare = candidate.TotalFare, TotalDurationMinutes = candidate.TotalDurationMinutes, MatchScore = candidate.MatchScore }).ToList();
         await context.JourneySearches.AddAsync(search, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return new JourneySearchResponseDto { SearchId = search.Id, Candidates = candidates };
