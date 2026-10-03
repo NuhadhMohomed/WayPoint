@@ -1207,7 +1207,441 @@ class TestPromptInjectionSanitization:
 
 
 # ============================================================================
-# 4. JSON Extraction Tests
+# 4. Phase 4: Agent Execution Pipeline Tests (FR-AI-001, FR-AI-004, BR-APPROVAL-001)
+# ============================================================================
+
+class TestSafetyAgentExecution:
+    """Phase 4 verification: _safety_core execution pipeline and routing.
+
+    Tests:
+      - safety_agent_node is an async callable accepting and returning state
+      - Multi-round tool loop: execution ceases once final text returned or round limit reached
+      - High-impact → PendingManagerApproval workflow status
+      - Low-impact → Completed workflow status
+      - Step record structure with tool_calls and validation_results
+      - Tool call audit record capture with duration_ms
+    """
+
+    # --- Node callable test ---
+
+    def test_safety_agent_node_is_async_callable(self):
+        """safety_agent_node must be an async function (coroutine function)."""
+        from agents.safety_agent import safety_agent_node
+
+        assert callable(safety_agent_node)
+        assert inspect.iscoroutinefunction(safety_agent_node)
+
+    def test_safety_agent_node_accepts_state_and_returns_dict(self):
+        """safety_agent_node with SafeFailure state returns a dict."""
+        import asyncio
+        from agents.safety_agent import safety_agent_node
+
+        state = {
+            "workflow_status": "SafeFailure",
+            "retry_count": 3,
+            "messages": [],
+        }
+        result = asyncio.run(safety_agent_node(state))
+        assert isinstance(result, dict)
+        assert "workflow_status" in result
+
+    # --- Multi-round tool loop tests ---
+
+    def test_multi_round_tool_loop_stops_on_final_text(self, post_booking_state):
+        """Tool loop must stop when LLM returns text (no tool_calls)."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        # Mock LLM: Round 1 = tool call, Round 2 = final text response
+        mock_tool_response = MagicMock()
+        mock_tool_response.tool_calls = [
+            {"id": "call_001", "name": "CalculatePassengerImpact", "args": {"disrupted_service_id": "91532418-794f-46b0-89e3-1a1f8125be4c"}}
+        ]
+
+        mock_final_response = MagicMock()
+        mock_final_response.tool_calls = None
+        mock_final_response.content = json.dumps({
+            "impact_classification": "High",
+            "affected_passenger_count": 28,
+            "total_delay_minutes": 45,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=[mock_tool_response, mock_final_response])
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        mock_tool_result = json.dumps({
+            "affectedPassengerCount": 28,
+            "totalDelayMinutes": 45,
+            "netFareDelta": 0,
+            "affectedBookingIds": [],
+        })
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            with patch("agents.safety_agent._execute_tool_call", new_callable=AsyncMock) as mock_exec:
+                mock_exec.return_value = (mock_tool_result, {
+                    "tool_name": "CalculatePassengerImpact",
+                    "arguments_json": "{}",
+                    "result_json": mock_tool_result,
+                    "duration_ms": 150,
+                })
+
+                from agents.safety_agent import _safety_core
+                result = asyncio.run(_safety_core(post_booking_state))
+
+        # Verify: LLM invoked exactly 2 times (1 tool call + 1 final text)
+        assert mock_llm.ainvoke.call_count == 2
+
+        # Verify result structure
+        assert result["current_agent"] == "ValidationSafetyAgent"
+        assert result["impact_classification"] == "High"
+        assert result["requires_approval"] is True
+        assert result["workflow_status"] == "PendingManagerApproval"
+
+    def test_multi_round_tool_loop_stops_at_max_rounds(self, post_booking_state):
+        """Tool loop must stop after _MAX_TOOL_ROUNDS even if LLM keeps requesting tools."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        # Every round produces tool calls — never final text
+        def make_tool_response():
+            resp = MagicMock()
+            resp.tool_calls = [
+                {"id": "call_round", "name": "CalculatePassengerImpact",
+                 "args": {"disrupted_service_id": "91532418-794f-46b0-89e3-1a1f8125be4c"}}
+            ]
+            resp.content = ""
+            return resp
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=[make_tool_response() for _ in range(3)])
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        mock_tool_result = json.dumps({"affectedPassengerCount": 5})
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            with patch("agents.safety_agent._execute_tool_call", new_callable=AsyncMock) as mock_exec:
+                mock_exec.return_value = (mock_tool_result, {
+                    "tool_name": "CalculatePassengerImpact",
+                    "arguments_json": "{}",
+                    "result_json": mock_tool_result,
+                    "duration_ms": 100,
+                })
+
+                from agents.safety_agent import _safety_core
+                result = asyncio.run(_safety_core(post_booking_state))
+
+        # Verify: LLM invoked exactly 3 times (max rounds)
+        assert mock_llm.ainvoke.call_count == 3
+        # Verify: result is returned even without final text
+        assert isinstance(result, dict)
+        assert result["current_agent"] == "ValidationSafetyAgent"
+
+    def test_multi_round_tool_loop_no_tool_calls_first_round(self, post_booking_state):
+        """If LLM returns final text on first round, loop should execute only once."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "Low",
+            "affected_passenger_count": 2,
+            "total_delay_minutes": 5,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        # Only 1 LLM invocation (immediate final text)
+        assert mock_llm.ainvoke.call_count == 1
+        assert result["current_agent"] == "ValidationSafetyAgent"
+
+    # --- Impact routing tests ---
+
+    def test_high_impact_routes_to_pending_manager_approval(self, post_booking_state):
+        """High impact → requires_approval=True, workflow_status=PendingManagerApproval."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "High",
+            "affected_passenger_count": 28,
+            "total_delay_minutes": 45,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        assert result["impact_classification"] == "High"
+        assert result["requires_approval"] is True
+        assert result["approval_status"] == "PendingManagerApproval"
+        assert result["workflow_status"] == "PendingManagerApproval"
+
+    def test_low_impact_routes_to_completed(self, post_booking_state):
+        """Low impact → requires_approval=False, workflow_status=Completed."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        # Modify state to NOT be disruption_rebooking and no high delay
+        post_booking_state["workflow_type"] = "journey_recommendation"
+        post_booking_state["candidate_routes"] = [
+            {"route_id": "rt-1", "delay_minutes": 5}
+        ]
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "Low",
+            "affected_passenger_count": 2,
+            "total_delay_minutes": 5,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        assert result["impact_classification"] == "Low"
+        assert result["requires_approval"] is False
+        assert result["approval_status"] == ""
+        assert result["workflow_status"] == "Completed"
+
+    def test_cancellation_overrides_llm_low_to_high(self, post_booking_state):
+        """BR-APPROVAL-001: LLM says Low but workflow_type=disruption_rebooking → deterministic High."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "Low",
+            "affected_passenger_count": 28,
+            "total_delay_minutes": 10,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        # is_cancellation = True because workflow_type == "disruption_rebooking"
+        assert result["impact_classification"] == "High"
+        assert result["requires_approval"] is True
+        assert result["workflow_status"] == "PendingManagerApproval"
+
+    # --- Step record structure tests ---
+
+    def test_step_record_has_required_fields(self, post_booking_state):
+        """Step record must include agent_name, step_order, step_description,
+        tool_calls, and validation_results (ADR-004)."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "High",
+            "affected_passenger_count": 10,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        # At least one step appended
+        assert len(result["steps"]) > 0
+        step = result["steps"][-1]
+        assert step["agent_name"] == "ValidationSafetyAgent"
+        assert isinstance(step["step_order"], int)
+        assert "step_description" in step
+        assert isinstance(step["tool_calls"], list)
+        assert isinstance(step["validation_results"], list)
+
+    def test_validation_results_contain_all_required_rules(self, post_booking_state):
+        """Validation results must include ImpactClassificationOverride,
+        HumanApprovalBoundary, and OperationalSafetyBoundary."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        mock_response = MagicMock()
+        mock_response.tool_calls = None
+        mock_response.content = json.dumps({
+            "impact_classification": "High",
+            "affected_passenger_count": 10,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            from agents.safety_agent import _safety_core
+            result = asyncio.run(_safety_core(post_booking_state))
+
+        step = result["steps"][-1]
+        rule_names = [v["rule_name"] for v in step["validation_results"]]
+        assert "ImpactClassificationOverride" in rule_names
+        assert "HumanApprovalBoundary" in rule_names
+        assert "OperationalSafetyBoundary" in rule_names
+
+    # --- Tool call audit record tests ---
+
+    def test_tool_call_records_captured_with_duration(self, post_booking_state):
+        """Tool call records must have tool_name, arguments_json, result_json, duration_ms."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch, MagicMock
+
+        # Round 1: tool call, Round 2: final text
+        mock_tool_response = MagicMock()
+        mock_tool_response.tool_calls = [
+            {"id": "call_audit", "name": "CreateRebookingProposal",
+             "args": {"disruption_case_id": "dc-001", "replacement_service_id": "srv-001"}}
+        ]
+
+        mock_final_response = MagicMock()
+        mock_final_response.tool_calls = None
+        mock_final_response.content = json.dumps({
+            "impact_classification": "High",
+            "affected_passenger_count": 28,
+        })
+
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=[mock_tool_response, mock_final_response])
+        mock_llm.bind_tools = MagicMock(return_value=mock_llm)
+
+        tool_record = {
+            "tool_name": "CreateRebookingProposal",
+            "arguments_json": json.dumps({"disruption_case_id": "dc-001"}),
+            "result_json": json.dumps({"proposalId": "prop-001"}),
+            "duration_ms": 230,
+        }
+
+        with patch("agents.safety_agent.ChatGoogleGenerativeAI", return_value=mock_llm):
+            with patch("agents.safety_agent._execute_tool_call", new_callable=AsyncMock) as mock_exec:
+                mock_exec.return_value = (json.dumps({"proposalId": "prop-001"}), tool_record)
+
+                from agents.safety_agent import _safety_core
+                result = asyncio.run(_safety_core(post_booking_state))
+
+        step = result["steps"][-1]
+        assert len(step["tool_calls"]) == 1
+        tc = step["tool_calls"][0]
+        assert tc["tool_name"] == "CreateRebookingProposal"
+        assert "arguments_json" in tc
+        assert "result_json" in tc
+        assert isinstance(tc["duration_ms"], int)
+        assert tc["duration_ms"] >= 0
+
+    # --- Safe failure integration tests ---
+
+    def test_safety_agent_safe_failure_returns_safe_state(self):
+        """Exception in _safety_core → SafeFailure state with structured error (FR-AI-004)."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+
+        state = {
+            "workflow_status": "Running",
+            "retry_count": 2,  # Will hit max (3)
+            "step_order": 4,
+            "steps": [],
+            "messages": [],
+            "objective": "test",
+            "workflow_type": "disruption_rebooking",
+        }
+
+        with patch("agents.safety_agent._safety_core", new_callable=AsyncMock) as mock_core:
+            mock_core.side_effect = RuntimeError("Gemini API timeout")
+
+            from agents.safety_agent import safety_agent_node
+            result = asyncio.run(safety_agent_node(state))
+
+        assert result["workflow_status"] == "SafeFailure"
+        assert "ValidationSafetyAgent" in result.get("error", "")
+        assert result["retry_count"] >= 3
+
+    def test_safety_agent_safe_failure_records_step(self):
+        """SafeFailure must append a step with SafeFailureGuardrail validation record."""
+        import asyncio
+        from unittest.mock import AsyncMock, patch
+
+        state = {
+            "workflow_status": "Running",
+            "retry_count": 2,
+            "step_order": 4,
+            "steps": [],
+            "messages": [],
+        }
+
+        with patch("agents.safety_agent._safety_core", new_callable=AsyncMock) as mock_core:
+            mock_core.side_effect = ConnectionError("Backend unreachable")
+
+            from agents.safety_agent import safety_agent_node
+            result = asyncio.run(safety_agent_node(state))
+
+        assert len(result["steps"]) > 0
+        step = result["steps"][-1]
+        assert step["agent_name"] == "ValidationSafetyAgent"
+        vr = step["validation_results"][0]
+        assert vr["rule_name"] == "SafeFailureGuardrail"
+        assert vr["passed"] is False
+
+    # --- Graph integration tests ---
+
+    def test_graph_has_safety_node(self):
+        """LangGraph workflow must have a 'safety' node registered."""
+        from agents.graph import build_graph
+
+        graph = build_graph()
+        # LangGraph compiled graph has a 'nodes' attribute
+        node_names = list(graph.nodes.keys())
+        assert "safety" in node_names
+
+    def test_graph_has_five_nodes(self):
+        """FR-AI-001: 5-node LangGraph multi-agent workflow."""
+        from agents.graph import build_graph
+
+        graph = build_graph()
+        # Exclude __start__ and __end__ meta-nodes
+        agent_nodes = [n for n in graph.nodes.keys() if not n.startswith("__")]
+        assert len(agent_nodes) == 5, (
+            f"Expected 5 agent nodes, got {len(agent_nodes)}: {agent_nodes}"
+        )
+
+    def test_route_after_safety_returns_end(self):
+        """_route_after_safety always routes to END."""
+        from agents.graph import _route_after_safety
+        from langgraph.graph import END
+
+        for status in ["PendingManagerApproval", "Completed", "SafeFailure"]:
+            result = _route_after_safety({"workflow_status": status})
+            assert result == END
+
+
+# ============================================================================
+# 4b. JSON Extraction Tests
 # ============================================================================
 
 class TestSafetyAgentJsonExtraction:
