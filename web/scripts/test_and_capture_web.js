@@ -37,7 +37,7 @@ async function run() {
   // FOLDER 1: 01_auth_and_overview
   // ----------------------------------------------------
   console.log('Testing 01_auth_and_overview...');
-  await page.goto('http://localhost:5173/login', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/login', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(screenshotRoot, '01_auth_and_overview', '01_login_screen.png') });
   console.log('Saved 01_login_screen.png');
@@ -51,13 +51,13 @@ async function run() {
   console.log('Saved 02_login_error_state.png');
 
   // Register Screen
-  await page.goto('http://localhost:5173/register', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/register', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(screenshotRoot, '01_auth_and_overview', '03_register_screen.png') });
   console.log('Saved 03_register_screen.png');
 
   // Successful Login
-  await page.goto('http://localhost:5173/login', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/login', { waitUntil: 'domcontentloaded' });
   await page.fill('input[type="email"]', 'admin@waypoint.lk');
   await page.fill('input[type="password"]', 'Password123!');
   await page.click('button[type="submit"]');
@@ -70,7 +70,7 @@ async function run() {
   // FOLDER 2: 02_component_1_journey_and_routes (Sethum)
   // ----------------------------------------------------
   console.log('Testing 02_component_1_journey_and_routes...');
-  await page.goto('http://localhost:5173/routes/catalog', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/routes/catalog', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '02_component_1_journey_and_routes', '01_route_catalog_manager.png') });
   console.log('Saved 01_route_catalog_manager.png');
@@ -90,12 +90,12 @@ async function run() {
     await page.screenshot({ path: path.join(screenshotRoot, '02_component_1_journey_and_routes', '02_route_filter_view.png') });
   }
 
-  await page.goto('http://localhost:5173/routes/scheduler', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/routes/scheduler', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '02_component_1_journey_and_routes', '03_service_scheduler.png') });
   console.log('Saved 03_service_scheduler.png');
 
-  await page.goto('http://localhost:5173/routes/corridors', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/routes/corridors', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '02_component_1_journey_and_routes', '04_tourist_corridors_buffer.png') });
   console.log('Saved 04_tourist_corridors_buffer.png');
@@ -104,22 +104,22 @@ async function run() {
   // FOLDER 3: 03_component_2_fleet_and_resources (Nuhadh)
   // ----------------------------------------------------
   console.log('Testing 03_component_2_fleet_and_resources...');
-  await page.goto('http://localhost:5173/fleet/buses', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/fleet/buses', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '03_component_2_fleet_and_resources', '01_fleet_matrix_builder.png') });
   console.log('Saved 01_fleet_matrix_builder.png');
 
-  await page.goto('http://localhost:5173/fleet/layouts', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/fleet/layouts', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '03_component_2_fleet_and_resources', '02_seat_layout_designer_interactive.png') });
   console.log('Saved 02_seat_layout_designer_interactive.png');
 
-  await page.goto('http://localhost:5173/fleet/drivers', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/fleet/drivers', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '03_component_2_fleet_and_resources', '03_driver_rostering_rest_rules.png') });
   console.log('Saved 03_driver_rostering_rest_rules.png');
 
-  await page.goto('http://localhost:5173/fleet/reviews', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/fleet/reviews', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '03_component_2_fleet_and_resources', '04_fleet_reviews_dashboard.png') });
   console.log('Saved 04_fleet_reviews_dashboard.png');
@@ -128,12 +128,12 @@ async function run() {
   // FOLDER 4: 04_component_3_booking_and_operator (Mithila)
   // ----------------------------------------------------
   console.log('Testing 04_component_3_booking_and_operator...');
-  await page.goto('http://localhost:5173/operator', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/operator', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '04_component_3_booking_and_operator', '01_operator_dashboard_terminal.png') });
   console.log('Saved 01_operator_dashboard_terminal.png');
 
-  await page.goto('http://localhost:5173/manifest', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/manifest', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '04_component_3_booking_and_operator', '02_booking_manifest_monitor.png') });
   console.log('Saved 02_booking_manifest_monitor.png');
@@ -158,27 +158,27 @@ async function run() {
   // FOLDER 5: 05_component_4_disruptions_and_ai (Dineth)
   // ----------------------------------------------------
   console.log('Testing 05_component_4_disruptions_and_ai...');
-  await page.goto('http://localhost:5173/disruptions/intake', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/disruptions/intake', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '05_component_4_disruptions_and_ai', '01_disruption_intake_form.png') });
   console.log('Saved 01_disruption_intake_form.png');
 
-  await page.goto('http://localhost:5173/disruptions/approvals', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/disruptions/approvals', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '05_component_4_disruptions_and_ai', '02_manager_approval_workbench.png') });
   console.log('Saved 02_manager_approval_workbench.png');
 
-  await page.goto('http://localhost:5173/disruptions/alerts', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/disruptions/alerts', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '05_component_4_disruptions_and_ai', '03_service_alert_broadcast.png') });
   console.log('Saved 03_service_alert_broadcast.png');
 
-  await page.goto('http://localhost:5173/disruptions/ai-traces', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/disruptions/ai-traces', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '05_component_4_disruptions_and_ai', '04_ai_observability_traces.png') });
   console.log('Saved 04_ai_observability_traces.png');
 
-  await page.goto('http://localhost:5173/disruptions/admin', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:5173/disruptions/admin', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(screenshotRoot, '05_component_4_disruptions_and_ai', '05_admin_console_audit_integrity.png') });
   console.log('Saved 05_admin_console_audit_integrity.png');

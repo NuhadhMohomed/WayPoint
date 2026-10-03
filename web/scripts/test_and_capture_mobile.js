@@ -88,12 +88,12 @@ async function captureMobile() {
 
   // First visit to allow Flutter engine to fully initialize
   console.log('Loading Flutter app on http://localhost:8080/#/ ...');
-  await page.goto('http://localhost:8080/#/', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:8080/#/', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(4000);
 
   for (const s of screens) {
     console.log(`Navigating to ${s.description} -> ${s.url} ...`);
-    await page.goto(s.url, { waitUntil: 'networkidle' });
+    await page.goto(s.url, { waitUntil: 'domcontentloaded' });
     // Allow animation & rendering to settle
     await page.waitForTimeout(2000);
 
