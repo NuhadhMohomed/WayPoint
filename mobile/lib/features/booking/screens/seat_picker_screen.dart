@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/seat_picker_bloc.dart';
-import '../data/fleet_api_service.dart';
+import '../../fleet/bloc/seat_picker_bloc.dart';
+import '../../fleet/data/fleet_api_service.dart';
 
 /// MOB-05: Interactive Seat Picker & 10-minute Hold Screen.
 ///

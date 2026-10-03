@@ -4,7 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/transit_badge.dart';
 import '../../../core/widgets/waypoint_card.dart';
 import '../../fleet/data/fleet_api_service.dart';
-import '../../fleet/screens/seat_picker_screen.dart';
+import '../../booking/screens/seat_picker_screen.dart';
 import '../models/journey_models.dart';
 
 /// MOB-04: Journey Comparison Cards & Safe Buffer
