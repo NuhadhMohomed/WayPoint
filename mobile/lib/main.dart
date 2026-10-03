@@ -8,6 +8,7 @@ import 'features/booking/screens/ticket_wallet_screen.dart';
 import 'core/widgets/waypoint_button.dart';
 import 'core/widgets/waypoint_card.dart';
 import 'core/widgets/transit_badge.dart';
+import 'features/journey/screens/journey_search_screen.dart';
 
 import 'features/disruption/models/disruption_models.dart';
 import 'features/disruption/screens/disruption_alert_screen.dart';
@@ -44,7 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      const Center(child: Text('Component 1: Journey Search (Sethum)', style: TextStyle(fontSize: 16))),
+      const JourneySearchScreen(),
       const Center(child: Text('Component 2: Seat Picker & Fleet (Nuhadh)', style: TextStyle(fontSize: 16))),
       _buildComponent3Hub(context),
       _buildComponent4Hub(context),
