@@ -50,6 +50,16 @@ _INJECTION_PATTERNS: list[re.Pattern] = [
     re.compile(r"what\s+are\s+your\s+instructions", re.IGNORECASE),
     re.compile(r"bypass\s+(all\s+)?safety", re.IGNORECASE),
     re.compile(r"jailbreak", re.IGNORECASE),
+    # --- Disruption-domain-specific injection patterns (BR-APPROVAL-001) ---
+    # These target the Safety Agent's approval gate logic.
+    re.compile(r"bypass\s+(manager\s+)?approval", re.IGNORECASE),
+    re.compile(r"skip\s+(manager\s+)?approval", re.IGNORECASE),
+    re.compile(r"auto[\-\s]?approve", re.IGNORECASE),
+    re.compile(r"set\s+impact\s+to\s+low", re.IGNORECASE),
+    re.compile(r"classify\s+(as|impact)\s+low", re.IGNORECASE),
+    re.compile(r"force\s+low\s+impact", re.IGNORECASE),
+    re.compile(r"mark\s+(as\s+)?approved", re.IGNORECASE),
+    re.compile(r"execute\s+without\s+approval", re.IGNORECASE),
 ]
 
 

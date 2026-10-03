@@ -249,9 +249,70 @@ def validate_impact_classification(
 # ---------------------------------------------------------------------------
 
 
+def validate_upstream_outputs(
+    state: dict,
+) -> list[dict]:
+    """
+    Validate integrity of upstream agent outputs before safety processing.
+
+    Checks that prior nodes (Journey, Resource, Booking) produced well-formed
+    outputs the Safety Agent can rely on.
+
+    Args:
+        state: The full workflow state dict.
+
+    Returns:
+        List of validation result dicts (rule_name, passed, validation_details).
+    """
+    results: list[dict] = []
+
+    # Check Journey Agent output (candidate routes must exist)
+    candidate_routes = state.get("candidate_routes", [])
+    has_routes = bool(candidate_routes)
+    results.append({
+        "rule_name": "UpstreamJourneyAgent",
+        "passed": has_routes,
+        "validation_details": (
+            f"Found {len(candidate_routes)} candidate route(s)"
+            if has_routes
+            else "No candidate routes from Journey Agent"
+        ),
+    })
+
+    # Check Resource Agent output (feasibility assessment must exist)
+    feasibility = state.get("feasibility_result", {})
+    has_feasibility = bool(feasibility)
+    results.append({
+        "rule_name": "UpstreamResourceAgent",
+        "passed": has_feasibility,
+        "validation_details": (
+            "Feasibility assessment present"
+            if has_feasibility
+            else "No feasibility result from Resource Agent"
+        ),
+    })
+
+    # Check Booking Agent output (fare analysis should exist for disruptions)
+    fare_analysis = state.get("fare_analysis", {})
+    has_fare = bool(fare_analysis)
+    results.append({
+        "rule_name": "UpstreamBookingAgent",
+        "passed": has_fare,
+        "validation_details": (
+            "Fare analysis present"
+            if has_fare
+            else "No fare analysis from Booking Agent (may be acceptable)"
+        ),
+    })
+
+    return results
+
+
 def run_all_validators(
     agent_output: dict,
     workflow_type: str = "",
+    *,
+    state: dict | None = None,
 ) -> list[dict]:
     """
     Run all applicable validators on an agent's output dict.
@@ -261,11 +322,21 @@ def run_all_validators(
     - passed: bool
     - validation_details: str
 
-    This is used by the safety agent to produce AiValidationResult records.
+    This is used by the safety agent to produce AiValidationResult records
+    for persistence via the backend API (ADR-004).
+
+    Args:
+        agent_output: The agent's output dictionary.
+        workflow_type: Workflow context (e.g. 'disruption_rebooking').
+        state: Optional full workflow state for upstream validation.
     """
     results: list[dict] = []
 
-    # Seat count validation (if present in output)
+    # ---- Upstream output integrity (if state provided) ----
+    if state is not None:
+        results.extend(validate_upstream_outputs(state))
+
+    # ---- Seat count validation (if present in output) ----
     if all(
         k in agent_output
         for k in ("total_seats", "available_seats", "held_seats", "booked_seats")
@@ -284,27 +355,67 @@ def run_all_validators(
             }
         )
 
-    # Impact classification (if present)
+    # ---- Bus capacity validation (if present) ----
+    if "available_seats" in agent_output and "required_seats" in agent_output:
+        passed, detail = validate_bus_capacity(
+            agent_output["available_seats"],
+            agent_output["required_seats"],
+        )
+        results.append({
+            "rule_name": "BusCapacityCheck",
+            "passed": passed,
+            "validation_details": detail,
+        })
+
+    # ---- Transfer window validation (if present) ----
+    if "leg1_arrival" in agent_output and "leg2_departure" in agent_output:
+        passed, actual_min, detail = validate_transfer_window(
+            agent_output["leg1_arrival"],
+            agent_output["leg2_departure"],
+        )
+        results.append({
+            "rule_name": "TransferWindowMinimum",
+            "passed": passed,
+            "validation_details": detail,
+        })
+
+    # ---- Impact classification override (if present) ----
     if "impact_classification" in agent_output or "impactClassification" in agent_output:
         llm_class = agent_output.get(
             "impact_classification",
             agent_output.get("impactClassification", "Low"),
         )
-        is_cancel = workflow_type == "disruption_rebooking"
+        delay_min = agent_output.get(
+            "total_delay_minutes",
+            agent_output.get("totalDelayMinutes", 0),
+        )
+        pax_count = agent_output.get(
+            "affected_passenger_count",
+            agent_output.get("affectedPassengerCount", 0),
+        )
+        is_cancel = agent_output.get(
+            "is_cancellation",
+            workflow_type == "disruption_rebooking",
+        )
+
         corrected = validate_impact_classification(
             llm_class,
-            agent_output.get("affected_passenger_count", 0),
-            agent_output.get("total_delay_minutes", 0),
+            pax_count,
+            delay_min,
             is_cancellation=is_cancel,
         )
+
+        overridden = corrected != llm_class
         results.append(
             {
                 "rule_name": "ImpactClassificationOverride",
-                "passed": corrected == llm_class,
+                "passed": not overridden,
                 "validation_details": (
-                    f"LLM: {llm_class}, Corrected: {corrected}"
+                    f"LLM: {llm_class}, Deterministic: {corrected}"
+                    + (" [OVERRIDDEN]" if overridden else " [AGREED]")
                 ),
             }
         )
 
     return results
+
