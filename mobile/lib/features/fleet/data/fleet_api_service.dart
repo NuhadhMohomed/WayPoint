@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 /// Shared HTTP client for all fleet-related API calls.
 /// Connects to the WayPoint ASP.NET Core backend.
@@ -8,7 +9,7 @@ class FleetApiService {
   FleetApiService({Dio? dio})
       : _dio = dio ??
             Dio(BaseOptions(
-              baseUrl: 'http://10.0.2.2:5010', // Android emulator → host
+              baseUrl: kIsWeb ? 'http://localhost:5010' : 'http://10.0.2.2:5010',
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
             ));
