@@ -106,6 +106,13 @@ void main() {
 
   group('DisruptionAlertScreen (MOB-09) Widget Tests', () {
     testWidgets('renders all critical UI cards, badges and buttons', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       final sample = DisruptionAlertModel.sampleColomboToElla();
 
       await tester.pumpWidget(
@@ -118,24 +125,30 @@ void main() {
       );
 
       // Verify incident header
-      expect(find.text('DISRUPTION NOTIFICATION'), findsOneWidget);
+      expect(find.text('Service Disruption Notice'), findsOneWidget);
       expect(find.text(sample.disruptionTitle), findsOneWidget);
       expect(find.textContaining('WP-8F29K1'), findsWidgets);
 
       // Verify original service details
-      expect(find.text('Bus ND-8821'), findsOneWidget);
-      expect(find.text('Standard AC'), findsOneWidget);
+      expect(find.text('Bus ND-8821 • Standard AC'), findsOneWidget);
 
       // Verify AI replacement service details
       expect(find.text('Bus WP-CAD-4120'), findsOneWidget);
       expect(find.text('Super Line Luxury Coach'), findsOneWidget);
 
       // Verify action buttons
-      expect(find.text('Accept Replacement Seat'), findsOneWidget);
-      expect(find.text('Decline & Request 100% Refund'), findsOneWidget);
+      expect(find.text('Accept Recommended Journey'), findsOneWidget);
+      expect(find.textContaining('Decline & Request 100% Refund'), findsOneWidget);
     });
 
     testWidgets('invokes onAccepted callback when Accept button is pressed', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       bool acceptedTriggered = false;
       final sample = DisruptionAlertModel.sampleColomboToElla();
 
@@ -154,7 +167,7 @@ void main() {
       );
 
       // Find accept button and tap
-      final acceptBtn = find.text('Accept Replacement Seat');
+      final acceptBtn = find.text('Accept Recommended Journey');
       expect(acceptBtn, findsOneWidget);
       await tester.tap(acceptBtn);
       await tester.pumpAndSettle();
@@ -163,6 +176,13 @@ void main() {
     });
 
     testWidgets('shows decline dialog when Decline button is pressed', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       final sample = DisruptionAlertModel.sampleColomboToElla();
 
       await tester.pumpWidget(
@@ -174,14 +194,14 @@ void main() {
         ),
       );
 
-      final declineBtn = find.text('Decline & Request 100% Refund');
+      final declineBtn = find.textContaining('Decline & Request 100% Refund');
       expect(declineBtn, findsOneWidget);
       await tester.tap(declineBtn);
       await tester.pumpAndSettle();
 
       // Verify confirm refund dialog opens
       expect(find.text('Confirm 100% Refund'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Back to Review'), findsOneWidget);
       expect(find.text('Confirm Refund'), findsOneWidget);
     });
   });

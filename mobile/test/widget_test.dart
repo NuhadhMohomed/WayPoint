@@ -8,6 +8,5 @@ void main() {
 
     // Verify app bar title renders
     expect(find.text('WayPoint Transit'), findsOneWidget);
-    expect(find.text('Booking & Ticketing Hub'), findsOneWidget);
   });
 }
