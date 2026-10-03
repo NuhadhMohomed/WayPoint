@@ -1072,5 +1072,62 @@ BEGIN
     VALUES ('20261003094506_AddAuditLogHashAndNotifications', '9.0.1');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    ALTER TABLE "Users" ADD "FailedLoginAttempts" integer NOT NULL DEFAULT 0;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    ALTER TABLE "Users" ADD "LockedUntil" timestamp with time zone;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    CREATE TABLE "JourneyLegs" (
+        "Id" uuid NOT NULL,
+        "JourneyCandidateId" uuid NOT NULL,
+        "LegOrder" integer NOT NULL,
+        "ServiceId" uuid NOT NULL,
+        "BoardingStopId" uuid NOT NULL,
+        "AlightingStopId" uuid NOT NULL,
+        "DurationMinutes" integer NOT NULL,
+        "LegFare" numeric(10,2) NOT NULL,
+        "CreatedAt" timestamp with time zone NOT NULL,
+        "UpdatedAt" timestamp with time zone NOT NULL,
+        CONSTRAINT "PK_JourneyLegs" PRIMARY KEY ("Id"),
+        CONSTRAINT "FK_JourneyLegs_JourneyCandidates_JourneyCandidateId" FOREIGN KEY ("JourneyCandidateId") REFERENCES "JourneyCandidates" ("Id") ON DELETE CASCADE,
+        CONSTRAINT "FK_JourneyLegs_Services_ServiceId" FOREIGN KEY ("ServiceId") REFERENCES "Services" ("Id") ON DELETE RESTRICT
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    CREATE INDEX "IX_JourneyLegs_JourneyCandidateId" ON "JourneyLegs" ("JourneyCandidateId");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    CREATE INDEX "IX_JourneyLegs_ServiceId" ON "JourneyLegs" ("ServiceId");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261003101503_AddAccountLockoutAndJourneyLegs') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261003101503_AddAccountLockoutAndJourneyLegs', '9.0.1');
+    END IF;
+END $EF$;
 COMMIT;
 

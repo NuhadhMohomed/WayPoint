@@ -15,12 +15,14 @@ class RegisterRequest {
   final String password;
   final String fullName;
   final String nicOrPassport;
+  final String? phoneNumber;
 
   RegisterRequest({
     required this.email,
     required this.password,
     required this.fullName,
     required this.nicOrPassport,
+    this.phoneNumber,
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,7 +30,8 @@ class RegisterRequest {
     'password': password,
     'fullName': fullName,
     'nicOrPassport': nicOrPassport,
-    'roleId': 'passenger', // Example role assignment
+    'phoneNumber': phoneNumber,
+    'role': 'Passenger',
   };
 }
 
@@ -44,10 +47,12 @@ class AuthResponse {
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] ?? json['User'];
+    final userId = user is Map ? (user['id'] ?? user['Id'] ?? '') : (json['userId'] ?? '');
     return AuthResponse(
-      token: json['token'],
-      refreshToken: json['refreshToken'],
-      userId: json['userId'] ?? '',
+      token: (json['token'] ?? json['Token'] ?? '').toString(),
+      refreshToken: (json['refreshToken'] ?? json['RefreshToken'] ?? '').toString(),
+      userId: userId.toString(),
     );
   }
 }

@@ -12,7 +12,7 @@ This directory contains cross-cutting integration, end-to-end (E2E), and perform
 
 Component-level test suites reside inside their respective application directories:
 
-- **Backend (.NET xUnit)**: `backend/WayPoint.Tests/` (59+ unit and integration tests covering domain entities, EF Core concurrency, business rules, and security).
+- **Backend (.NET xUnit)**: `backend/WayPoint.Tests/` (71+ unit and integration tests covering domain entities, EF Core concurrency, business rules, and security).
   ```bash
   cd backend
   dotnet test

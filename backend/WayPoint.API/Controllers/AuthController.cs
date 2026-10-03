@@ -124,7 +124,7 @@ public class AuthController : ControllerBase
             .Include(u => u.OperatorProfile)
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
-        if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        if (user == null)
         {
             return Unauthorized(new ProblemDetails
             {
@@ -132,6 +132,45 @@ public class AuthController : ControllerBase
                 Title = "Invalid Credentials",
                 Detail = "Invalid email or password."
             });
+        }
+
+        // BR-AUTH-002: Check if account is locked
+        if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
+        {
+            var remainingMinutes = (int)(user.LockedUntil.Value - DateTime.UtcNow).TotalMinutes + 1;
+            return StatusCode(StatusCodes.Status423Locked, new ProblemDetails
+            {
+                Status = StatusCodes.Status423Locked,
+                Title = "Account Locked",
+                Detail = $"Account is locked due to too many failed attempts. Try again in {remainingMinutes} minute(s)."
+            });
+        }
+
+        if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            // BR-AUTH-002: Increment failed attempts
+            user.FailedLoginAttempts++;
+            if (user.FailedLoginAttempts >= 5)
+            {
+                user.LockedUntil = DateTime.UtcNow.AddMinutes(15);
+                user.FailedLoginAttempts = 0; // Reset counter after locking
+            }
+            await _context.SaveChangesAsync();
+
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Invalid Credentials",
+                Detail = "Invalid email or password."
+            });
+        }
+
+        // Reset failed attempts on successful login
+        if (user.FailedLoginAttempts > 0 || user.LockedUntil != null)
+        {
+            user.FailedLoginAttempts = 0;
+            user.LockedUntil = null;
+            await _context.SaveChangesAsync();
         }
 
         if (!user.IsActive)

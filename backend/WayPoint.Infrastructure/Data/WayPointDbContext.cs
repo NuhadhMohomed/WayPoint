@@ -32,6 +32,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<FareRule> FareRules => Set<FareRule>();
     public DbSet<JourneySearch> JourneySearches => Set<JourneySearch>();
     public DbSet<JourneyCandidate> JourneyCandidates => Set<JourneyCandidate>();
+    public DbSet<JourneyLeg> JourneyLegs => Set<JourneyLeg>();
 
     // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
     public DbSet<Bus> Buses => Set<Bus>();
@@ -196,6 +197,19 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
                   .WithMany(js => js.Candidates)
                   .HasForeignKey(jc => jc.JourneySearchId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<JourneyLeg>(entity =>
+        {
+            entity.Property(jl => jl.LegFare).HasPrecision(10, 2);
+            entity.HasOne(jl => jl.JourneyCandidate)
+                  .WithMany(jc => jc.Legs)
+                  .HasForeignKey(jl => jl.JourneyCandidateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(jl => jl.Service)
+                  .WithMany()
+                  .HasForeignKey(jl => jl.ServiceId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Component 2: Fleet, Seats & Resources (Nuhadh)
@@ -482,6 +496,16 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Auto-update UpdatedAt timestamp for modified entities (P3-03)
+        foreach (var entry in ChangeTracker.Entries<WayPoint.Domain.Common.BaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        // Auto-compute SHA-256 hash for newly created audit log records (BR-AUDIT-001)
         foreach (var entry in ChangeTracker.Entries<AuditLog>()
             .Where(e => e.State == EntityState.Added))
         {

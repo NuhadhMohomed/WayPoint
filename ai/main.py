@@ -12,6 +12,7 @@ database access.
 """
 
 import logging
+import os
 import uuid
 
 from fastapi import FastAPI, HTTPException
@@ -44,9 +45,13 @@ app = FastAPI(
     version="0.1.0",
 )
 
+BACKEND_ORIGIN = os.getenv("BACKEND_ORIGIN", "http://localhost:5010")
+# ponytail: parse origins if comma-separated, default to backend origin
+_allowed_origins = [o.strip() for o in BACKEND_ORIGIN.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

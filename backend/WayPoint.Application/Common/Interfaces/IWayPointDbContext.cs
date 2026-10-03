@@ -26,6 +26,7 @@ public interface IWayPointDbContext
     DbSet<FareRule> FareRules { get; }
     DbSet<JourneySearch> JourneySearches { get; }
     DbSet<JourneyCandidate> JourneyCandidates { get; }
+    DbSet<JourneyLeg> JourneyLegs { get; }
 
     // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
     DbSet<Bus> Buses { get; }

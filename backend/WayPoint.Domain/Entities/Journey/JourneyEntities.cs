@@ -110,4 +110,20 @@ public class JourneyCandidate : BaseEntity
 
     // Navigation properties
     public JourneySearch JourneySearch { get; set; } = null!;
+    public ICollection<JourneyLeg> Legs { get; set; } = new List<JourneyLeg>();
+}
+
+public class JourneyLeg : BaseEntity
+{
+    public Guid JourneyCandidateId { get; set; }
+    public int LegOrder { get; set; }
+    public Guid ServiceId { get; set; }
+    public Guid BoardingStopId { get; set; }
+    public Guid AlightingStopId { get; set; }
+    public int DurationMinutes { get; set; }
+    public decimal LegFare { get; set; }
+
+    // Navigation properties
+    public JourneyCandidate JourneyCandidate { get; set; } = null!;
+    public Service Service { get; set; } = null!;
 }
