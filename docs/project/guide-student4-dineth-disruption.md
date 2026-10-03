@@ -125,14 +125,19 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 
 ## 7. Agentic AI Responsibilities (Student 4)
 
-- **Assigned Agent**: **Validation & Safety Agent** and Multi-Agent Workflow Coordinator (`ADR-003`).
-- **Domain Purpose**: Coordinates the 4 agents, validates proposals against business rules, classifies severity, enforces human approval boundaries, and ensures safe failure.
-- **Allow-Listed Tools**:
-  - `CreateRebookingProposal`
-  - `CalculatePassengerImpact`
-  - `RequestManagerApproval`
-  - `ApplyApprovedOperationalChange`
-- **Safety Rule**: High-impact operational changes CANNOT bypass human Transport Manager approval. AI failures must default to `SafeFailure` fallback without corrupting operational data.
+- **Assigned Agent**: **Validation & Safety Agent** and Multi-Agent Workflow Coordinator (`ADR-003`, Node 5 of 5).
+- **Domain Purpose**: Coordinates the 5-node multi-agent workflow, validates proposals against business rules, classifies severity, enforces human approval boundaries, defuses prompt injection, and ensures safe failure.
+- **Allow-Listed Tools (`BR-AITOOL-001`)**:
+  - `CreateRebookingProposal` (`POST /api/v1/rebooking/generate-proposal`)
+  - `CalculatePassengerImpact` (`GET /api/v1/disruptions/{id}/impact`)
+  - `RequestManagerApproval` (`PUT /api/v1/approvals/{id}/request`)
+  - `ApplyApprovedOperationalChange` (`POST /api/v1/rebooking/{id}/execute` - restricted to post-approval)
+- **Deterministic Guardrails & Schemas**:
+  - `validate_impact_classification()`: Overrides LLM hallucinations; departure shift $>15$ min or cancellation strictly sets `High` impact (`BR-DISRUPT-001`, `BR-APPROVAL-001`, `FR-AI-003`).
+  - `sanitize_user_input()`: Defuses adversarial prompt injections, strips attack payloads, and wraps user input in `<user_input>` delimiters (`FR-AI-008`).
+  - `execute_with_safe_failure()`: Traps runtime exceptions, capping retries at 3 before defaulting to structured `SafeFailure` (`FR-AI-004`).
+  - `WorkflowLogger`: Relational audit persistence client logging steps, tool latencies ($\ge 0$), and before/after state captures to PostgreSQL `JSONB` columns (`ADR-004`, `FR-AI-005`, `FR-AI-007`).
+- **Safety Rule**: High-impact operational changes CANNOT bypass human Transport Manager approval (`BR-APPROVAL-001`, `BR-APPLY-001`). Direct unapproved operational mutations are strictly prohibited.
 
 ---
 
@@ -142,18 +147,19 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
    - Test disruption impact classification rules (ensuring timetable shift $>15$ min correctly triggers high-impact flag).
    - Test approval state machine transitions (`Proposed` $\rightarrow$ `PendingManagerApproval` $\rightarrow$ `Approved` / `Rejected`).
 2. **Integration Tests**:
-   - Test approval boundary: verify unauthorized execution of high-impact proposal returns HTTP 403 Forbidden without manager role.
-   - Test transactional rollback during rebooking failure (ensuring original bookings remain intact if replacement service capacity check fails).
-   - Test safe-failure fallback execution on simulated AI execution error.
+   - Test approval boundary: verify unauthorized execution of high-impact proposal returns HTTP 400 Bad Request / InvalidOperationException without manager approval (`BR-APPLY-001`).
+   - Test transactional rollback during rebooking failure (ensuring original bookings remain intact if replacement service capacity check fails, `BR-REBOOK-001`).
+   - Test safe-failure fallback execution on simulated AI execution error (`FR-AI-004`).
 
 ---
 
 ## 9. Viva Examination Defense Cheatsheet
 
 Be prepared to explain and demonstrate live without AI tools:
-- **Approval Boundary Enforcement (`BR-APPROVAL-001`)**: Show the exact code branch where high-impact actions are halted in `PendingManagerApproval`.
+- **Approval Boundary Enforcement (`BR-APPROVAL-001`)**: Show the exact code branch where high-impact actions are halted in `PendingManagerApproval` in `safety_agent.py` and `output_validator.py`.
 - **Relational AI Audit Persistence (`ADR-004`)**: Explain why tool logs are stored in `AiToolCalls` with `JSONB` columns without saving raw hidden LLM reasoning (`REQ-DB-06`).
-- **Transactional Integrity**: Walk through how `IDbContextTransaction` prevents partial rebookings during emergency schedule modifications.
+- **Transactional Integrity**: Walk through how `IDbContextTransaction` prevents partial rebookings during emergency schedule modifications in `RebookingService.cs`.
+- **Live 5-Step Viva Demonstration Protocol**: Follow the script defined in `docs/ai/validation-safety-agent.md` §8.
 
 ---
 
@@ -167,7 +173,8 @@ The complete 7-phase implementation plan for Component 4 has been executed acros
 | **Phase 2** | API Controllers & RBAC | `DisruptionController`, `RebookingController`, `ApprovalController`, `ServiceAlertController`, `AiWorkflowController` with role authorization (`RequireManager`, `RequireOperator`) | Endpoint OpenAPI route registration & claims verification |
 | **Phase 3** | Dependency Injection & Seeder | `backend/WayPoint.Infrastructure/DependencyInjection.cs`, `DbSeeder.cs` realistic seed data for Colombo–Ella disruption | Service lifetime scoping (`Scoped`) & DB seed execution |
 | **Phase 4** | Web Frontend Hub & Pages | Google Stitch screens: `WEB-07` (`DisruptionIntakePage.jsx`), `WEB-08` (`ManagerApprovalWorkbenchPage.jsx`), `WEB-09` (`ServiceAlertBroadcastPage.jsx`), `WEB-10` (`AiObservabilityPage.jsx`), `WEB-12` (`AdminConsolePage.jsx`), `DisruptionHubLayout.jsx` | `npm run build` in `web/` (1,710 modules transformed in 2.2s) |
-| **Phase 5** | Mobile UI & Backend Tests | Google Stitch screen `MOB-09` (`DisruptionAlertScreen.dart`), `DisruptionAlertModel.dart`, wired in `mobile/lib/main.dart`, plus 17 backend tests in `DisruptionTests.cs` | `dotnet test backend/WayPoint.Tests` (59 passed) |
-| **Phase 6** | Agentic AI Safety & Golden Tests | `ai/agents/safety_agent.py` multi-round tool loop & guardrails, `ai/tests/test_safety_agent.py`, `ai/tests/test_golden_safety.py`, and `docs/ai/validation-safety-agent.md` | `python -m pytest ai/tests/test_safety_agent.py ai/tests/test_golden_safety.py` (33 passed) |
-| **Phase 7** | Full Stack E2E & Viva Verification | Mobile unit/widget tests (`mobile/test/features/disruption/disruption_alert_test.dart`), Web unit tests (`web/src/features/disruptions/__tests__/DisruptionHub.test.jsx`), `traceability-matrix.md` updates, viva cheatsheet alignment | 59/59 backend tests, 199/199 AI tests, clean web production bundle |
+| **Phase 5** | Observability Pipeline & Relational Audit Logging | `WorkflowLogger` client, DTO schema alignment (`ToolCallRecord`, `ValidationRecord`, `AgentStepRecord`, `AuditLogRecord`, `AiWorkflowRecord`), PostgreSQL JSONB serialization, dual-route backend `/tools` & `/tool-calls` | `python -m pytest ai/tests/test_safety_agent.py -k "TestWorkflowLogger or TestWorkflowSchemas"` (31 passed) |
+| **Phase 6** | Comprehensive Testing Suite & Golden Scenario Verification | Authoritative Colombo–Ella Bus ND-8821 breakdown golden test, Table 4.2 15-minute boundary sweep, operational safety constraints, and backend integration tests | `python -m pytest ai/tests/test_golden_safety.py` (22 passed), `DisruptionTests` (17 passed), full regression (319 Python / 59 C# passed) |
+| **Phase 7** | Technical Documentation, Traceability & Viva Defense Prep | `docs/ai/validation-safety-agent.md`, `docs/project/guide-student4-dineth-disruption.md`, `docs/requirements/traceability-matrix.md`, 5-step live demonstration protocol, viva defense cheatsheet | 319/319 AI tests passed, 59/59 backend tests passed, full requirement traceability verified |
+
 
