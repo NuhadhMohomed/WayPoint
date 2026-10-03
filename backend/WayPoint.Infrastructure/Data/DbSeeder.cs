@@ -310,14 +310,68 @@ public static class DbSeeder
 
             await context.Services.AddRangeAsync(srvKandy, srvElla, srvGalle);
             await context.SaveChangesAsync();
+        }
 
-            // 8. Reviews
-            if (!await context.BusReviews.AnyAsync())
+        // 8. Completed Service, Booking & Reviews Seed Data
+        if (!await context.BusReviews.AnyAsync() && await context.Services.AnyAsync())
+        {
+            var kandyRoute = await context.Routes.FirstAsync(r => r.RouteCode == "RT-01");
+            var busForBooking = await context.Buses.FirstAsync();
+            var driverForBooking = await context.Drivers.FirstAsync();
+            var passengerUser = await context.Users
+                .Include(u => u.PassengerProfile)
+                .FirstAsync(u => u.Email == "passenger@waypoint.lk");
+
+            var pastService = await context.Services.FirstOrDefaultAsync(s => s.ServiceCode == "SRV-COL-KDY-PAST");
+            if (pastService == null)
             {
-                // We need a dummy booking to attach reviews. Since we don't have bookings in this layer, we can skip seeding reviews here, 
-                // OR we just create a dummy passenger and booking if needed. But it's better to just leave it for the Booking seeder or let users add it.
-                // Wait, it's fine. I will just leave it empty if we don't have bookings seeded here yet.
+                pastService = new Service
+                {
+                    ServiceCode = "SRV-COL-KDY-PAST",
+                    RouteId = kandyRoute.Id,
+                    BusId = busForBooking.Id,
+                    DriverId = driverForBooking.Id,
+                    DepartureTime = DateTime.UtcNow.AddDays(-2),
+                    ArrivalTime = DateTime.UtcNow.AddDays(-2).AddHours(3),
+                    BaseFare = 1450.0m,
+                    Status = ServiceStatus.Completed
+                };
+                await context.Services.AddAsync(pastService);
+                await context.SaveChangesAsync();
             }
+
+            var pastBooking1 = new WayPoint.Domain.Entities.Booking.Booking
+            {
+                BookingReference = "WP-BK-COMPLETED-101",
+                PassengerId = passengerUser.PassengerProfile!.Id,
+                ServiceId = pastService.Id,
+                SeatNumbers = "1A",
+                TotalFareAmount = 1450.0m,
+                Status = BookingStatus.Confirmed
+            };
+            var pastBooking2 = new WayPoint.Domain.Entities.Booking.Booking
+            {
+                BookingReference = "WP-BK-COMPLETED-102",
+                PassengerId = passengerUser.PassengerProfile!.Id,
+                ServiceId = pastService.Id,
+                SeatNumbers = "1B",
+                TotalFareAmount = 1450.0m,
+                Status = BookingStatus.Confirmed
+            };
+            await context.Bookings.AddRangeAsync(pastBooking1, pastBooking2);
+            await context.SaveChangesAsync();
+
+            var seedReview = new BusReview
+            {
+                BusId = busForBooking.Id,
+                PassengerId = passengerUser.PassengerProfile.Id,
+                BookingId = pastBooking1.Id,
+                Rating = 5,
+                Comment = "Punctual departure, comfortable seats and clean interior.",
+                IsAnonymous = false
+            };
+            await context.BusReviews.AddAsync(seedReview);
+            await context.SaveChangesAsync();
         }
 
         // 9. Component 4: Disruption, Rebooking & Approval Seed Data (Dineth)
