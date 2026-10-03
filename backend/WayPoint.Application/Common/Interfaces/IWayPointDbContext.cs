@@ -59,5 +59,8 @@ public interface IWayPointDbContext
     DbSet<AiValidationResult> AiValidationResults { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
+    // Passenger Notifications
+    DbSet<WayPoint.Domain.Entities.Notification.Notification> Notifications { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,19 +1,27 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/waypoint_button.dart';
 
 class ReviewSubmissionScreen extends StatefulWidget {
   final String entityId;
+  final String bookingId;
   final String entityType; // 'bus' or 'driver'
   final String entityName;
+  final String? authToken;
+  final http.Client? httpClient;
 
   const ReviewSubmissionScreen({
     super.key,
     required this.entityId,
+    required this.bookingId,
     required this.entityType,
     required this.entityName,
+    this.authToken,
+    this.httpClient,
   });
 
   @override
@@ -23,6 +31,7 @@ class ReviewSubmissionScreen extends StatefulWidget {
 class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
   int _rating = 0;
   final _commentController = TextEditingController();
+  bool _isAnonymous = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -38,22 +47,37 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
     });
 
     try {
-      const baseUrl = 'http://10.0.2.2:5000/api/v1';
-      final endpoint = widget.entityType == 'bus' 
-          ? '$baseUrl/reviews/bus' 
-          : '$baseUrl/reviews/driver';
+      final token = widget.authToken ?? await SecureStorageService.getToken();
+      const baseUrl = ApiConstants.baseUrl;
+      final isBus = widget.entityType.toLowerCase() == 'bus';
+      final endpoint = isBus 
+          ? '$baseUrl/reviews/buses' 
+          : '$baseUrl/reviews/drivers';
 
-      final response = await http.post(
+      final payload = isBus
+          ? {
+              'busId': widget.entityId,
+              'bookingId': widget.bookingId,
+              'rating': _rating,
+              'comment': _commentController.text.trim(),
+              'isAnonymous': _isAnonymous,
+            }
+          : {
+              'driverId': widget.entityId,
+              'bookingId': widget.bookingId,
+              'rating': _rating,
+              'comment': _commentController.text.trim(),
+              'isAnonymous': _isAnonymous,
+            };
+
+      final client = widget.httpClient ?? http.Client();
+      final response = await client.post(
         Uri.parse(endpoint),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer <token>', // Add auth token here in real app
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'entityId': widget.entityId,
-          'rating': _rating,
-          'comment': _commentController.text.trim(),
-        }),
+        body: jsonEncode(payload),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -64,7 +88,16 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
           Navigator.pop(context, true); // Return true to indicate success
         }
       } else {
-        throw Exception('Failed to submit review');
+        String message = 'Failed to submit review';
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && decoded.containsKey('detail') && decoded['detail'] != null) {
+            message = decoded['detail'].toString();
+          } else if (decoded is Map && decoded.containsKey('message') && decoded['message'] != null) {
+            message = decoded['message'].toString();
+          }
+        } catch (_) {}
+        throw Exception(message);
       }
     } catch (e) {
       setState(() => _errorMessage = 'Could not submit review: $e');
@@ -131,6 +164,17 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Post anonymously'),
+              subtitle: const Text('Your name will not be shown to other passengers or operators'),
+              value: _isAnonymous,
+              activeColor: AppTheme.primaryColor,
+              onChanged: (val) {
+                setState(() => _isAnonymous = val ?? false);
+              },
+            ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
               Text(
@@ -138,7 +182,7 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
                 style: const TextStyle(color: AppTheme.errorColor),
               ),
             ],
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : WayPointButton(

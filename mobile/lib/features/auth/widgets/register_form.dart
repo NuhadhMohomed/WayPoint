@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
@@ -36,8 +37,8 @@ class RegisterFormState extends State<RegisterForm> {
           nicOrPassport: _nicOrPassportController.text.trim(),
           password: _passwordController.text,
         );
-        await _authService.register(request);
-        // TODO: Store token
+        final response = await _authService.register(request);
+        await SecureStorageService.saveToken(response.token);
         widget.onSuccess();
       } catch (e) {
         setState(() {

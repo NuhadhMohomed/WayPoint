@@ -7,6 +7,7 @@ using WayPoint.Domain.Entities.Disruption;
 using WayPoint.Domain.Entities.Fleet;
 using WayPoint.Domain.Entities.Identity;
 using WayPoint.Domain.Entities.Journey;
+using WayPoint.Domain.Entities.Notification;
 
 namespace WayPoint.Infrastructure.Data;
 
@@ -63,6 +64,9 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<AiToolCall> AiToolCalls => Set<AiToolCall>();
     public DbSet<AiValidationResult> AiValidationResults => Set<AiValidationResult>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // Passenger Notifications
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -462,6 +466,29 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
             entity.Property(a => a.ActionType).HasMaxLength(50);
             entity.Property(a => a.EntityName).HasMaxLength(50);
             entity.Property(a => a.EntityId).HasMaxLength(100);
+            entity.Property(a => a.HashSha256).HasMaxLength(64).IsRequired();
+        });
+
+        // Passenger Notifications
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasIndex(n => new { n.UserId, n.CreatedAt });
+            entity.Property(n => n.Title).HasMaxLength(150).IsRequired();
+            entity.Property(n => n.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(n => n.Type).HasMaxLength(50).IsRequired();
+            entity.Property(n => n.ReferenceEntityType).HasMaxLength(50);
         });
     }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<AuditLog>()
+            .Where(e => e.State == EntityState.Added))
+        {
+            entry.Entity.ComputeHash();
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }
+

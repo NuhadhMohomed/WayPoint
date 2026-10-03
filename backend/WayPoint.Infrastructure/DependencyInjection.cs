@@ -51,6 +51,9 @@ public static class DependencyInjection
         // Agentic AI Persistence Services
         services.AddScoped<IAiWorkflowService, AiWorkflowService>();
 
+        // Passenger Notifications
+        services.AddScoped<INotificationService, NotificationService>();
+
         return services;
     }
 

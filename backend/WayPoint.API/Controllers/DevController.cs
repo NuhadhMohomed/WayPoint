@@ -204,7 +204,8 @@ public class DevController : ControllerBase
                 a.EntityName,
                 a.EntityId,
                 a.BeforeStateJson,
-                a.AfterStateJson
+                a.AfterStateJson,
+                a.HashSha256
             })
             .ToListAsync();
 

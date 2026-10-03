@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WayPoint.Application.Common.Interfaces;
 
 namespace WayPoint.API.Controllers;
 
@@ -12,17 +14,58 @@ namespace WayPoint.API.Controllers;
 [Authorize]
 public class NotificationController : ControllerBase
 {
+    private readonly INotificationService _notificationService;
+
+    public NotificationController(INotificationService notificationService)
+    {
+        _notificationService = notificationService;
+    }
+
+    private Guid? GetCurrentUserId()
+    {
+        var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(idStr, out var id) ? id : null;
+    }
+
     /// <summary>
     /// Retrieves notifications for the authenticated user (disruption alerts, booking updates).
     /// </summary>
-    /// <remarks>
-    /// TODO: Implement notification query service backed by a Notifications table.
-    /// Currently returns an empty collection as a contract placeholder.
-    /// </remarks>
     [HttpGet("my-notifications")]
-    public IActionResult GetMyNotifications()
+    public async Task<IActionResult> GetMyNotifications(CancellationToken cancellationToken)
     {
-        // Stub: notification persistence and query service not yet implemented
-        return Ok(new { items = new List<object>(), totalCount = 0 });
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Valid user ID claim not found in authentication token."
+            });
+        }
+
+        var items = await _notificationService.GetUserNotificationsAsync(userId.Value, cancellationToken);
+        var itemList = items.ToList();
+
+        return Ok(new
+        {
+            items = itemList,
+            totalCount = itemList.Count
+        });
+    }
+
+    /// <summary>
+    /// Marks a specific notification as read.
+    /// </summary>
+    [HttpPatch("{id:guid}/read")]
+    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var success = await _notificationService.MarkAsReadAsync(id, userId.Value, cancellationToken);
+        if (!success) return NotFound();
+
+        return NoContent();
     }
 }

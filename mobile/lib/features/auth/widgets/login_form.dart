@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
@@ -32,8 +33,8 @@ class LoginFormState extends State<LoginForm> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        await _authService.login(request);
-        // TODO: Store token using secure storage
+        final response = await _authService.login(request);
+        await SecureStorageService.saveToken(response.token);
         widget.onSuccess();
       } catch (e) {
         setState(() {

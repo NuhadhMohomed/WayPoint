@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WayPoint.Infrastructure.Data;
@@ -11,9 +12,11 @@ using WayPoint.Infrastructure.Data;
 namespace WayPoint.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(WayPointDbContext))]
-    partial class WayPointDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003094506_AddAuditLogHashAndNotifications")]
+    partial class AddAuditLogHashAndNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
