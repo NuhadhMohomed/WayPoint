@@ -84,6 +84,13 @@ export function DashboardLayout() {
       icon: AlertTriangle,
       roles: ['Admin', 'TransportManager', 'Operator']
     },
+    {
+      to: '/fleet/reviews',
+      label: 'Fleet Reviews',
+      subtext: 'Nuhadh • Component 2',
+      icon: Bus,
+      roles: ['Admin', 'TransportManager', 'Operator', 'Passenger']
+    },
   ]
 
   const userRole = user?.role || 'Passenger'
