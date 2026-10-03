@@ -1716,3 +1716,661 @@ class TestSafetyAgentInputSanitization:
         assert "<user_input>" in wrapped
         assert "</user_input>" in wrapped
         assert "Ignore previous instructions" not in sanitized
+
+
+# ============================================================================
+# 7. Workflow State Schemas & ADR-004 Trace Records (Phase 5)
+# ============================================================================
+
+class TestWorkflowSchemas:
+    """Verifies DTO schema alignment, JSONB serialization, and validation rules."""
+
+    def test_tool_call_record_valid_serialization(self):
+        from schemas.workflow import ToolCallRecord
+
+        record = ToolCallRecord(
+            tool_name="CalculatePassengerImpact",
+            arguments_json='{"disrupted_service_id": "srv-01"}',
+            result_json='{"affectedPassengerCount": 28}',
+            duration_ms=120,
+            executed_at="2026-10-03T12:00:00Z",
+        )
+        assert record.tool_name == "CalculatePassengerImpact"
+        assert record.duration_ms == 120
+        assert json.loads(record.arguments_json)["disrupted_service_id"] == "srv-01"
+        assert json.loads(record.result_json)["affectedPassengerCount"] == 28
+
+    def test_tool_call_record_camel_case_alias(self):
+        from schemas.workflow import ToolCallRecord
+
+        record = ToolCallRecord(
+            toolName="RequestManagerApproval",
+            argumentsJson='{"impact": "High"}',
+            resultJson='{"status": "PendingManagerApproval"}',
+            durationMs=95,
+            executedAt="2026-10-03T12:00:01Z",
+        )
+        assert record.tool_name == "RequestManagerApproval"
+        assert record.duration_ms == 95
+        assert record.executed_at == "2026-10-03T12:00:01Z"
+
+    def test_tool_call_record_duration_ge_zero(self):
+        from pydantic import ValidationError
+        from schemas.workflow import ToolCallRecord
+
+        # Zero and positive duration succeed
+        r0 = ToolCallRecord(tool_name="TestTool", duration_ms=0)
+        assert r0.duration_ms == 0
+        r100 = ToolCallRecord(tool_name="TestTool", duration_ms=100)
+        assert r100.duration_ms == 100
+
+        # Negative duration raises ValidationError
+        with pytest.raises(ValidationError):
+            ToolCallRecord(tool_name="TestTool", duration_ms=-1)
+
+    def test_tool_call_record_automatic_dict_serialization(self):
+        from schemas.workflow import ToolCallRecord
+
+        # Passing dicts directly automatically serializes to valid JSON for PostgreSQL JSONB
+        record = ToolCallRecord(
+            tool_name="CheckSeatAvailability",
+            arguments_json={"service_id": "srv-99", "date": "2026-10-15"},
+            result_json={"available_seats": 42},
+            duration_ms=80,
+        )
+        assert isinstance(record.arguments_json, str)
+        assert isinstance(record.result_json, str)
+        assert json.loads(record.arguments_json)["service_id"] == "srv-99"
+        assert json.loads(record.result_json)["available_seats"] == 42
+
+    def test_tool_call_record_invalid_json_rejected(self):
+        from pydantic import ValidationError
+        from schemas.workflow import ToolCallRecord
+
+        with pytest.raises(ValidationError):
+            ToolCallRecord(tool_name="Test", arguments_json="{invalid json")
+
+    def test_tool_call_record_parsing_helpers(self):
+        from schemas.workflow import ToolCallRecord
+
+        record = ToolCallRecord(
+            tool_name="TestTool",
+            arguments_json='{"key": "value"}',
+            result_json='{"num": 123}',
+        )
+        assert record.get_arguments() == {"key": "value"}
+        assert record.get_result() == {"num": 123}
+
+    def test_validation_record_valid_serialization(self):
+        from schemas.workflow import ValidationRecord
+
+        record = ValidationRecord(
+            rule_name="ImpactClassificationOverride",
+            passed=True,
+            validation_details="Enforced High severity due to 45m delay",
+        )
+        assert record.rule_name == "ImpactClassificationOverride"
+        assert record.passed is True
+        assert "45m delay" in record.validation_details
+
+    def test_validation_record_camel_case_alias(self):
+        from schemas.workflow import ValidationRecord
+
+        record = ValidationRecord(
+            ruleName="HumanApprovalBoundary",
+            passed=False,
+            validationDetails="Manager rejected rebooking",
+        )
+        assert record.rule_name == "HumanApprovalBoundary"
+        assert record.passed is False
+        assert record.validation_details == "Manager rejected rebooking"
+
+    def test_validation_record_state_capture_audit_schema(self):
+        from schemas.workflow import ValidationRecord
+
+        # Captures before/after state per ADR-004 relational audit requirements
+        before = {"status": "Running", "approval_required": False}
+        after = {"status": "PendingManagerApproval", "approval_required": True}
+
+        record = ValidationRecord.create_with_state_capture(
+            rule_name="HumanApprovalBoundary",
+            passed=True,
+            before_state=before,
+            after_state=after,
+            reason="High impact disruption requires manager approval (BR-APPROVAL-001)",
+        )
+        assert record.rule_name == "HumanApprovalBoundary"
+        assert record.passed is True
+        details = json.loads(record.validation_details)
+        assert details["before_state"]["status"] == "Running"
+        assert details["after_state"]["status"] == "PendingManagerApproval"
+        assert "BR-APPROVAL-001" in details["reason"]
+
+    def test_agent_step_record_valid_serialization(self):
+        from schemas.workflow import (
+            AgentStepRecord,
+            ToolCallRecord,
+            ValidationRecord,
+        )
+
+        step = AgentStepRecord(
+            agent_name="ValidationSafetyAgent",
+            step_order=5,
+            step_description="Impact evaluation and approval gating",
+            executed_at="2026-10-03T12:00:00Z",
+            tool_calls=[
+                ToolCallRecord(
+                    tool_name="CalculatePassengerImpact",
+                    arguments_json='{"service_id": "srv-1"}',
+                    result_json='{"affected": 28}',
+                    duration_ms=110,
+                )
+            ],
+            validation_results=[
+                ValidationRecord(
+                    rule_name="HumanApprovalBoundary",
+                    passed=True,
+                    validation_details="Approval required: True",
+                )
+            ],
+        )
+        assert step.agent_name == "ValidationSafetyAgent"
+        assert step.step_order == 5
+        assert len(step.tool_calls) == 1
+        assert len(step.validation_results) == 1
+
+    def test_agent_step_record_camel_case_alias(self):
+        from schemas.workflow import AgentStepRecord
+
+        step = AgentStepRecord(
+            agentName="ValidationSafetyAgent",
+            stepOrder=2,
+            stepDescription="Step 2",
+            toolCalls=[],
+            validationResults=[],
+        )
+        assert step.agent_name == "ValidationSafetyAgent"
+        assert step.step_order == 2
+
+    def test_agent_step_record_step_order_ge_zero(self):
+        from pydantic import ValidationError
+        from schemas.workflow import AgentStepRecord
+
+        s0 = AgentStepRecord(agent_name="Agent", step_order=0)
+        assert s0.step_order == 0
+
+        with pytest.raises(ValidationError):
+            AgentStepRecord(agent_name="Agent", step_order=-1)
+
+    def test_agent_step_record_append_helpers(self):
+        from schemas.workflow import AgentStepRecord, ToolCallRecord, ValidationRecord
+
+        step = AgentStepRecord(agent_name="Agent", step_order=1)
+        step.add_tool_call({"tool_name": "T1", "duration_ms": 50})
+        step.add_validation({"rule_name": "R1", "passed": True})
+
+        assert len(step.tool_calls) == 1
+        assert isinstance(step.tool_calls[0], ToolCallRecord)
+        assert step.tool_calls[0].tool_name == "T1"
+        assert len(step.validation_results) == 1
+        assert isinstance(step.validation_results[0], ValidationRecord)
+        assert step.validation_results[0].passed is True
+
+    def test_audit_log_record_schema_adr004(self):
+        from schemas.workflow import AuditLogRecord
+
+        audit = AuditLogRecord(
+            actor_id="SafetyAgent:Validation",
+            action_type="ProposalGatedForApproval",
+            entity_name="RebookingProposal",
+            entity_id="prop-8821",
+            before_state_json={"proposal_status": "Draft"},
+            after_state_json={"proposal_status": "SubmittedForApproval"},
+            timestamp="2026-10-03T12:00:00Z",
+        )
+        assert audit.actor_id == "SafetyAgent:Validation"
+        assert audit.action_type == "ProposalGatedForApproval"
+        assert json.loads(audit.before_state_json)["proposal_status"] == "Draft"
+        assert json.loads(audit.after_state_json)["proposal_status"] == "SubmittedForApproval"
+
+    def test_ai_workflow_record_full_trace(self):
+        from schemas.workflow import (
+            AiWorkflowRecord,
+            AgentStepRecord,
+            ToolCallRecord,
+            ValidationRecord,
+        )
+
+        wf = AiWorkflowRecord(
+            id="wf-999",
+            objective="Rebook Colombo-Ella passengers",
+            status="PendingManagerApproval",
+            started_at="2026-10-03T12:00:00Z",
+            steps=[
+                AgentStepRecord(
+                    agent_name="ValidationSafetyAgent",
+                    step_order=1,
+                    tool_calls=[
+                        ToolCallRecord(tool_name="Tool1", duration_ms=45)
+                    ],
+                    validation_results=[
+                        ValidationRecord(rule_name="Rule1", passed=True)
+                    ],
+                )
+            ],
+        )
+        assert wf.id == "wf-999"
+        assert wf.status == "PendingManagerApproval"
+        assert len(wf.steps) == 1
+        assert wf.steps[0].tool_calls[0].tool_name == "Tool1"
+
+    def test_backend_persistence_dtos(self):
+        from schemas.workflow import (
+            CreateWorkflowDto,
+            CreateWorkflowStepDto,
+            CreateToolCallDto,
+            CreateValidationResultDto,
+            UpdateWorkflowStatusDto,
+        )
+
+        dto1 = CreateWorkflowDto(objective="Disruption handling")
+        assert dto1.objective == "Disruption handling"
+
+        dto2 = CreateWorkflowStepDto(agent_name="SafetyAgent", step_order=1)
+        assert dto2.agent_name == "SafetyAgent"
+        assert dto2.step_order == 1
+
+        dto3 = CreateToolCallDto(tool_name="ImpactTool", duration_ms=100)
+        assert dto3.tool_name == "ImpactTool"
+        assert dto3.duration_ms == 100
+
+        dto4 = CreateValidationResultDto(rule_name="SafeCheck", passed=True)
+        assert dto4.rule_name == "SafeCheck"
+        assert dto4.passed is True
+
+        dto5 = UpdateWorkflowStatusDto(status="Completed")
+        assert dto5.status == "Completed"
+
+
+# ============================================================================
+# 8. Workflow Logger & Relational Persistence (Phase 5)
+# ============================================================================
+
+class TestWorkflowLogger:
+    """Tests for the WorkflowLogger trace persistence client (FR-AI-005, FR-AI-007, ADR-004)."""
+
+    def test_workflow_logger_instantiation_and_methods(self):
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        assert hasattr(logger, "create_workflow")
+        assert hasattr(logger, "add_step")
+        assert hasattr(logger, "add_tool_call")
+        assert hasattr(logger, "add_validation")
+        assert hasattr(logger, "update_status")
+        assert hasattr(logger, "get_workflow")
+        assert hasattr(logger, "log_full_workflow")
+        assert hasattr(logger, "create_audit_record")
+
+    @pytest.mark.asyncio
+    async def test_create_workflow_success(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        mock_response = {"id": "wf-guid-12345", "status": 0}
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            wf_id = await logger.create_workflow("Emergency Rebooking Bus ND-8821")
+
+            assert wf_id == "wf-guid-12345"
+            mock_req.assert_called_once_with(
+                "POST",
+                "/ai/workflows",
+                json_body={"objective": "Emergency Rebooking Bus ND-8821"},
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_workflow_api_failure(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"error": True, "detail": "Backend unavailable"}
+            wf_id = await logger.create_workflow("Test Objective")
+            assert wf_id is None
+
+    @pytest.mark.asyncio
+    async def test_add_step_success(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        mock_response = {"id": "step-guid-555", "agentName": "ValidationSafetyAgent"}
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            step_id = await logger.add_step(
+                workflow_id="wf-123",
+                agent_name="ValidationSafetyAgent",
+                step_order=5,
+                description="Evaluating severity and gating approval",
+            )
+
+            assert step_id == "step-guid-555"
+            mock_req.assert_called_once_with(
+                "POST",
+                "/ai/workflows/wf-123/steps",
+                json_body={
+                    "agentName": "ValidationSafetyAgent",
+                    "stepOrder": 5,
+                    "stepDescription": "Evaluating severity and gating approval",
+                },
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_step_with_step_description_alias(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": "step-777"}
+            step_id = await logger.add_step(
+                workflow_id="wf-123",
+                agent_name="PlannerAgent",
+                step_order=1,
+                step_description="Alias description",
+            )
+            assert step_id == "step-777"
+            call_body = mock_req.call_args[1]["json_body"]
+            assert call_body["stepDescription"] == "Alias description"
+
+    @pytest.mark.asyncio
+    async def test_add_tool_call_success(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        mock_response = {"id": "tc-guid-999", "toolName": "CalculatePassengerImpact"}
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            tc_id = await logger.add_tool_call(
+                step_id="step-555",
+                tool_name="CalculatePassengerImpact",
+                args_json='{"disrupted_service_id": "srv-01"}',
+                result_json='{"affectedPassengerCount": 28}',
+                duration_ms=135,
+            )
+
+            assert tc_id == "tc-guid-999"
+            mock_req.assert_called_once_with(
+                "POST",
+                "/ai/workflows/steps/step-555/tools",
+                json_body={
+                    "toolName": "CalculatePassengerImpact",
+                    "argumentsJson": '{"disrupted_service_id": "srv-01"}',
+                    "resultJson": '{"affectedPassengerCount": 28}',
+                    "durationMs": 135,
+                },
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_tool_call_dict_serialization_for_jsonb(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": "tc-100"}
+            await logger.add_tool_call(
+                step_id="step-1",
+                tool_name="RequestManagerApproval",
+                args_json={"disruption_case_id": "dc-01", "impact": "High"},
+                result_json={"status": "PendingManagerApproval"},
+                duration_ms=90,
+            )
+
+            call_body = mock_req.call_args[1]["json_body"]
+            assert isinstance(call_body["argumentsJson"], str)
+            assert json.loads(call_body["argumentsJson"])["impact"] == "High"
+            assert isinstance(call_body["resultJson"], str)
+            assert json.loads(call_body["resultJson"])["status"] == "PendingManagerApproval"
+
+    @pytest.mark.asyncio
+    async def test_add_tool_call_duration_metric_clean(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": "tc-200"}
+            # Negative duration is sanitized to >= 0
+            await logger.add_tool_call(
+                step_id="step-1",
+                tool_name="Tool",
+                duration_ms=-10,
+            )
+            call_body = mock_req.call_args[1]["json_body"]
+            assert call_body["durationMs"] == 0
+
+    @pytest.mark.asyncio
+    async def test_add_validation_success(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        mock_response = {"id": "vr-guid-333", "ruleName": "HumanApprovalBoundary"}
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_response
+            vr_id = await logger.add_validation(
+                step_id="step-555",
+                rule_name="HumanApprovalBoundary",
+                passed=True,
+                details="Requires manager sign-off: True (BR-APPROVAL-001)",
+            )
+
+            assert vr_id == "vr-guid-333"
+            mock_req.assert_called_once_with(
+                "POST",
+                "/ai/workflows/steps/step-555/validations",
+                json_body={
+                    "ruleName": "HumanApprovalBoundary",
+                    "passed": True,
+                    "validationDetails": "Requires manager sign-off: True (BR-APPROVAL-001)",
+                },
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_validation_dict_details_serialized(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": "vr-444"}
+            audit_details = {
+                "before": {"status": "Running"},
+                "after": {"status": "PendingManagerApproval"},
+            }
+            await logger.add_validation(
+                step_id="step-555",
+                rule_name="StateTransitionCheck",
+                passed=True,
+                details=audit_details,
+            )
+            call_body = mock_req.call_args[1]["json_body"]
+            assert isinstance(call_body["validationDetails"], str)
+            assert json.loads(call_body["validationDetails"])["after"]["status"] == "PendingManagerApproval"
+
+    @pytest.mark.asyncio
+    async def test_update_status_string_mapping(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": "wf-123", "status": 1}
+
+            # 1. PendingManagerApproval -> 1
+            await logger.update_status("wf-123", "PendingManagerApproval")
+            assert mock_req.call_args[1]["json_body"]["status"] == 1
+
+            # 2. Completed -> 2
+            await logger.update_status("wf-123", "Completed")
+            assert mock_req.call_args[1]["json_body"]["status"] == 2
+
+            # 3. SafeFailure -> 3
+            await logger.update_status("wf-123", "SafeFailure")
+            assert mock_req.call_args[1]["json_body"]["status"] == 3
+
+            # 4. Running -> 0
+            await logger.update_status("wf-123", "Running")
+            assert mock_req.call_args[1]["json_body"]["status"] == 0
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_trace(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        mock_trace = {
+            "id": "wf-123",
+            "objective": "Test",
+            "status": 2,
+            "steps": [],
+        }
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_trace
+            result = await logger.get_workflow("wf-123")
+            assert result["id"] == "wf-123"
+            assert result["status"] == 2
+            mock_req.assert_called_once_with("GET", "/ai/workflows/wf-123")
+
+    @pytest.mark.asyncio
+    async def test_log_full_workflow_end_to_end(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+
+        steps_data = [
+            {
+                "agent_name": "PlannerAgent",
+                "step_order": 1,
+                "step_description": "Initial task plan",
+                "tool_calls": [
+                    {
+                        "tool_name": "FetchDisruptionCase",
+                        "arguments_json": '{"id":"dc-1"}',
+                        "result_json": '{"status":"Active"}',
+                        "duration_ms": 110,
+                    }
+                ],
+                "validation_results": [
+                    {
+                        "rule_name": "PlanSyntaxValidation",
+                        "passed": True,
+                        "validation_details": "OK",
+                    }
+                ],
+            },
+            {
+                "agent_name": "ValidationSafetyAgent",
+                "step_order": 2,
+                "step_description": "Safety evaluation and approval gate",
+                "tool_calls": [
+                    {
+                        "tool_name": "CalculatePassengerImpact",
+                        "arguments_json": '{"srv":"s-1"}',
+                        "result_json": '{"affected":28}',
+                        "duration_ms": 95,
+                    }
+                ],
+                "validation_results": [
+                    {
+                        "rule_name": "HumanApprovalBoundary",
+                        "passed": True,
+                        "validation_details": "Requires manager sign-off: True",
+                    }
+                ],
+            },
+        ]
+
+        with patch.object(logger, "create_workflow", new_callable=AsyncMock) as mock_create, \
+             patch.object(logger, "add_step", new_callable=AsyncMock) as mock_step, \
+             patch.object(logger, "add_tool_call", new_callable=AsyncMock) as mock_tc, \
+             patch.object(logger, "add_validation", new_callable=AsyncMock) as mock_vr, \
+             patch.object(logger, "update_status", new_callable=AsyncMock) as mock_status:
+
+            mock_create.return_value = "wf-e2e-123"
+            mock_step.side_effect = ["step-1", "step-2"]
+            mock_tc.side_effect = ["tc-1", "tc-2"]
+            mock_vr.side_effect = ["vr-1", "vr-2"]
+            mock_status.return_value = {"id": "wf-e2e-123", "status": 1}
+
+            result_wf_id = await logger.log_full_workflow(
+                objective="Colombo-Ella Disruption Handling",
+                steps=steps_data,
+                final_status="PendingManagerApproval",
+            )
+
+            assert result_wf_id == "wf-e2e-123"
+            assert mock_create.call_count == 1
+            assert mock_step.call_count == 2
+            assert mock_tc.call_count == 2
+            assert mock_vr.call_count == 2
+            mock_status.assert_called_once_with("wf-e2e-123", "PendingManagerApproval")
+
+    @pytest.mark.asyncio
+    async def test_workflow_logger_exception_resilience(self):
+        from unittest.mock import AsyncMock, patch
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+
+        with patch("persistence.workflow_logger.make_tool_request", new_callable=AsyncMock) as mock_req:
+            mock_req.side_effect = ConnectionResetError("Connection reset by peer")
+
+            # All methods must catch exceptions and return None / error dict without raising
+            wf_id = await logger.create_workflow("Objective")
+            assert wf_id is None
+
+            step_id = await logger.add_step("wf-1", "Agent", 1)
+            assert step_id is None
+
+            tc_id = await logger.add_tool_call("step-1", "Tool")
+            assert tc_id is None
+
+            vr_id = await logger.add_validation("step-1", "Rule", True)
+            assert vr_id is None
+
+            status_res = await logger.update_status("wf-1", "Completed")
+            assert status_res is None
+
+            trace_res = await logger.get_workflow("wf-1")
+            assert trace_res.get("error") is True
+
+    def test_create_audit_record_helper(self):
+        from persistence.workflow_logger import WorkflowLogger
+
+        logger = WorkflowLogger()
+        audit = logger.create_audit_record(
+            actor_id="ValidationSafetyAgent",
+            action_type="ManagerApprovalRequested",
+            entity_name="RebookingProposal",
+            entity_id="prop-01",
+            before_state={"status": "Draft"},
+            after_state={"status": "PendingApproval"},
+        )
+        assert audit.actor_id == "ValidationSafetyAgent"
+        assert audit.action_type == "ManagerApprovalRequested"
+        assert json.loads(audit.before_state_json)["status"] == "Draft"
+        assert json.loads(audit.after_state_json)["status"] == "PendingApproval"
+

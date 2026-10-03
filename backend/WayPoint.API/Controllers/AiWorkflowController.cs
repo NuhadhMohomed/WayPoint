@@ -131,8 +131,10 @@ public class AiWorkflowController : ControllerBase
 
     /// <summary>
     /// Add a tool call record to an existing step.
+    /// Supports both /tool-calls and /tools routes for client compatibility.
     /// </summary>
     [HttpPost("steps/{stepId:guid}/tool-calls")]
+    [HttpPost("steps/{stepId:guid}/tools")]
     public async Task<IActionResult> AddToolCall(
         Guid stepId, [FromBody] CreateAiToolCallDto dto)
     {
