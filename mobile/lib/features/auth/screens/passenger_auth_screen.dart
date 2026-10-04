@@ -1,76 +1,108 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/waypoint_logo.dart';
 import '../widgets/login_form.dart';
 import '../widgets/register_form.dart';
-import '../../../core/theme/app_theme.dart';
 
 class PassengerAuthScreen extends StatelessWidget {
-  const PassengerAuthScreen({super.key});
+  final VoidCallback? onAuthSuccess;
 
-  void _handleAuthSuccess(BuildContext context) {
-    // Navigate to the main application area
-    Navigator.of(context).pushReplacementNamed('/home');
+  const PassengerAuthScreen({super.key, this.onAuthSuccess});
+
+  void _handleSuccess(BuildContext context) {
+    if (onAuthSuccess != null) {
+      onAuthSuccess!();
+    } else {
+      Navigator.of(context).pushReplacementNamed('/');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Welcome to WayPoint'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Login'),
-              Tab(text: 'Register'),
-            ],
-            labelColor: AppTheme.primaryColor,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: AppTheme.primaryColor,
-          ),
-        ),
+        backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
         body: SafeArea(
-          child: TabBarView(
+          child: Column(
             children: [
+              const SizedBox(height: 24),
+              // Brand Logo & Subtitle
+              Center(
+                child: WayPointLogo(
+                  size: 48,
+                  showText: true,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Segmented Tabs
               Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Sign In',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      LoginForm(
-                        onSuccess: () => _handleAuthSuccess(context),
-                      ),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkCardBackground : AppTheme.lightSurfaceSubdued,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? AppTheme.darkBorderColor : AppTheme.lightBorderColor,
+                    ),
+                  ),
+                  child: TabBar(
+                    indicator: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: AppTheme.onPrimaryColor,
+                    unselectedLabelColor: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    dividerColor: Colors.transparent,
+                    tabs: const [
+                      Tab(text: 'Sign In'),
+                      Tab(text: 'Create Account'),
                     ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+
+              // Tab Views
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 16),
+                            LoginForm(
+                              onSuccess: () => _handleSuccess(context),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      RegisterForm(
-                        onSuccess: () => _handleAuthSuccess(context),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 16),
+                            RegisterForm(
+                              onSuccess: () => _handleSuccess(context),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
