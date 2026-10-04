@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../models/journey_models.dart';
 
-/// MOB-03: Preference Filter Sheet & Sliders
-/// Stitch Screen ID: fb4b74ea904c435b93f05e9dc324e989
-/// Component 1: Journey Planning & Route Catalogue (Sethum)
 class PreferenceFilterSheet extends StatefulWidget {
   final JourneySearchPreferences initialPreferences;
   final ValueChanged<JourneySearchPreferences> onApply;
@@ -44,10 +41,13 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E293B), // Slate 800
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       child: Column(
@@ -60,7 +60,7 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: isDark ? Colors.white24 : Colors.black12,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -74,7 +74,6 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
               const Text(
                 'Filter & Travel Preferences',
                 style: TextStyle(
-                  color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -88,45 +87,47 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
                     _departureWindow = 'Any';
                   });
                 },
-                child: const Text('Reset', style: TextStyle(color: Color(0xFF818CF8))),
+                child: const Text('Reset', style: TextStyle(color: AppTheme.primaryColor)),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
           // Direct Only Switch
-          SwitchListTile(
+          SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
+            activeColor: AppTheme.primaryColor,
             title: const Text(
               'Direct Corridors Only',
-              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Exclude connecting services via intermediate hubs',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              style: TextStyle(color: textMuted, fontSize: 12),
             ),
             value: _directOnly,
             onChanged: (val) => setState(() => _directOnly = val),
           ),
 
-          const Divider(color: Color(0xFF334155), height: 24),
+          Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), height: 24),
 
           // Air Conditioned Switch
-          SwitchListTile(
+          SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
+            activeColor: AppTheme.primaryColor,
             title: const Text(
               'Air-Conditioned Bus (AC)',
-              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Filter for luxury super line and expressway air-conditioned coaches',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              style: TextStyle(color: textMuted, fontSize: 12),
             ),
             value: _requireAc,
             onChanged: (val) => setState(() => _requireAc = val),
           ),
 
-          const Divider(color: Color(0xFF334155), height: 24),
+          Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), height: 24),
 
           // Max Fare Slider
           Row(
@@ -134,12 +135,12 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
             children: [
               const Text(
                 'Maximum Ticket Fare',
-                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
               Text(
                 _currencyFormat.format(_maxFare),
                 style: const TextStyle(
-                  color: Color(0xFF22C55E),
+                  color: AppTheme.primaryColor,
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
@@ -152,17 +153,17 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
             max: 5000.0,
             divisions: 45,
             activeColor: AppTheme.primaryColor,
-            inactiveColor: const Color(0xFF334155),
+            inactiveColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
             label: _currencyFormat.format(_maxFare),
             onChanged: (val) => setState(() => _maxFare = val),
           ),
 
-          const Divider(color: Color(0xFF334155), height: 24),
+          Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), height: 24),
 
           // Departure Time Window
           const Text(
             'Preferred Departure Window',
-            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -173,9 +174,8 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
                 label: Text(win),
                 selected: isSelected,
                 selectedColor: AppTheme.primaryColor,
-                backgroundColor: const Color(0xFF0F172A),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                  color: isSelected ? AppTheme.onPrimaryColor : (isDark ? Colors.white70 : Colors.black87),
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),

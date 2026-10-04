@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/empty_state_view.dart';
 import '../../../core/widgets/transit_badge.dart';
 import '../../../core/widgets/waypoint_card.dart';
 import '../../fleet/data/fleet_api_service.dart';
 import '../../booking/screens/seat_picker_screen.dart';
 import '../models/journey_models.dart';
 
-/// MOB-04: Journey Comparison Cards & Safe Buffer
-/// Stitch Screen ID: aa124497024b48a3adc01888fed1a5a3
-/// Component 1: Journey Planning & Route Catalogue (Sethum)
 class JourneyComparisonScreen extends StatelessWidget {
   final String originCity;
   final String destinationCity;
@@ -32,12 +30,11 @@ class JourneyComparisonScreen extends StatelessWidget {
       decimalDigits: 2,
     );
     final dateFormat = DateFormat('EEE, dd MMM yyyy');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        foregroundColor: Colors.white,
         title: Column(
           children: [
             Text(
@@ -46,35 +43,23 @@ class JourneyComparisonScreen extends StatelessWidget {
             ),
             Text(
               dateFormat.format(travelDate),
-              style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: textMuted),
             ),
           ],
         ),
       ),
       body: candidates.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.directions_bus_outlined, size: 64, color: Color(0xFF64748B)),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No Transit Options Found',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Try adjusting your search date or filters for $originCity to $destinationCity.',
-                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+          ? EmptyStateView(
+              icon: Icons.directions_bus_outlined,
+              title: 'No Transit Options Found',
+              description: 'Try adjusting your search date or filters for $originCity to $destinationCity.',
+              actionLabel: 'Modify Search',
+              onAction: () => Navigator.of(context).pop(),
             )
           : ListView.separated(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               itemCount: candidates.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final candidate = candidates[index];
                 final durationHours = candidate.durationMinutes ~/ 60;
@@ -99,14 +84,16 @@ class JourneyComparisonScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0F172A),
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFF334155)),
+                                  border: Border.all(
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                  ),
                                 ),
                                 child: Text(
                                   candidate.routeNumber,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black87,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'monospace',
@@ -129,7 +116,7 @@ class JourneyComparisonScreen extends StatelessWidget {
                           Text(
                             '${(candidate.matchScore * 100).toInt()}% Match',
                             style: const TextStyle(
-                              color: Color(0xFF818CF8),
+                              color: AppTheme.primaryColor,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -138,7 +125,7 @@ class JourneyComparisonScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
 
-                      // Origin & Destination Timeline
+                      // Departure & Arrival Timeline
                       Row(
                         children: [
                           Expanded(
@@ -147,16 +134,12 @@ class JourneyComparisonScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   formattedDep,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   candidate.origin,
-                                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                                  style: TextStyle(color: textMuted, fontSize: 13),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -166,18 +149,17 @@ class JourneyComparisonScreen extends StatelessWidget {
                             children: [
                               Text(
                                 '${durationHours}h ${durationMins}m',
-                                style: const TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Container(width: 24, height: 1, color: const Color(0xFF475569)),
-                                  const Icon(Icons.directions_bus, size: 14, color: AppTheme.primaryColor),
-                                  Container(width: 24, height: 1, color: const Color(0xFF475569)),
+                                  Container(width: 24, height: 1, color: AppTheme.primaryColor),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 4),
+                                    child: Icon(Icons.directions_bus, size: 14, color: AppTheme.primaryColor),
+                                  ),
+                                  Container(width: 24, height: 1, color: AppTheme.primaryColor),
                                 ],
                               ),
                             ],
@@ -188,16 +170,12 @@ class JourneyComparisonScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   formattedArr,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   candidate.destination,
-                                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                                  style: TextStyle(color: textMuted, fontSize: 13),
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.right,
                                 ),
@@ -214,8 +192,8 @@ class JourneyComparisonScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSafeTransfer
-                                ? const Color(0xFF064E3B).withAlpha(102)
-                                : const Color(0xFF7F1D1D).withAlpha(102),
+                                ? const Color(0xFF064E3B).withOpacity(0.2)
+                                : const Color(0xFF7F1D1D).withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSafeTransfer ? const Color(0xFF059669) : const Color(0xFFDC2626),
@@ -232,7 +210,7 @@ class JourneyComparisonScreen extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   isSafeTransfer
-                                      ? 'Safe ${candidate.transferBufferMinutes}m transfer window (>= 20 min rule)'
+                                      ? 'Safe ${candidate.transferBufferMinutes}m transfer window (≥ 20 min guarantee)'
                                       : 'Transfer window (${candidate.transferBufferMinutes}m) is below 20 min safety threshold',
                                   style: TextStyle(
                                     fontSize: 11,
@@ -253,8 +231,8 @@ class JourneyComparisonScreen extends StatelessWidget {
                         children: [
                           Text(
                             candidate.busClass,
-                            style: const TextStyle(
-                              color: Color(0xFFCBD5E1),
+                            style: TextStyle(
+                              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -262,7 +240,7 @@ class JourneyComparisonScreen extends StatelessWidget {
                           Text(
                             '${candidate.availableSeats} Seats Available',
                             style: const TextStyle(
-                              color: Color(0xFF34D399),
+                              color: AppTheme.primaryColor,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -279,14 +257,14 @@ class JourneyComparisonScreen extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'TOTAL TICKET FARE',
-                                style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: textMuted, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 currencyFormat.format(candidate.totalFare),
                                 style: const TextStyle(
-                                  color: Color(0xFF22C55E),
+                                  color: AppTheme.primaryColor,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -296,7 +274,7 @@ class JourneyComparisonScreen extends StatelessWidget {
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppTheme.onPrimaryColor,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -306,7 +284,6 @@ class JourneyComparisonScreen extends StatelessWidget {
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                             ),
                             onPressed: () {
-                              // Handoff to Component 2 (Nuhadh) - MOB-05 SeatPickerScreen
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => SeatPickerScreen(
