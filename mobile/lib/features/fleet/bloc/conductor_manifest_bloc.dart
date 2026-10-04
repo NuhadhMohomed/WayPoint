@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 part 'conductor_manifest_event.dart';
 part 'conductor_manifest_state.dart';
 
-/// BLoC for MOB-11: Conductor Passenger Manifest Roster.
+/// BLoC for Conductor Passenger Manifest Roster.
 ///
 /// Loads the passenger list for a given service and tracks boarding progress.
 class ConductorManifestBloc extends Bloc<ConductorManifestEvent, ConductorManifestState> {
@@ -19,8 +19,8 @@ class ConductorManifestBloc extends Bloc<ConductorManifestEvent, ConductorManife
 
     // Mock data — in production comes from GET /api/v1/services/{id}/manifest
     final passengers = [
-      {'name': 'Nuhadh Mohomed', 'seat': '12A', 'status': 'Boarded', 'boardingPoint': 'Colombo Fort'},
-      {'name': 'Nuhadh Mohomed', 'seat': '12B', 'status': 'Boarded', 'boardingPoint': 'Colombo Fort'},
+      {'name': 'Sunil Shantha', 'seat': '12A', 'status': 'Boarded', 'boardingPoint': 'Colombo Fort'},
+      {'name': 'Kavindi Perera', 'seat': '12B', 'status': 'Boarded', 'boardingPoint': 'Colombo Fort'},
       {'name': 'Kamal Perera', 'seat': '4C', 'status': 'Pending', 'boardingPoint': 'Kaduwela'},
       {'name': 'Amaya Silva', 'seat': '1A', 'status': 'Pending', 'boardingPoint': 'Colombo Fort'},
       {'name': 'Amaya Silva', 'seat': '1B', 'status': 'Pending', 'boardingPoint': 'Colombo Fort'},

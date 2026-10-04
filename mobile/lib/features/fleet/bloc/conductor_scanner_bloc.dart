@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 part 'conductor_scanner_event.dart';
 part 'conductor_scanner_state.dart';
 
-/// BLoC for MOB-10: Conductor QR Boarding Scanner.
+/// BLoC for Conductor QR Boarding Scanner.
 ///
 /// Receives scanned QR payloads, verifies against backend,
 /// and emits TicketValid (green overlay) or TicketInvalid (red overlay).
@@ -23,7 +23,7 @@ class ConductorScannerBloc extends Bloc<ConductorScannerEvent, ConductorScannerS
     // Mock: tickets containing 'TK-12345' are valid
     if (event.payload.contains('TK-12345')) {
       emit(const TicketValid(
-        passengerName: 'Nuhadh Mohomed',
+        passengerName: 'Sunil Shantha',
         seatNumbers: ['12A', '12B'],
       ));
     } else if (event.payload.contains('TK-00987')) {
