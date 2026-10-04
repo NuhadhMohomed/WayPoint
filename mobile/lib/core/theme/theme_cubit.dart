@@ -38,4 +38,6 @@ class ThemeCubit extends Cubit<ThemeMode> {
       // Ignore storage errors in test mode
     }
   }
+
+  Future<void> setThemeMode(ThemeMode mode) => setTheme(mode);
 }
