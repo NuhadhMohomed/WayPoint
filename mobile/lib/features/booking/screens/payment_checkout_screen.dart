@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/transit_badge.dart';
@@ -10,9 +11,6 @@ import '../services/booking_api_service.dart';
 import '../widgets/hold_countdown_bar.dart';
 import 'ticket_wallet_screen.dart';
 
-/// MOB-06: Payment Sandbox Checkout & Hold Bar
-/// Stitch Screen ID: 01076854fa0e41d299d8fc02ab224ad1
-/// Component 3: Booking, Ticketing & Passenger Options (Mithila)
 class PaymentCheckoutScreen extends StatefulWidget {
   final SeatHoldInfo holdInfo;
   final VoidCallback? onBookingSuccess;
@@ -28,26 +26,30 @@ class PaymentCheckoutScreen extends StatefulWidget {
 }
 
 class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
-  // Timer & Expiration State
   late int _remainingSeconds;
   Timer? _countdownTimer;
   bool _isHoldExpired = false;
 
-  // Form & Sandbox Payment State
   PaymentSandboxCard _selectedPreset = PaymentSandboxCard.successCard;
   final _cardNumberController = TextEditingController();
   final _expiryController = TextEditingController();
   final _cvvController = TextEditingController();
   final _nameController = TextEditingController();
+  final _promoController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Execution State
+  bool _promoApplied = false;
+  bool _includeInsurance = false;
   bool _isProcessing = false;
   final _currencyFormatter = NumberFormat.currency(
     locale: 'en_LK',
     symbol: 'Rs. ',
     decimalDigits: 2,
   );
+
+  double get _discountAmount => _promoApplied ? (widget.holdInfo.subtotal * 0.20) : 0.0;
+  double get _insuranceAmount => _includeInsurance ? (widget.holdInfo.seatCount * 150.0) : 0.0;
+  double get _totalPayable => (widget.holdInfo.subtotal - _discountAmount) + widget.holdInfo.serviceFee + _insuranceAmount;
 
   @override
   void initState() {
@@ -68,10 +70,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     _expiryController.dispose();
     _cvvController.dispose();
     _nameController.dispose();
+    _promoController.dispose();
     super.dispose();
   }
 
-  /// Starts the second-by-second countdown timer for the 10-minute hold window.
   void _startCountdownTimer() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -90,7 +92,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     });
   }
 
-  /// Fills the checkout text fields with data from the chosen test card preset.
   void _populateCardFields(PaymentSandboxCard card) {
     _cardNumberController.text = card.cardNumber;
     _expiryController.text = card.expiryDate;
@@ -98,13 +99,13 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     _nameController.text = card.cardholderName;
   }
 
-  /// Shows alert modal when the 10-minute server seat hold expires.
   void _showHoldExpiredDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(
           Icons.alarm_off_rounded,
@@ -114,14 +115,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         title: const Text(
           'Seat Hold Expired',
           style: TextStyle(
-            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
         ),
         content: const Text(
-          'Your 10-minute temporary seat reservation has ended. The selected seats have been released back to public inventory to prevent lockouts.',
-          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          'Your 10-minute temporary seat reservation has ended. Seats have been returned to public inventory.',
           textAlign: TextAlign.center,
         ),
         actions: [
@@ -137,7 +136,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  /// Simulates transactional payment gateway authorization and booking conversion.
   Future<void> _processPayment() async {
     if (_isHoldExpired) {
       _showHoldExpiredDialog();
@@ -152,11 +150,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _isProcessing = true;
     });
 
-    // 1. Process payment charge via live API / sandbox gateway
     final apiService = BookingApiService();
     final chargeResult = await apiService.processSandboxCharge(
       cardNumber: _cardNumberController.text,
-      amount: widget.holdInfo.totalAmount,
+      amount: _totalPayable,
       cardholderName: _nameController.text,
     );
 
@@ -171,40 +168,24 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
     if (isSuccess) {
       _countdownTimer?.cancel();
-      final txnId =
-          chargeResult['transactionId']?.toString() ?? 'TXN-CONFIRMED';
+      final txnId = chargeResult['transactionId']?.toString() ?? 'TXN-CONFIRMED';
 
-      // 2. Execute transactional atomic checkout on backend API
       final confirmation = await apiService.executeCheckout(
         holdId: widget.holdInfo.holdId,
         paymentTxnId: txnId,
-        passengerName: _nameController.text.isNotEmpty
-            ? _nameController.text
-            : 'Nimal Silva',
+        passengerName: _nameController.text.isNotEmpty ? _nameController.text : 'Nimal Silva',
       );
 
       if (!mounted) return;
-      _showSuccessDialog(
-          confirmation.bookingReference, confirmation.ticketQrPayload);
+      _showSuccessDialog(confirmation.bookingReference, confirmation.ticketQrPayload);
     } else if (gatewayStatus == 'Timeout') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppTheme.secondaryColor,
           behavior: SnackBarBehavior.floating,
-          content: Row(
-            children: [
-              Icon(Icons.wifi_off_rounded, color: Color(0xFF191C1D)),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Gateway Timeout (HTTP 504): Simulated network delay. Please retry transaction.',
-                  style: TextStyle(
-                      color: Color(0xFF191C1D),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+          content: Text(
+            'Gateway Timeout (HTTP 504): Simulated network delay. Please retry transaction.',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       );
@@ -213,188 +194,166 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         SnackBar(
           backgroundColor: AppTheme.errorColor,
           behavior: SnackBarBehavior.floating,
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  chargeResult['message']?.toString() ??
-                      'Payment Declined: Simulated Insufficient Funds (HTTP 402). Your hold is still active, please try another card.',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                ),
-              ),
-            ],
+          content: Text(
+            chargeResult['declineReason']?.toString() ?? 'Card Declined by Bank. Try another preset.',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       );
     }
   }
 
-  /// Displays booking success confirmation bottom modal with ticket reference.
   void _showSuccessDialog(String reference, String qrPayload) {
-    showModalBottomSheet(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
       context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xFF05230F),
-                shape: BoxShape.circle,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF131B2E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: AppTheme.primaryColor,
+                  size: 40,
+                ),
               ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: Color(0xFF22C55E),
-                size: 40,
+              const SizedBox(height: 16),
+              const Text(
+                'Payment Confirmed!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Payment Confirmed!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 8),
+              Text(
+                'Your seats are confirmed and your digital boarding pass is ready in your wallet.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: isDark ? Colors.grey[400] : Colors.grey[600]),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Your seats have been booked and digital tickets issued.',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF334155)),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildSummaryRow('Booking Reference', reference, isHighlight: true),
+                    const Divider(height: 16),
+                    _buildSummaryRow('Service', widget.holdInfo.serviceCode),
+                    const SizedBox(height: 6),
+                    _buildSummaryRow('Reserved Seats', widget.holdInfo.seatNumbers.join(', ')),
+                    const SizedBox(height: 6),
+                    _buildSummaryRow('Total Paid', _currencyFormatter.format(_totalPayable)),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  _buildSummaryRow('Booking Reference', reference,
-                      isHighlight: true),
-                  const Divider(color: Color(0xFF334155), height: 20),
-                  _buildSummaryRow('Service', widget.holdInfo.serviceCode),
-                  const SizedBox(height: 8),
-                  _buildSummaryRow(
-                      'Reserved Seats', widget.holdInfo.seatNumbers.join(', ')),
-                  const SizedBox(height: 8),
-                  _buildSummaryRow('Total Paid',
-                      _currencyFormatter.format(widget.holdInfo.totalAmount)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            WayPointButton(
-              text: 'Go to Ticket Wallet (MOB-07)',
-              icon: Icons.confirmation_number_outlined,
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => TicketWalletScreen(
-                      initialTickets: [
-                        DigitalTicketPass(
-                          ticketId:
-                              'TCK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-                          bookingReference: reference,
-                          serviceCode: widget.holdInfo.serviceCode,
-                          routeTitle: widget.holdInfo.routeTitle,
-                          originCity: widget.holdInfo.originCity,
-                          destinationCity: widget.holdInfo.destinationCity,
-                          boardingPointName:
-                              'Platform 3, Makumbura Highway Terminal',
-                          departureTime: widget.holdInfo.departureTime,
-                          arrivalTime: widget.holdInfo.arrivalTime,
-                          busRegistration: 'NC-8890',
-                          busClass: 'SuperLuxury Express',
-                          seatNumbers: widget.holdInfo.seatNumbers,
-                          passengerName: 'Nimal Silva',
-                          totalFare: widget.holdInfo.totalAmount,
-                          isBoarded: false,
-                          qrCodePayload: qrPayload,
-                          issuedAt: DateTime.now(),
-                        ),
-                        DigitalTicketPass.sampleColomboToKandy(),
-                      ],
+              const SizedBox(height: 24),
+              WayPointButton(
+                text: 'View Ticket in Wallet',
+                icon: Icons.confirmation_number_outlined,
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => TicketWalletScreen(
+                        initialTickets: [
+                          DigitalTicketPass(
+                            ticketId: 'TCK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                            bookingReference: reference,
+                            serviceCode: widget.holdInfo.serviceCode,
+                            routeTitle: widget.holdInfo.routeTitle,
+                            originCity: widget.holdInfo.originCity,
+                            destinationCity: widget.holdInfo.destinationCity,
+                            boardingPointName: 'Platform 3, Makumbura Highway Terminal',
+                            departureTime: widget.holdInfo.departureTime,
+                            arrivalTime: widget.holdInfo.arrivalTime,
+                            busRegistration: 'NC-8890',
+                            busClass: 'SuperLuxury Express',
+                            seatNumbers: widget.holdInfo.seatNumbers,
+                            passengerName: _nameController.text.isNotEmpty ? _nameController.text : 'Nimal Silva',
+                            totalFare: _totalPayable,
+                            isBoarded: false,
+                            qrCodePayload: qrPayload,
+                            issuedAt: DateTime.now(),
+                          ),
+                          DigitalTicketPass.sampleColomboToKandy(),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-                if (widget.onBookingSuccess != null) {
-                  widget.onBookingSuccess!();
-                }
-              },
-            ),
-          ],
+                  );
+                  if (widget.onBookingSuccess != null) {
+                    widget.onBookingSuccess!();
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  void _applyPromoCode() {
+    final code = _promoController.text.trim().toUpperCase();
+    if (code == 'WAYPOINT20') {
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _promoApplied = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Promo Code WAYPOINT20 Applied! 20% discount added.'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid promo code. Try WAYPOINT20.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         title: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_outline_rounded,
-                color: Color(0xFF22C55E), size: 18),
+            Icon(Icons.lock_outline_rounded, color: AppTheme.primaryColor, size: 18),
             SizedBox(width: 8),
-            Text(
-              'Secure Checkout',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Secure Checkout'),
           ],
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Center(
-              child: TransitBadge(
-                status: TransitStatus.luxury,
-                customLabel: 'MOB-06',
-              ),
-            ),
-          ),
-        ],
+        elevation: 0,
       ),
       body: Column(
         children: [
-          // Sticky Top 10-minute hold progress bar
           HoldCountdownBar(
             remainingSeconds: _remainingSeconds,
             totalSeconds: widget.holdInfo.totalHoldSeconds,
             isExpired: _isHoldExpired,
           ),
-
-          // Scrollable Checkout Body
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -403,26 +362,20 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Journey Summary Card
                     _buildJourneyCard(),
                     const SizedBox(height: 16),
-
-                    // 2. Fare Breakdown Card
+                    _buildStopTimeline(),
+                    const SizedBox(height: 16),
                     _buildFareCard(),
+                    const SizedBox(height: 16),
+                    _buildPromoCodeCard(),
                     const SizedBox(height: 20),
-
-                    // 3. Payment Sandbox Presets
                     _buildSandboxPresetSelector(),
                     const SizedBox(height: 16),
-
-                    // 4. Card Details Input Form
                     _buildCardDetailsForm(),
-                    const SizedBox(height: 20),
-
-                    // 5. Security & Gateway Note
+                    const SizedBox(height: 16),
                     _buildSecurityNote(),
-                    const SizedBox(
-                        height: 80), // Padding for sticky bottom button
+                    const SizedBox(height: 90),
                   ],
                 ),
               ),
@@ -430,14 +383,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           ),
         ],
       ),
-
-      // Sticky Bottom Checkout Button
       bottomSheet: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1E293B),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131B2E) : Colors.white,
           border: Border(
-            top: BorderSide(color: Color(0xFF334155), width: 1),
+            top: BorderSide(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
           ),
         ),
         child: SafeArea(
@@ -448,21 +401,20 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'TOTAL PAYABLE',
                       style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                     Text(
-                      _currencyFormatter.format(widget.holdInfo.totalAmount),
+                      _currencyFormatter.format(_totalPayable),
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
                       ),
                     ),
                   ],
@@ -470,14 +422,11 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                flex: 2,
                 child: WayPointButton(
-                  text: _isHoldExpired ? 'Hold Expired' : 'Pay & Confirm',
-                  icon: _isHoldExpired ? Icons.lock_clock : Icons.credit_card,
+                  text: _isProcessing ? 'Authorizing...' : 'Pay & Confirm',
+                  icon: Icons.shield,
                   isLoading: _isProcessing,
-                  onPressed: (_isHoldExpired || _isProcessing)
-                      ? null
-                      : _processPayment,
+                  onPressed: _isProcessing || _isHoldExpired ? null : _processPayment,
                 ),
               ),
             ],
@@ -487,7 +436,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  /// Builds the transit corridor trip card with departure, destination, and seat badges.
   Widget _buildJourneyCard() {
     final dateFormat = DateFormat('EEE, dd MMM yyyy • hh:mm a');
 
@@ -501,38 +449,29 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               Text(
                 widget.holdInfo.serviceCode,
                 style: const TextStyle(
-                  color: AppTheme.secondaryColor,
+                  color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                   fontFamily: 'monospace',
                 ),
               ),
-              const TransitBadge(
-                status: TransitStatus.held,
-                customLabel: 'Hold Active',
-              ),
+              const TransitBadge(status: TransitStatus.held, customLabel: 'Hold Active'),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             widget.holdInfo.routeTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.departure_board,
-                  color: Color(0xFF94A3B8), size: 16),
+              const Icon(Icons.departure_board, size: 16, color: AppTheme.primaryColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '${widget.holdInfo.originCity}  ➔  ${widget.holdInfo.destinationCity}',
-                  style:
-                      const TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -540,39 +479,35 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.schedule, color: Color(0xFF94A3B8), size: 16),
+              const Icon(Icons.schedule, size: 16, color: Colors.grey),
               const SizedBox(width: 8),
               Text(
                 dateFormat.format(widget.holdInfo.departureTime),
-                style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ),
-          const Divider(color: Color(0xFF334155), height: 24),
+          const Divider(height: 24),
           Row(
             children: [
-              const Text(
-                'Reserved Seats: ',
-                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-              ),
+              const Text('Reserved Seats: ', style: TextStyle(fontSize: 13, color: Colors.grey)),
               const SizedBox(width: 6),
               Wrap(
                 spacing: 6,
                 children: widget.holdInfo.seatNumbers.map((seat) {
                   return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                      color: AppTheme.primaryColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppTheme.primaryColor),
                     ),
                     child: Text(
                       'Seat $seat',
                       style: const TextStyle(
-                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
+                        color: AppTheme.primaryColor,
                       ),
                     ),
                   );
@@ -585,16 +520,109 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  /// Builds the itemized fare breakdown table according to Sri Lankan Rupee pricing.
+  Widget _buildStopTimeline() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return WayPointCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Route Stops & Pickup Timeline',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 14),
+          _buildTimelineItem(
+            station: widget.holdInfo.originCity,
+            detail: 'Platform 4 • Departure Terminal',
+            time: '07:30 AM',
+            isFirst: true,
+            isDark: isDark,
+          ),
+          _buildTimelineItem(
+            station: 'Avissawella Highway Interchange',
+            detail: 'Quick passenger boarding stop',
+            time: '08:45 AM',
+            isDark: isDark,
+          ),
+          _buildTimelineItem(
+            station: 'Ratnapura Bus Terminal',
+            detail: '15 min refreshment stop',
+            time: '10:15 AM',
+            isDark: isDark,
+          ),
+          _buildTimelineItem(
+            station: widget.holdInfo.destinationCity,
+            detail: 'Arrival at main terminal',
+            time: '01:00 PM',
+            isLast: true,
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem({
+    required String station,
+    required String detail,
+    required String time,
+    bool isFirst = false,
+    bool isLast = false,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: (isFirst || isLast) ? AppTheme.primaryColor : Colors.grey,
+                shape: BoxShape.circle,
+              ),
+            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 36,
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+              ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                station,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              Text(
+                detail,
+                style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          time,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFareCard() {
     return WayPointCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Fare Summary',
+            'Fare Breakdown',
             style: TextStyle(
-              color: Colors.white,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
@@ -606,13 +634,28 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           ),
           const SizedBox(height: 8),
           _buildSummaryRow(
-            'Service & Processing Fee',
+            'Service & Platform Fee',
             _currencyFormatter.format(widget.holdInfo.serviceFee),
           ),
-          const Divider(color: Color(0xFF334155), height: 20),
+          if (_promoApplied) ...[
+            const SizedBox(height: 8),
+            _buildSummaryRow(
+              'Promo Discount (WAYPOINT20)',
+              '- ${_currencyFormatter.format(_discountAmount)}',
+              textColor: AppTheme.primaryColor,
+            ),
+          ],
+          if (_includeInsurance) ...[
+            const SizedBox(height: 8),
+            _buildSummaryRow(
+              'Passenger Travel Insurance',
+              '+ ${_currencyFormatter.format(_insuranceAmount)}',
+            ),
+          ],
+          const Divider(height: 20),
           _buildSummaryRow(
             'Grand Total (LKR)',
-            _currencyFormatter.format(widget.holdInfo.totalAmount),
+            _currencyFormatter.format(_totalPayable),
             isHighlight: true,
           ),
         ],
@@ -620,7 +663,79 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  /// Builds the interactive preset selector for sandbox test scenarios.
+  Widget _buildPromoCodeCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return WayPointCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Promotions & Add-ons',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _promoController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter promo (e.g. WAYPOINT20)',
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: _applyPromoCode,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: AppTheme.onPrimaryColor,
+                ),
+                child: const Text('Apply'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Checkbox(
+                value: _includeInsurance,
+                activeColor: AppTheme.primaryColor,
+                onChanged: (val) {
+                  setState(() {
+                    _includeInsurance = val ?? false;
+                  });
+                },
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _includeInsurance = !_includeInsurance;
+                    });
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Add Sri Lanka Transit Insurance (+Rs. 150/seat)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Covers accidental loss, delay refunds & medical coverage',
+                        style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSandboxPresetSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,7 +746,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             const Text(
               'Payment Sandbox Presets',
               style: TextStyle(
-                color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -639,23 +753,24 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFF334155),
+                color: AppTheme.primaryColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
                 'TEST MODE',
                 style: TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
+                  color: AppTheme.primaryColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         const Text(
-          'Select a mock card scenario to test transactional responses:',
-          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+          'Select a test card scenario or simulate immediately:',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 12),
         Row(
@@ -664,7 +779,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             Color chipColor;
             switch (preset.expectedOutcome) {
               case SandboxOutcome.success:
-                chipColor = const Color(0xFF22C55E);
+                chipColor = AppTheme.primaryColor;
                 break;
               case SandboxOutcome.declined:
                 chipColor = AppTheme.errorColor;
@@ -684,15 +799,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? chipColor.withValues(alpha: 0.18)
-                        : const Color(0xFF1E293B),
+                    color: isSelected ? chipColor.withOpacity(0.18) : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSelected ? chipColor : const Color(0xFF334155),
+                      color: isSelected ? chipColor : Colors.grey.withOpacity(0.3),
                       width: isSelected ? 1.8 : 1.0,
                     ),
                   ),
@@ -710,13 +822,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                       const SizedBox(height: 6),
                       Text(
                         preset.name,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF94A3B8),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -726,33 +832,18 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline,
-                  color: Color(0xFF94A3B8), size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _selectedPreset.description,
-                  style:
-                      const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: 12),
+        WayPointButton(
+          text: 'Simulate Sandbox Payment',
+          icon: Icons.play_arrow,
+          variant: WayPointButtonVariant.outline,
+          isLoading: _isProcessing,
+          onPressed: _isProcessing || _isHoldExpired ? null : _processPayment,
         ),
       ],
     );
   }
 
-  /// Builds the manual credit card input form with visual feedback.
   Widget _buildCardDetailsForm() {
     return WayPointCard(
       child: Column(
@@ -761,25 +852,19 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           const Text(
             'Card Details',
             style: TextStyle(
-              color: Colors.white,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 14),
-
-          // Card Number Field
           _buildTextFormField(
             controller: _cardNumberController,
             label: 'Card Number',
             hintText: '4000 0000 0000 0001',
             prefixIcon: Icons.credit_card,
-            validator: (val) =>
-                (val == null || val.isEmpty) ? 'Enter card number' : null,
+            validator: (val) => (val == null || val.isEmpty) ? 'Enter card number' : null,
           ),
           const SizedBox(height: 12),
-
-          // Expiry and CVV in a row
           Row(
             children: [
               Expanded(
@@ -788,8 +873,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   label: 'Expiry Date',
                   hintText: 'MM/YY',
                   prefixIcon: Icons.calendar_today,
-                  validator: (val) =>
-                      (val == null || val.isEmpty) ? 'Required' : null,
+                  validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
                 ),
               ),
               const SizedBox(width: 12),
@@ -800,22 +884,18 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   hintText: '123',
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
-                  validator: (val) =>
-                      (val == null || val.length < 3) ? '3 digits' : null,
+                  validator: (val) => (val == null || val.length < 3) ? '3 digits' : null,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-
-          // Cardholder Name Field
           _buildTextFormField(
             controller: _nameController,
             label: 'Cardholder Name',
             hintText: 'NIMAL SILVA',
             prefixIcon: Icons.person_outline,
-            validator: (val) =>
-                (val == null || val.isEmpty) ? 'Enter cardholder name' : null,
+            validator: (val) => (val == null || val.isEmpty) ? 'Enter cardholder name' : null,
           ),
         ],
       ),
@@ -833,30 +913,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
         hintText: hintText,
-        hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-        prefixIcon: Icon(prefixIcon, color: const Color(0xFF94A3B8), size: 18),
-        filled: true,
-        fillColor: const Color(0xFF0F172A),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF334155)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF334155)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:
-              const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        prefixIcon: Icon(prefixIcon, size: 18),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
       validator: validator,
     );
@@ -866,20 +928,18 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: AppTheme.primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF334155)),
+        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.25)),
       ),
       child: const Row(
         children: [
-          Icon(Icons.verified_user_outlined,
-              color: Color(0xFF22C55E), size: 20),
+          Icon(Icons.verified_user_outlined, color: AppTheme.primaryColor, size: 20),
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Encrypted 256-bit sandbox simulation. No real credit card charges are made. Concurrency lock is protected server-side via IDbContextTransaction.',
-              style: TextStyle(
-                  color: Color(0xFF94A3B8), fontSize: 11, height: 1.4),
+              'Encrypted 256-bit sandbox environment. No actual charge is incurred. Concurrency lock is protected server-side via EF Core DbContextTransaction.',
+              style: TextStyle(fontSize: 11, height: 1.4),
             ),
           ),
         ],
@@ -887,15 +947,18 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value,
-      {bool isHighlight = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+    Color? textColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: isHighlight ? Colors.white : const Color(0xFF94A3B8),
             fontSize: isHighlight ? 14 : 13,
             fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
           ),
@@ -903,7 +966,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         Text(
           value,
           style: TextStyle(
-            color: isHighlight ? AppTheme.secondaryColor : Colors.white,
+            color: textColor ?? (isHighlight ? AppTheme.primaryColor : null),
             fontSize: isHighlight ? 15 : 13,
             fontWeight: isHighlight ? FontWeight.w800 : FontWeight.w600,
             fontFamily: isHighlight ? 'monospace' : null,
