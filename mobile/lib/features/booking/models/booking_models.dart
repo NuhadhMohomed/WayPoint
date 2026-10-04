@@ -343,6 +343,71 @@ class DigitalTicketPass extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'ticketId': ticketId,
+      'bookingReference': bookingReference,
+      'serviceCode': serviceCode,
+      'routeTitle': routeTitle,
+      'originCity': originCity,
+      'destinationCity': destinationCity,
+      'boardingPointName': boardingPointName,
+      'departureTime': departureTime.toIso8601String(),
+      'arrivalTime': arrivalTime.toIso8601String(),
+      'busRegistration': busRegistration,
+      'busClass': busClass,
+      'seatNumbers': seatNumbers,
+      'passengerName': passengerName,
+      'totalFare': totalFare,
+      'isBoarded': isBoarded,
+      'boardedAt': boardedAt?.toIso8601String(),
+      'qrCodePayload': qrCodePayload,
+      'issuedAt': issuedAt.toIso8601String(),
+    };
+  }
+
+  DigitalTicketPass copyWith({
+    String? ticketId,
+    String? bookingReference,
+    String? serviceCode,
+    String? routeTitle,
+    String? originCity,
+    String? destinationCity,
+    String? boardingPointName,
+    DateTime? departureTime,
+    DateTime? arrivalTime,
+    String? busRegistration,
+    String? busClass,
+    List<String>? seatNumbers,
+    String? passengerName,
+    double? totalFare,
+    bool? isBoarded,
+    DateTime? boardedAt,
+    String? qrCodePayload,
+    DateTime? issuedAt,
+  }) {
+    return DigitalTicketPass(
+      ticketId: ticketId ?? this.ticketId,
+      bookingReference: bookingReference ?? this.bookingReference,
+      serviceCode: serviceCode ?? this.serviceCode,
+      routeTitle: routeTitle ?? this.routeTitle,
+      originCity: originCity ?? this.originCity,
+      destinationCity: destinationCity ?? this.destinationCity,
+      boardingPointName: boardingPointName ?? this.boardingPointName,
+      departureTime: departureTime ?? this.departureTime,
+      arrivalTime: arrivalTime ?? this.arrivalTime,
+      busRegistration: busRegistration ?? this.busRegistration,
+      busClass: busClass ?? this.busClass,
+      seatNumbers: seatNumbers ?? this.seatNumbers,
+      passengerName: passengerName ?? this.passengerName,
+      totalFare: totalFare ?? this.totalFare,
+      isBoarded: isBoarded ?? this.isBoarded,
+      boardedAt: boardedAt ?? this.boardedAt,
+      qrCodePayload: qrCodePayload ?? this.qrCodePayload,
+      issuedAt: issuedAt ?? this.issuedAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
         ticketId,

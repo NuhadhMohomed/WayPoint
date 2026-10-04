@@ -7,10 +7,6 @@ import '../models/booking_models.dart';
 import '../services/booking_api_service.dart';
 import '../widgets/tiered_refund_modal.dart';
 import 'ticket_wallet_screen.dart';
-
-/// MOB-08: Booking History & Tiered Refund Modal
-/// Stitch Screen ID: e7403487c674488db9f16886e3f42c26
-/// Component 3: Booking, Ticketing & Passenger Options (Mithila)
 class BookingHistoryScreen extends StatefulWidget {
   final List<HistoricalBookingItem>? initialBookings;
 
