@@ -5,9 +5,6 @@ import '../../../core/widgets/waypoint_button.dart';
 import '../../../core/widgets/transit_badge.dart';
 import '../models/disruption_models.dart';
 
-/// Screen MOB-09: Disruption Push Alert & Alternative Bus Rebooking
-/// Google Stitch Screen ID: `2bfd1cb2561245a99f17148299e4099d`
-/// Implements REQ-FE-09, FR-DISRUPTION-003, and BR-APPROVAL-001.
 class DisruptionAlertScreen extends StatefulWidget {
   final DisruptionAlertModel? disruption;
   final VoidCallback? onAccepted;
@@ -801,15 +798,14 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
             // Action Buttons Dock
             if (!_isAccepted && !_isRefunded) ...[
               WayPointButton(
-                text: 'Accept Recommended Journey',
+                text: 'Accept Replacement Bus',
                 icon: Icons.check_circle,
                 isLoading: _isProcessing,
                 onPressed: _remainingSeconds > 0 ? _handleAccept : null,
               ),
               const SizedBox(height: 12),
               WayPointButton(
-                text:
-                    'Decline & Request 100% Refund (Rs. ${_disruption.originalFarePaid.toStringAsFixed(0)})',
+                text: 'Request 100% Refund',
                 variant: WayPointButtonVariant.outline,
                 onPressed: _handleDecline,
               ),
