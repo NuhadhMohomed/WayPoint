@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/seat_reservation_bar.dart';
+import '../../../core/widgets/empty_state_view.dart';
 import '../../fleet/bloc/seat_picker_bloc.dart';
 import '../../fleet/data/fleet_api_service.dart';
+import '../models/booking_models.dart';
+import 'payment_checkout_screen.dart';
 
-/// MOB-05: Interactive Seat Picker & 10-minute Hold Screen.
-///
-/// Renders a 2D bus seat grid from the API seat matrix.
-/// Color legend: Green = Available, Blue = Selected, Amber = Held, Red = Booked.
 class SeatPickerScreen extends StatelessWidget {
   final String serviceId;
   final FleetApiService apiService;
@@ -19,44 +21,46 @@ class SeatPickerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocProvider(
       create: (_) => SeatPickerBloc(api: apiService)..add(LoadSeatMap(serviceId)),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Select Your Seats'),
-          backgroundColor: const Color(0xFF0056D2), // Lanka Blue
-          foregroundColor: Colors.white,
+          title: const Text('Select Seats'),
+          elevation: 0,
         ),
         body: BlocConsumer<SeatPickerBloc, SeatPickerState>(
           listener: (context, state) {
             if (state.status == SeatPickerStatus.holdExpired) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Seat hold expired. Please select again.'),
-                  backgroundColor: Colors.red,
+                  content: Text('Seat hold expired. Please reselect your seats.'),
+                  backgroundColor: AppTheme.errorColor,
                 ),
               );
             }
           },
           builder: (context, state) {
             if (state.status == SeatPickerStatus.loading || state.status == SeatPickerStatus.initial) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF0056D2)));
-            }
-
-            if (state.status == SeatPickerStatus.error) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                    const SizedBox(height: 12),
-                    Text(state.errorMessage ?? 'Failed to load seats'),
-                  ],
-                ),
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
               );
             }
 
-            final matrix = state.seatMatrix!;
+            if (state.status == SeatPickerStatus.error) {
+              return EmptyStateView(
+                icon: Icons.error_outline,
+                title: 'Unable to Load Seat Map',
+                description: state.errorMessage ?? 'Please check your connection and retry.',
+                actionLabel: 'Retry',
+                onAction: () {
+                  context.read<SeatPickerBloc>().add(LoadSeatMap(serviceId));
+                },
+              );
+            }
+
+            final matrix = state.seatMatrix ?? {};
             final seats = (matrix['seats'] as List<dynamic>?) ?? [];
 
             int maxRow = 0, maxCol = 0;
@@ -68,49 +72,84 @@ class SeatPickerScreen extends StatelessWidget {
 
             return Column(
               children: [
-                // Hold countdown bar
-                if (state.status == SeatPickerStatus.seatsHeld) _HoldCountdownBar(state.remainingSeconds),
-
-                // Legend row
+                // Legend Bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  color: isDark ? const Color(0xFF131B2E) : const Color(0xFFF1F5F9),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _LegendChip(color: Colors.green.shade200, label: 'Available'),
-                      const _LegendChip(color: Color(0xFF0056D2), label: 'Selected'),
-                      _LegendChip(color: Colors.amber.shade300, label: 'Held'),
-                      _LegendChip(color: Colors.red.shade300, label: 'Booked'),
+                      _LegendChip(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        label: 'Available',
+                        borderColor: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                      ),
+                      const _LegendChip(
+                        color: AppTheme.primaryColor,
+                        label: 'Selected',
+                        borderColor: AppTheme.primaryDark,
+                      ),
+                      const _LegendChip(
+                        color: AppTheme.secondaryColor,
+                        label: 'Held',
+                        borderColor: Color(0xFFD97706),
+                      ),
+                      _LegendChip(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFF94A3B8),
+                        label: 'Booked',
+                        borderColor: Colors.transparent,
+                      ),
                     ],
                   ),
                 ),
 
-                // "FRONT" indicator
+                // Front of Bus Indicator with Steering Wheel
                 Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(8),
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text('FRONT', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.directions_bus, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'FRONT • DRIVER CABIN',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          fontSize: 11,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
-                // Seat grid
+                // Scrollable Coach Layout
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: Column(
                       children: List.generate(maxRow + 1, (r) {
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Row number
                               SizedBox(
-                                width: 20,
-                                child: Text('${r + 1}', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                                width: 22,
+                                child: Text(
+                                  '${r + 1}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                  ),
+                                ),
                               ),
                               ...List.generate(totalCols, (c) {
                                 final seat = seats.cast<Map<String, dynamic>?>().firstWhere(
@@ -118,9 +157,8 @@ class SeatPickerScreen extends StatelessWidget {
                                       orElse: () => null,
                                     );
 
-                                // Aisle gap for 4-column (2+2) layouts
                                 final aisleGap = totalCols == 4 && c == 2
-                                    ? const SizedBox(width: 20)
+                                    ? const SizedBox(width: 24)
                                     : const SizedBox.shrink();
 
                                 return Row(
@@ -138,8 +176,25 @@ class SeatPickerScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Bottom action bar
-                _BottomActionBar(),
+                // Bottom SeatReservationBar or Quick Selection Bar
+                if (state.status == SeatPickerStatus.seatsHeld)
+                  SeatReservationBar(
+                    remainingSeconds: state.remainingSeconds,
+                    selectedSeats: state.selectedSeats,
+                    totalAmount: state.selectedSeats.length * 2400.0,
+                    onContinue: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PaymentCheckoutScreen(
+                            holdInfo: SeatHoldInfo.sampleColomboToElla(),
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                else
+                  _QuickSelectionBar(state: state),
               ],
             );
           },
@@ -148,8 +203,6 @@ class SeatPickerScreen extends StatelessWidget {
     );
   }
 }
-
-// ─── Seat Cell ───
 
 class _SeatCell extends StatelessWidget {
   final Map<String, dynamic>? seat;
@@ -160,30 +213,35 @@ class _SeatCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (seat == null) {
-      return Container(width: 44, height: 44, margin: const EdgeInsets.symmetric(horizontal: 3));
+      return Container(width: 44, height: 44, margin: const EdgeInsets.symmetric(horizontal: 4));
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final seatNumber = seat!['seatNumber'] as String;
     final status = seat!['status'] as String;
     final isSelected = state.selectedSeats.contains(seatNumber);
     final isAvailable = status == 'Available';
 
-    Color bg, border;
-    Color textColor = Colors.black87;
+    Color bg;
+    Color border;
+    Color textColor;
 
     if (isSelected) {
-      bg = const Color(0xFF0056D2);
-      border = const Color(0xFF003DA5);
-      textColor = Colors.white;
-    } else if (status == 'Available') {
-      bg = Colors.green.shade100;
-      border = Colors.green.shade400;
+      bg = AppTheme.primaryColor;
+      border = AppTheme.primaryDark;
+      textColor = AppTheme.onPrimaryColor;
+    } else if (isAvailable) {
+      bg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+      border = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
+      textColor = isDark ? Colors.white : Colors.black87;
     } else if (status == 'Held') {
-      bg = Colors.amber.shade200;
-      border = Colors.amber.shade400;
+      bg = AppTheme.secondaryColor.withOpacity(0.25);
+      border = AppTheme.secondaryColor;
+      textColor = AppTheme.secondaryColor;
     } else {
-      bg = Colors.red.shade200;
-      border = Colors.red.shade400;
+      bg = isDark ? const Color(0xFF1A243B).withOpacity(0.5) : const Color(0xFFE2E8F0);
+      border = Colors.transparent;
+      textColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
     }
 
     return GestureDetector(
@@ -191,6 +249,7 @@ class _SeatCell extends StatelessWidget {
         if (!isAvailable && !isSelected) return;
         if (state.status == SeatPickerStatus.seatsHeld) return;
 
+        HapticFeedback.lightImpact();
         final bloc = context.read<SeatPickerBloc>();
         if (isSelected) {
           bloc.add(DeselectSeat(seatNumber));
@@ -201,79 +260,95 @@ class _SeatCell extends StatelessWidget {
       child: Container(
         width: 44,
         height: 44,
-        margin: const EdgeInsets.symmetric(horizontal: 3),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: bg,
-          border: Border.all(color: border, width: 2),
-          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: border, width: isSelected ? 2 : 1.2),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Center(
-          child: Text(seatNumber, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor)),
+          child: isSelected
+              ? const Icon(Icons.check, size: 18, color: AppTheme.onPrimaryColor)
+              : Text(
+                  seatNumber,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
         ),
       ),
     );
   }
 }
-
-// ─── Hold Countdown Bar ───
-
-class _HoldCountdownBar extends StatelessWidget {
-  final int remainingSeconds;
-  const _HoldCountdownBar(this.remainingSeconds);
-
-  @override
-  Widget build(BuildContext context) {
-    final mins = remainingSeconds ~/ 60;
-    final secs = remainingSeconds % 60;
-    final isUrgent = remainingSeconds < 120;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      color: isUrgent ? Colors.red : Colors.amber,
-      child: Text(
-        'Hold expires in $mins:${secs.toString().padLeft(2, '0')}',
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
-      ),
-    );
-  }
-}
-
-// ─── Legend Chip ───
 
 class _LegendChip extends StatelessWidget {
   final Color color;
   final String label;
-  const _LegendChip({required this.color, required this.label});
+  final Color borderColor;
+
+  const _LegendChip({
+    required this.color,
+    required this.label,
+    required this.borderColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 14, height: 14, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11)),
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        ),
       ],
     );
   }
 }
 
-// ─── Bottom Action Bar ───
+class _QuickSelectionBar extends StatelessWidget {
+  final SeatPickerState state;
 
-class _BottomActionBar extends StatelessWidget {
+  const _QuickSelectionBar({required this.state});
+
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<SeatPickerBloc>().state;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final count = state.selectedSeats.length;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, -4), blurRadius: 10)],
+        color: isDark ? const Color(0xFF131B2E) : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
+        ),
       ),
       child: SafeArea(
+        top: false,
         child: Row(
           children: [
             Expanded(
@@ -281,10 +356,15 @@ class _BottomActionBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('${state.selectedSeats.length} Seat${state.selectedSeats.length == 1 ? '' : 's'} Selected',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    count == 0 ? 'No seats selected' : '$count Seat${count == 1 ? '' : 's'} Selected',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
                   if (state.selectedSeats.isNotEmpty)
-                    Text(state.selectedSeats.join(', '), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text(
+                      'Seats: ${state.selectedSeats.join(', ')}',
+                      style: const TextStyle(color: AppTheme.primaryColor, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
                 ],
               ),
             ),
@@ -292,23 +372,24 @@ class _BottomActionBar extends StatelessWidget {
               onPressed: state.selectedSeats.isEmpty || state.status == SeatPickerStatus.seatsHolding
                   ? null
                   : () {
-                      if (state.status == SeatPickerStatus.seatsHeld) {
-                        // Navigate to payment checkout
-                        Navigator.pushNamed(context, '/checkout');
-                      } else {
-                        context.read<SeatPickerBloc>().add(const HoldSeats());
-                      }
+                      HapticFeedback.mediumImpact();
+                      context.read<SeatPickerBloc>().add(const HoldSeats());
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0056D2),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: AppTheme.onPrimaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: state.status == SeatPickerStatus.seatsHolding
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text(
-                      state.status == SeatPickerStatus.seatsHeld ? 'Checkout' : 'Hold Seats',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.onPrimaryColor),
+                    )
+                  : const Text(
+                      'Hold Seats (10m)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
             ),
           ],

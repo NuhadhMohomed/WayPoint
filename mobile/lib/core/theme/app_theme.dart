@@ -11,6 +11,7 @@ class AppTheme {
 
   // Semantic Status Accents
   static const secondaryColor = Color(0xFFF59E0B); // Sunset Amber (10m seat hold & buffer warning)
+  static const accentAmber = secondaryColor;
   static const tertiaryColor = Color(0xFF0284C7); // Sky Blue (Corridors & expressways)
   static const errorColor = Color(0xFFEF4444); // Crimson Alert
 
