@@ -72,6 +72,9 @@ class LocalCacheService {
   Future<void> saveSavedTravelers(List<Map<String, String>> travelers) =>
       _write(_keyTravelers, jsonEncode(travelers));
 
+  Future<void> saveTravelers(List<dynamic> travelers) =>
+      _write(_keyTravelers, jsonEncode(travelers));
+
   Future<List<Map<String, String>>> getSavedTravelers() async {
     final str = await _read(_keyTravelers);
     if (str == null || str.isEmpty) return [];
