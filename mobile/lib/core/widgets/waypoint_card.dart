@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class WayPointCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final Color? color;
+  final Border? border;
+  final double borderRadius;
 
   const WayPointCard({
     super.key,
@@ -12,37 +15,48 @@ class WayPointCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.onTap,
     this.color,
+    this.border,
+    this.borderRadius = 16,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cardColor = color ?? theme.cardTheme.color ?? theme.colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = color ?? (isDark ? AppTheme.darkCardBackground : AppTheme.lightSurface);
+    final borderColor = isDark ? AppTheme.darkBorderColor : AppTheme.lightBorderColor;
 
-    final content = Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000), // 5% diffused shadow Level 1
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: padding,
-      child: child,
+    final decoration = BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: border ?? Border.all(color: borderColor, width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: content,
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Ink(
+            decoration: decoration,
+            padding: padding,
+            child: child,
+          ),
+        ),
       );
     }
 
-    return content;
+    return Container(
+      decoration: decoration,
+      padding: padding,
+      child: child,
+    );
   }
 }
