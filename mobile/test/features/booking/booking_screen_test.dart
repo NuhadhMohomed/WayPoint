@@ -6,7 +6,7 @@ import 'package:waypoint_mobile/features/booking/screens/ticket_wallet_screen.da
 import 'package:waypoint_mobile/features/booking/screens/booking_history_screen.dart';
 
 void main() {
-  group('Component 3: Booking Models Unit Tests (Mithila)', () {
+  group('Booking Models Unit Tests', () {
     test(
         'SeatHoldInfo.sampleColomboToElla initializes with correct sample data',
         () {
@@ -101,7 +101,7 @@ void main() {
     });
   });
 
-  group('Component 3: Booking Screen Widget Tests (Mithila)', () {
+  group('Booking Screen Widget Tests', () {
     testWidgets('PaymentCheckoutScreen renders hold bar and preset test chips',
         (tester) async {
       final hold = SeatHoldInfo.sampleColomboToElla();

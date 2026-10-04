@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/transit_badge.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../../../core/widgets/waypoint_card.dart';
 import '../models/journey_models.dart';

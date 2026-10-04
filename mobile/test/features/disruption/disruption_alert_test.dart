@@ -137,8 +137,8 @@ void main() {
       expect(find.text('Super Line Luxury Coach'), findsOneWidget);
 
       // Verify action buttons
-      expect(find.text('Accept Recommended Journey'), findsOneWidget);
-      expect(find.textContaining('Decline & Request 100% Refund'), findsOneWidget);
+      expect(find.text('Accept Replacement Bus'), findsOneWidget);
+      expect(find.text('Request 100% Refund'), findsOneWidget);
     });
 
     testWidgets('invokes onAccepted callback when Accept button is pressed', (WidgetTester tester) async {
@@ -167,7 +167,7 @@ void main() {
       );
 
       // Find accept button and tap
-      final acceptBtn = find.text('Accept Recommended Journey');
+      final acceptBtn = find.text('Accept Replacement Bus');
       expect(acceptBtn, findsOneWidget);
       await tester.tap(acceptBtn);
       await tester.pumpAndSettle();
@@ -194,7 +194,7 @@ void main() {
         ),
       );
 
-      final declineBtn = find.textContaining('Decline & Request 100% Refund');
+      final declineBtn = find.text('Request 100% Refund');
       expect(declineBtn, findsOneWidget);
       await tester.tap(declineBtn);
       await tester.pumpAndSettle();

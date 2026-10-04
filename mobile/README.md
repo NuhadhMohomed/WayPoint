@@ -49,17 +49,17 @@ The mobile UI implements the design system tokens via `AppTheme` in `lib/core/th
 
 ## 3. Pre-Designed Stitch Screens Reference
 
-Reference your assigned screens in [`docs/design/stitch-screens-index.md`](../docs/design/stitch-screens-index.md):
+Reference your screens in [`docs/design/stitch-screens-index.md`](../docs/design/stitch-screens-index.md):
 
-| Screen Code | Screen Name | Assigned Student | Stitch Screen ID |
+| Screen Code | Screen Name | Feature Domain | Stitch Screen ID |
 | :--- | :--- | :--- | :--- |
-| **MOB-01** | Passenger Dashboard & Active Journey Card | Student 1 (Sethum) | `5f03d5fae16d4cfa9760775d71c223c2` |
-| **MOB-02** | Journey Search, Corridors & Dates | Student 1 (Sethum) | `4baf1853d7a14d7abd597916567b5370` |
-| **MOB-03** | Preference Filter Sheet & Sliders | Student 1 (Sethum) | `fb4b74ea904c435b93f05e9dc324e989` |
-| **MOB-04** | Interactive Bus Seat Selection | Student 3 (Mithila) | `ba846b0a72ad41ecbf0a116b47c617b0` |
-| **MOB-05** | Checkout, Fare Breakdown & Payment Sheet | Student 3 (Mithila) | `ff34d193d56f4d2f8cb573752e259e51` |
-| **MOB-06** | Digital Ticket Wallet with Offline QR Code | Student 3 (Mithila) | `9719356d2b4546eeae9eeef94b05531d` |
-| **MOB-07** | Disruption Alert Banner & Rebooking Sheet | Student 4 (Dineth) | `26ba19d84c134aa89617d91d09e86337` |
+| **MOB-01** | Passenger Dashboard & Active Journey Card | Explore & Corridor Discovery | `5f03d5fae16d4cfa9760775d71c223c2` |
+| **MOB-02** | Journey Search, Corridors & Dates | Journey Search & Dates | `4baf1853d7a14d7abd597916567b5370` |
+| **MOB-03** | Preference Filter Sheet & Sliders | Transit Filter Architecture | `fb4b74ea904c435b93f05e9dc324e989` |
+| **MOB-04** | Interactive Bus Seat Selection | Seat Picker & Hold Reservation | `ba846b0a72ad41ecbf0a116b47c617b0` |
+| **MOB-05** | Checkout, Fare Breakdown & Payment Sheet | Payment Sandbox & Invoicing | `ff34d193d56f4d2f8cb573752e259e51` |
+| **MOB-06** | Digital Ticket Wallet with Offline QR Code | Cryptographic Digital Wallet | `9719356d2b4546eeae9eeef94b05531d` |
+| **MOB-07** | Disruption Alert Banner & Rebooking Sheet | Disruption Center & Rebooking | `26ba19d84c134aa89617d91d09e86337` |
 
 ---
 

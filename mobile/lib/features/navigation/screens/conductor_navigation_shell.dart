@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_card.dart';
@@ -97,8 +97,8 @@ class _ConductorServicesTab extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
+        children: const [
+          Text(
             'TODAY\'S ASSIGNMENTS',
             style: TextStyle(
               fontSize: 12,
@@ -107,12 +107,12 @@ class _ConductorServicesTab extends StatelessWidget {
               color: Colors.grey,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           WayPointCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TransitBadge(status: TransitStatus.available, customLabel: 'Active Service'),
@@ -122,24 +122,24 @@ class _ConductorServicesTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'Colombo Fort -> Ella Superline Express',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Departure: 07:30 AM * Platform Bay 04',
                   style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
-                const SizedBox(height: 14),
-                const LinearProgressIndicator(
+                SizedBox(height: 14),
+                LinearProgressIndicator(
                   value: 0.82,
                   backgroundColor: Color(0xFF1E293B),
                   valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                 ),
-                const SizedBox(height: 8),
-                const Row(
+                SizedBox(height: 8),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Boarded: 33 / 40 seats', style: TextStyle(fontSize: 12, color: Colors.grey)),

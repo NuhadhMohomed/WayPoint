@@ -6,7 +6,7 @@ import 'package:http/testing.dart';
 import 'package:waypoint_mobile/features/fleet/presentation/screens/review_submission_screen.dart';
 
 void main() {
-  testWidgets('ReviewSubmissionScreen (SCR-FLEET-100) renders star rating and anonymous options', (WidgetTester tester) async {
+  testWidgets('ReviewSubmissionScreen renders star rating and anonymous options', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: ReviewSubmissionScreen(
@@ -19,8 +19,8 @@ void main() {
     );
 
     // Verify Title and Subtitle
-    expect(find.text('Rate Bus'), findsOneWidget);
-    expect(find.text('How was your experience with ND-4521 Luxury Super Express?'), findsOneWidget);
+    expect(find.text('Rate Transit Service'), findsOneWidget);
+    expect(find.text('How was your journey on ND-4521 Luxury Super Express?'), findsOneWidget);
 
     // Verify Star Rating buttons (5 stars)
     expect(find.byType(IconButton), findsNWidgets(5));
@@ -29,10 +29,17 @@ void main() {
     expect(find.text('Post anonymously'), findsOneWidget);
 
     // Verify Submit Button
-    expect(find.text('Submit Review'), findsOneWidget);
+    expect(find.text('Submit Verified Review'), findsOneWidget);
   });
 
   testWidgets('ReviewSubmissionScreen shows validation error when submitting with 0 stars', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(
       const MaterialApp(
         home: ReviewSubmissionScreen(
@@ -45,14 +52,21 @@ void main() {
     );
 
     // Tap Submit Review without selecting stars
-    await tester.tap(find.text('Submit Review'));
+    await tester.tap(find.text('Submit Verified Review'));
     await tester.pump();
 
     // Verify error message
-    expect(find.text('Please select a rating'), findsOneWidget);
+    expect(find.text('Please select a star rating (1-5)'), findsOneWidget);
   });
 
   testWidgets('ReviewSubmissionScreen submits review with Auth header and payload correctly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     bool requestCaptured = false;
     String? capturedAuthHeader;
     Map<String, dynamic>? capturedBody;
@@ -86,7 +100,7 @@ void main() {
     await tester.pump();
 
     // Submit review
-    await tester.tap(find.text('Submit Review'));
+    await tester.tap(find.text('Submit Verified Review'));
     await tester.pumpAndSettle();
 
     expect(requestCaptured, isTrue);

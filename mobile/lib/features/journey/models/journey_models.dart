@@ -1,7 +1,7 @@
 library;
 
 /// Journey Planning Data Models
-/// Component 1: Journey Planning & Route Catalogue (Sethum)
+/// Production Transit Catalogue and Route Architecture
 
 class RouteModel {
   final String id;

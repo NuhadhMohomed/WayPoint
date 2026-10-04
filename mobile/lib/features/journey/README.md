@@ -1,1 +1,3 @@
-// Component 1: Journey Planning feature module (Sethum)
+# Journey Planning Feature Module
+
+Production multi-modal journey planning, route catalogue, scenic corridor discovery, and transfer window calculations.

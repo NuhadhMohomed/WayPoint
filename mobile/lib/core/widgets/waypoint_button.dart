@@ -46,7 +46,6 @@ class WayPointButton extends StatelessWidget {
         fg = Colors.white;
         break;
       case WayPointButtonVariant.primary:
-      default:
         bg = AppTheme.primaryColor;
         fg = AppTheme.onPrimaryColor;
         break;

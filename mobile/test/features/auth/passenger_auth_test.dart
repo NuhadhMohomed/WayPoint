@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:waypoint_mobile/core/widgets/waypoint_logo.dart';
 import 'package:waypoint_mobile/features/auth/models/auth_models.dart';
 import 'package:waypoint_mobile/features/auth/screens/passenger_auth_screen.dart';
 import 'package:waypoint_mobile/features/auth/services/auth_service.dart';
 
 void main() {
-  testWidgets('PassengerAuthScreen (MOB-01) renders Login and Register tabs', (WidgetTester tester) async {
+  testWidgets('PassengerAuthScreen renders Sign In and Create Account tabs', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: PassengerAuthScreen(),
@@ -16,20 +17,18 @@ void main() {
     );
 
     // Verify Title & Tabs
-    expect(find.text('Welcome to WayPoint'), findsOneWidget);
-    expect(find.widgetWithText(Tab, 'Login'), findsOneWidget);
-    expect(find.widgetWithText(Tab, 'Register'), findsOneWidget);
+    expect(find.byType(WayPointLogo), findsOneWidget);
+    expect(find.widgetWithText(Tab, 'Sign In'), findsOneWidget);
+    expect(find.widgetWithText(Tab, 'Create Account'), findsOneWidget);
 
-    // Initial tab is Login
-    expect(find.text('Sign In'), findsOneWidget);
+    // Initial tab is Sign In
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
 
-    // Switch to Register tab
-    await tester.tap(find.text('Register'));
+    // Switch to Create Account tab
+    await tester.tap(find.widgetWithText(Tab, 'Create Account'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create Account'), findsOneWidget);
     expect(find.text('Full Name'), findsOneWidget);
     expect(find.text('NIC or Passport Number'), findsOneWidget);
   });

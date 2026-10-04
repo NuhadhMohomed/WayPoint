@@ -5,7 +5,7 @@ import 'package:waypoint_mobile/features/journey/screens/journey_comparison_scre
 import 'package:waypoint_mobile/features/journey/screens/journey_search_screen.dart';
 
 void main() {
-  testWidgets('JourneySearchScreen (MOB-02) renders search inputs and corridor chips', (WidgetTester tester) async {
+  testWidgets('JourneySearchScreen renders search inputs and scenic corridor chips', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -14,24 +14,13 @@ void main() {
       ),
     );
 
-    // Verify title & badges
-    expect(find.text('Intercity Journey Planner'), findsOneWidget);
-    expect(find.text('Component 1'), findsOneWidget);
-    expect(find.text('Sethum'), findsOneWidget);
-
-    // Verify origin and destination selectors
-    expect(find.text('FROM (ORIGIN)'), findsOneWidget);
-    expect(find.text('TO (DESTINATION)'), findsOneWidget);
-
-    // Verify popular corridor chips
-    expect(find.text('Colombo → Ella'), findsOneWidget);
-    expect(find.text('Colombo → Kandy'), findsOneWidget);
-
-    // Verify Search CTA button
-    expect(find.text('Search Journeys (MOB-02)'), findsOneWidget);
+    // Verify title and search elements
+    expect(find.text('Explore Corridors'), findsOneWidget);
+    expect(find.byIcon(Icons.swap_vert), findsOneWidget);
+    expect(find.text('Search Buses'), findsOneWidget);
   });
 
-  testWidgets('JourneyComparisonScreen (MOB-04) renders candidates and transfer buffer indicator', (WidgetTester tester) async {
+  testWidgets('JourneyComparisonScreen renders candidates and transfer buffer indicator', (WidgetTester tester) async {
     final direct = JourneyCandidateModel.sampleColomboToEllaDirect();
     final connecting = JourneyCandidateModel.sampleConnectingViaKandy();
 

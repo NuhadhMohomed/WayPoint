@@ -82,8 +82,8 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
                     final updated = List<Map<String, dynamic>>.from(_savedTravelers)
                       ..add({'name': nameCtrl.text.trim(), 'nic': nicCtrl.text.trim(), 'type': 'Companion'});
                     await _cache.saveTravelers(updated);
-                    setState(() => _savedTravelers = updated);
-                    Navigator.of(ctx).pop();
+                    if (mounted) setState(() => _savedTravelers = updated);
+                    if (ctx.mounted) Navigator.of(ctx).pop();
                   }
                 },
               ),
