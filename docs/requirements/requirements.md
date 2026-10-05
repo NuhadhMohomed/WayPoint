@@ -165,8 +165,8 @@ This document defines the functional and non-functional requirements for the **W
 - **Preconditions**: Booking status is `Confirmed`.
 - **Expected Behavior**: Backend generates QR code payload containing encrypted/signed booking reference, route, departure time, and seat numbers.
 - **Acceptance Criteria**:
-  1. Passenger can view e-ticket in Flutter mobile app offline/online wallet.
-  2. Operator can scan QR code via mobile camera/scanner device feature to verify passenger boarding.
+  1. Passenger can retrieve signed QR e-ticket payload via `GET /api/v1/tickets/{id}`.
+  2. Conductor / scanner can verify QR payload via `POST /api/v1/tickets/verify-qr` to verify passenger boarding.
 - **Priority**: Must Have
 
 #### `FR-BOOKING-004`: Passenger Cancellation & Refund Eligibility
@@ -207,7 +207,7 @@ This document defines the functional and non-functional requirements for the **W
 - **Description**: Pause high-impact operational changes in `PendingManagerApproval` state until authorized by a Transport Manager.
 - **Actor**: Validation & Safety Agent / Transport Manager
 - **Preconditions**: Proposed operational change classified as high-impact (ticketed service cancellation, timetable shift >15 mins, bus/driver reassignment).
-- **Expected Behavior**: System sets workflow state to `PendingManagerApproval`, notifies Transport Manager in React workspace, and blocks automated execution.
+- **Expected Behavior**: System sets workflow state to `PendingManagerApproval`, exposes proposal on `/api/v1/approvals/pending`, and blocks automated execution.
 - **Acceptance Criteria**:
   1. Low-impact actions (routine recommendations, search ranking) execute automatically without manager approval.
   2. High-impact actions CANNOT be applied without an explicit signed `ApprovalDecision` record from a Transport Manager.
@@ -216,11 +216,11 @@ This document defines the functional and non-functional requirements for the **W
 #### `FR-DISRUPTION-004`: Transactional Rebooking Application & Notification
 - **Description**: Execute manager-approved rebooking proposal transactionally and notify affected passengers.
 - **Actor**: Transport Manager / Backend System
-- **Preconditions**: Manager executes `Approve` action in React Manager Workbench.
-- **Expected Behavior**: Backend applies rebooking changes to database in a single transaction, updates passenger ticket records, releases old seats, reserves new seats, and dispatches notifications.
+- **Preconditions**: Manager submits `Approve` decision via `POST /api/v1/approvals/{id}/decision`.
+- **Expected Behavior**: Backend applies rebooking changes to database in a single transaction, updates passenger ticket records, releases old seats, reserves new seats, and dispatches notification records.
 - **Acceptance Criteria**:
   1. Rebooking execution is transactional (all affected passengers rebooked or total rollback).
-  2. Passengers receive push/in-app alert on Flutter app detailing updated journey.
+  2. Passengers receive service alert and notification records detailing the updated journey.
 - **Priority**: Must Have
 
 ---
@@ -289,16 +289,16 @@ This document defines the functional and non-functional requirements for the **W
 - **Priority**: Must Have
 - **Traceability**: `REQ-AI-06`
 
-#### `FR-AI-007`: AI Workflow Observability & Audit Display
-- **Description**: Provide a React UI interface displaying AI workflow execution states, tool call traces, step timings, validation summaries, and error logs.
-- **Actor**: Transport Manager / Operator
+#### `FR-AI-007`: AI Workflow Observability & Audit API
+- **Description**: Provide headless API endpoints (`GET /api/v1/ai/workflows/{id}`) exposing AI workflow execution states, tool call traces, step timings, validation summaries, and error logs in structured JSON.
+- **Actor**: Transport Manager / Operator / Admin
 - **Preconditions**: At least one AI workflow has been executed.
-- **Expected Behavior**: React workspace renders workflow execution timeline with per-step tool call details, durations, validation results, and final outcomes.
+- **Expected Behavior**: API returns full workflow execution timeline with per-step tool call details, durations, validation results, and final outcomes.
 - **Acceptance Criteria**:
-  1. Interface lists workflow ID, step execution timeline, tool arguments, and validation status.
+  1. Endpoint returns workflow ID, step execution timeline, tool arguments, and validation status.
   2. Failed or retried tool calls are highlighted with error details.
 - **Priority**: Must Have
-- **Traceability**: `REQ-AI-07`, `REQ-FE-05`
+- **Traceability**: `REQ-AI-07`
 
 #### `FR-AI-008`: Prompt Injection Resistance & Safe Input Handling
 - **Description**: Sanitize user-supplied inputs in system prompts, apply execution timeouts, and enforce retry caps before triggering safe-failure transitions.
@@ -319,9 +319,9 @@ This document defines the functional and non-functional requirements for the **W
 - **Description**: Dispatch automated alerts for booking confirmations, schedule changes, disruption notices, and rebooking options.
 - **Actor**: System Backend / Passenger
 - **Preconditions**: Trigger event occurs (e.g., booking confirmed, service delayed).
-- **Expected Behavior**: Backend inserts notification record in database and dispatches push payload to passenger's registered Flutter device token.
+- **Expected Behavior**: Backend inserts notification record in database and dispatches notifications to passenger devices and alert endpoints.
 - **Acceptance Criteria**:
-  1. Passengers can view notification history list in Flutter app.
+  1. Passengers can query notification history via `/api/v1/notifications`.
   2. Disruption alerts highlight affected booking reference and action required.
 - **Priority**: Should Have
 
@@ -335,7 +335,7 @@ This document defines the functional and non-functional requirements for the **W
 - **Preconditions**: Service scheduled for departure.
 - **Expected Behavior**: System lists all confirmed passengers, seat numbers, boarding points, and payment statuses; allows marking boarding verification.
 - **Acceptance Criteria**:
-  1. Manifest can be exported or viewed live on React/Flutter.
+  1. Manifest can be queried or exported via `/api/v1/bookings/manifest`.
   2. QR ticket scan marks passenger as `Boarded` in real time.
 - **Priority**: Should Have
 
@@ -344,14 +344,14 @@ This document defines the functional and non-functional requirements for the **W
 ### 1.9 Manager Approval (`FR-APPROVAL`)
 
 #### `FR-APPROVAL-001`: Manager Approval Decision Execution
-- **Description**: Provide Transport Managers with UI controls to review pending high-impact operational proposals and log `Approve`, `Reject`, or `Request Revision` decisions.
+- **Description**: Provide Transport Managers with API endpoints to review pending high-impact operational proposals and log `Approve`, `Reject`, or `Request Revision` decisions.
 - **Actor**: Transport Manager
 - **Preconditions**: Workflow in `PendingManagerApproval` state.
-- **Expected Behavior**: Manager inspects before/after passenger impact evidence in React approval workbench, submits signed decision, triggering backend execution or cancellation.
+- **Expected Behavior**: Manager inspects before/after passenger impact evidence via `/api/v1/approvals/pending` and submits signed decision to `/api/v1/approvals/{id}/decision`, triggering backend execution or cancellation.
 - **Acceptance Criteria**:
   1. `Approve` decision executes operational changes transactionally.
-  2. `Reject` decision cancels proposed change and notifies dispatcher.
-  3. `Request Revision` sends proposal back to AI/dispatcher with comments.
+  2. `Reject` decision cancels proposed change and records decision log.
+  3. `Request Revision` sends proposal back with comments.
 - **Priority**: Must Have
 
 ---
@@ -365,28 +365,28 @@ This document defines the functional and non-functional requirements for the **W
 - **Expected Behavior**: Backend writes audit log record containing Timestamp, User ID / Agent Name, Action Type, Entity ID, Before State, After State, and IP Address.
 - **Acceptance Criteria**:
   1. Audit records cannot be edited or deleted via API.
-  2. Administrators can search and filter audit logs in React workspace.
+  2. Administrators can search and filter audit logs via `/api/v1/admin/audit-logs`.
 - **Priority**: Must Have
 
 ---
 
 ### 1.11 Frontend Requirements (`FR-FE`)
 
-> The following frontend requirement IDs (`FR-FE-01` through `FR-FE-13`) are defined in the SE3090 Assignment Specification and extracted in [`project-analysis.md`](../project/project-analysis.md) Sections 4–5 (`REQ-FE-01` through `REQ-FE-13`). They are cross-referenced here to formalise their standing in this SRS document.
+> The following frontend requirement IDs (`FR-FE-01` through `FR-FE-13`) are defined in the SE3090 Assignment Specification and extracted in [`project-analysis.md`](../project/project-analysis.md) Sections 4–5 (`REQ-FE-01` through `REQ-FE-13`). Per [ADR-006](../adr/ADR-006-headless-architecture.md), these requirements are fulfilled authoritatively as a headless REST API with OpenAPI contracts:
 
-- `FR-FE-01` (**Role-Based Dashboard**): Summary widgets covering route/service occupancy, revenue, upcoming departures, and journey planning analytics. *(Source: `REQ-FE-01`)*
-- `FR-FE-02` (**Business Data Management**): Full CRUD interfaces with validation, search, filtering, sorting, and pagination for routes, stops, services, buses, seat layouts, drivers, and fare rules. *(Source: `REQ-FE-02`)*
-- `FR-FE-03` (**Disruption Workbench**): Workspace displaying candidate alternatives, resource feasibility evidence, and passenger impact analysis. *(Source: `REQ-FE-03`)*
-- `FR-FE-04` (**Manager Approval Workbench**): Dedicated UI for Transport Managers to inspect before/after operational impacts and execute approve/reject/revision actions. *(Source: `REQ-FE-04`)*
-- `FR-FE-05` (**AI Workflow Observability Dashboard**): UI displaying agent execution summaries, tool call histories, step timings, and deterministic validation outputs. *(Source: `REQ-FE-05`)*
-- `FR-FE-06` (**Journey Search & Booking**): Passenger mobile screens for search, seat selection, booking, and payment. *(Source: `REQ-FE-06`)*
-- `FR-FE-07` (**Interactive Seat Map**): Real-time seat map with hold/available/booked status indicators. *(Source: `REQ-FE-07`)*
-- `FR-FE-08` (**Digital E-Ticket Wallet**): Mobile wallet displaying active and historical e-tickets with QR codes. *(Source: `REQ-FE-08`)*
-- `FR-FE-09` (**Booking History & Cancellation**): Passenger booking history with cancellation and refund tracking. *(Source: `REQ-FE-09`)*
-- `FR-FE-10` (**Disruption Alert Notifications**): In-app disruption alerts highlighting affected bookings and required actions. *(Source: `REQ-FE-10`)*
-- `FR-FE-11` (**Rebooking Response**): Passenger screens for accepting alternative journey proposals or requesting full refunds. *(Source: `REQ-FE-11`)*
-- `FR-FE-12` (**QR Ticket Boarding Scanner**): Operator mobile scanner for verifying passenger QR tickets at boarding. *(Source: `REQ-FE-12`)*
-- `FR-FE-13` (**Passenger Manifest**): Departure manifest view with real-time boarding verification status. *(Source: `REQ-FE-13`)*
+- `FR-FE-01` (**Role-Based Dashboard**): API endpoints aggregating route/service occupancy, revenue, upcoming departures, and journey planning analytics. *(Source: `REQ-FE-01`)*
+- `FR-FE-02` (**Business Data Management**): Full CRUD endpoints with validation, search, filtering, sorting, and pagination for routes, stops, services, buses, seat layouts, drivers, and fare rules. *(Source: `REQ-FE-02`)*
+- `FR-FE-03` (**Disruption Workbench**): Disruption endpoints exposing candidate alternatives, resource feasibility evidence, and passenger impact analysis. *(Source: `REQ-FE-03`)*
+- `FR-FE-04` (**Manager Approval Workbench**): Dedicated approval API endpoints for Transport Managers to inspect before/after operational impacts and execute approve/reject/revision actions. *(Source: `REQ-FE-04`)*
+- `FR-FE-05` (**AI Workflow Observability Dashboard**): Observability API endpoints returning agent execution summaries, tool call histories, step timings, and deterministic validation outputs. *(Source: `REQ-FE-05`)*
+- `FR-FE-06` (**Journey Search & Booking**): Passenger API endpoints for search, seat selection, booking hold, and payment sandbox processing. *(Source: `REQ-FE-06`)*
+- `FR-FE-07` (**Interactive Seat Map**): Real-time seat inventory endpoint with hold/available/booked status indicators. *(Source: `REQ-FE-07`)*
+- `FR-FE-08` (**Digital E-Ticket Wallet**): E-ticket endpoints serving active and historical tickets with cryptographically signed QR code payloads. *(Source: `REQ-FE-08`)*
+- `FR-FE-09` (**Booking History & Cancellation**): Passenger booking history endpoints with cancellation and refund calculation. *(Source: `REQ-FE-09`)*
+- `FR-FE-10` (**Disruption Alert Notifications**): Disruption notification webhook/API payload delivering alerts highlighting affected bookings and required passenger actions. *(Source: `REQ-FE-10`)*
+- `FR-FE-11` (**Rebooking Response**): Passenger API endpoints for accepting alternative journey proposals or requesting full refunds. *(Source: `REQ-FE-11`)*
+- `FR-FE-12` (**QR Ticket Boarding Scanner**): Boarding verification API endpoint for validating passenger QR tickets at boarding. *(Source: `REQ-FE-12`)*
+- `FR-FE-13` (**Passenger Manifest**): Departure manifest endpoint with real-time boarding verification status. *(Source: `REQ-FE-13`)*
 
 ---
 
@@ -396,7 +396,7 @@ This document defines the functional and non-functional requirements for the **W
 
 - `NFR-SEC-001` (**Authentication Security**): Passwords MUST be hashed using BCrypt or Argon2 before storage. Plaintext passwords MUST NEVER be logged or returned in API responses.
 - `NFR-SEC-002` (**Secret Management**): API keys, JWT signing keys, and database passwords MUST be loaded strictly from environment variables (`.env`). Secrets MUST NOT be committed to Git.
-- `NFR-SEC-003` (**Transport Security**): All API communications between React/Flutter and ASP.NET Core MUST use HTTPS in production deployments.
+- `NFR-SEC-003` (**Transport Security**): All API communications between external clients and ASP.NET Core MUST use HTTPS in production deployments.
 - `NFR-SEC-004` (**Least Privilege Tool Execution**): AI agents MUST execute allow-listed tools using scoped DTO permissions. Agents CANNOT access system command shells or raw DB connections.
 - `NFR-SEC-005` (**AI Security Guardrails**): AI agents MUST operate within an allow-listed tool sandbox with DTO-validated inputs. Agents CANNOT access system command shells, raw database connections, or unsigned API keys. Execution timeouts and retry caps MUST be enforced.
 - `NFR-SEC-006` (**Audit Trail Completeness**): All high-impact operational changes, manager approval decisions, and AI tool executions MUST generate immutable audit log records that cannot be edited or deleted via the API.
@@ -410,15 +410,14 @@ This document defines the functional and non-functional requirements for the **W
 
 ### 2.3 Testing & Quality Requirements (`NFR-TEST`)
 
-- `NFR-TEST-001` (**Automated Test Coverage**): Backend API, database services, React components, and Flutter widgets MUST achieve comprehensive unit and integration test coverage.
+- `NFR-TEST-001` (**Automated Test Coverage**): Backend API, database services, and AI agent workflows MUST achieve comprehensive unit and integration test coverage.
 - `NFR-TEST-002` (**CI Pipeline Enforcement**): GitHub Actions CI workflow MUST automatically build code and run all backend unit/integration tests on every push and PR to `main`.
 - `NFR-TEST-003` (**Deterministic Agent Evaluation**): AI agent evaluation MUST include golden test cases, schema assertion checks, and safe-failure tests. LLM-as-a-judge may only serve as supporting evidence.
 
 ### 2.4 Deployment Requirements (`NFR-DEPLOY`)
 
-- `NFR-DEPLOY-001` (**Cloud Availability**): ASP.NET Core API, PostgreSQL database, and React web app MUST be deployed to cloud hosting platforms (e.g., Render, Azure, Railway) with live URLs.
-- `NFR-DEPLOY-002` (**Mobile Deliverable**): Flutter mobile application MUST be delivered as a runnable compiled Android APK (`.apk`).
-- `NFR-DEPLOY-003` (**No-Cost Services**): System deployment MUST operate within institution-provided or free-tier cloud resources without requiring paid subscriptions.
+- `NFR-DEPLOY-001` (**Cloud Availability**): ASP.NET Core API and PostgreSQL database MUST be deployed to cloud hosting platforms (e.g., Railway) with live URLs and Swagger access.
+- `NFR-DEPLOY-002` (**No-Cost Services**): System deployment MUST operate within institution-provided or free-tier cloud resources without requiring paid subscriptions.
 
 ### 2.5 Review & Rating Requirements (`FR-REVIEW`)
 

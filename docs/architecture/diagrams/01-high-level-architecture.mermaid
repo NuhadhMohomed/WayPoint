@@ -1,11 +1,11 @@
 graph TD
-    subgraph Clients["Client Applications"]
-        Flutter["Flutter Mobile App (Passenger Client)"]
-        React["React Web App (Operator & Manager Workspace)"]
+    subgraph Consumers["API Consumers & Integrations"]
+        ExtClients["External Clients (Mobile Apps, Operator Portals, Boarding Scanners)"]
+        PartnerAPIs["Third-Party Transit & Tourism Platforms"]
     end
 
-    subgraph Backend["Authoritative Application Layer"]
-        API["ASP.NET Core Web API (REST / JSON)"]
+    subgraph Backend["Authoritative Headless Application Layer"]
+        API["ASP.NET Core Web API (REST / JSON / Swagger)"]
     end
 
     subgraph Storage["Relational Data Store"]
@@ -21,13 +21,13 @@ graph TD
         Maps["Map / Location Service"]
     end
 
-    Flutter -->|HTTPS / REST| API
-    React -->|HTTPS / REST| API
+    ExtClients -->|HTTPS / REST / JWT| API
+    PartnerAPIs -->|HTTPS / REST / JWT| API
     API -->|EF Core ORM| Postgres
     API -->|Internal Service Call & Allow-Listed Tools| Orchestration
     API -->|Secure Server-to-Server API Calls| External
 
     %% Boundary Violations (Prohibited Connections)
-    Flutter -. X Direct Access Prohibited X .- Postgres
-    React -. X Direct Access Prohibited X .- Postgres
+    ExtClients -. X Direct Access Prohibited X .- Postgres
+    PartnerAPIs -. X Direct Access Prohibited X .- Postgres
     Orchestration -. X Direct Access Prohibited X .- Postgres

@@ -1,33 +1,26 @@
 graph TB
-    subgraph ClientDevices["Client Devices"]
-        MobileDevice["Android Mobile Device (Flutter APK)"]
-        Browser["Desktop Browser (React Web App)"]
+    subgraph Consumers["External API Consumers & Integrations"]
+        ExtClients["External Clients (Mobile Apps / Partner Gateways)"]
+        Operators["Operator Terminals & Station Scanners"]
     end
 
     subgraph CloudInfra["Cloud Infrastructure (Render / Azure / Railway)"]
-        subgraph StaticHosting["Static Frontend Host (Vercel / Netlify / Render)"]
-            ReactApp["Deployed React SPA (Production Build)"]
-        end
-
         subgraph ContainerHosting["Container / App Service Host"]
-            APIApp["ASP.NET Core Web API (Docker / Kestrel)"]
-            AIModule["Agentic AI Service / Tool Orchestrator"]
-            %% NOTE: AIModule is a separate node only if ADR-003 selects Option B (Python LangGraph microservice).
-            %% If Option A (C# Semantic Kernel) is selected, the AI subsystem is embedded in the ASP.NET Core process.
+            APIApp["ASP.NET Core Web API (Docker / Kestrel 8.0)"]
+            AIModule["Agentic AI Service (FastAPI / LangGraph)"]
         end
 
         subgraph ManagedDB["Managed Database Host"]
-            PostgresCloud[(Cloud PostgreSQL Managed DB)]
+            PostgresCloud[(Railway PostgreSQL 18 Managed DB - SSL/ALPN)]
         end
     end
 
-    MobileDevice -->|HTTPS / REST| APIApp
-    Browser -->|HTTP GET Static Assets| ReactApp
-    ReactApp -->|HTTPS / REST| APIApp
-    APIApp -->|Npgsql / EF Core| PostgresCloud
-    APIApp -->|Internal REST / gRPC| AIModule
+    ExtClients -->|HTTPS / REST / JWT| APIApp
+    Operators -->|HTTPS / REST / JWT| APIApp
+    APIApp -->|Npgsql 9 Direct SSL / EF Core 9| PostgresCloud
+    APIApp -->|Internal REST / Allow-Listed Tools| AIModule
 
     %% No direct access
-    MobileDevice -. X Prohibited X .- PostgresCloud
-    ReactApp -. X Prohibited X .- PostgresCloud
+    ExtClients -. X Prohibited X .- PostgresCloud
+    Operators -. X Prohibited X .- PostgresCloud
     AIModule -. X Prohibited X .- PostgresCloud

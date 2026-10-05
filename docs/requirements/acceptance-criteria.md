@@ -8,9 +8,8 @@ This document defines the formal Acceptance Criteria using **Gherkin (Given-When
 
 ### Scenario 1.1: Successful User Registration (`FR-AUTH-001`)
 ```gherkin
-Given a user is on the registration screen
-When they enter a valid email "passenger@waypoint.lk", full name "Kamal Perera", phone "+94771234567", and password "Pass@1234"
-And tap the "Register" button
+Given a registration payload with email "passenger@waypoint.lk", full name "Kamal Perera", phone "+94771234567", and password "Pass@1234"
+When a POST request is sent to "/api/v1/auth/register"
 Then the backend validates the DTO parameters
 And hashes the password using BCrypt
 And stores the user in PostgreSQL with CreatedAt audit timestamp
@@ -137,9 +136,8 @@ Given a rebooking proposal in status "PendingManagerApproval"
 When Transport Manager reviews passenger impact evidence and clicks "Approve"
 Then ASP.NET Core opens a PostgreSQL transaction
 And updates original service to Cancelled
-And rebooks affected passengers onto replacement service transactionally
 And logs an immutable ApprovalDecision record with Manager ID and timestamp
-And dispatches push notifications to affected passengers on Flutter
+And dispatches notification alert records to affected passengers
 And commits transaction
 ```
 

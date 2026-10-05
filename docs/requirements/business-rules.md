@@ -15,9 +15,9 @@ This document provides the complete, formal **Business Rules & Governance Specif
                                    │ HTTPS / REST               │ Internal Allow-Listed Tools
                                    │                            │ (Validated Inputs & Outputs)
 +----------------------------------+---+      +-----------------+------------------+
-|           CLIENT APPLICATIONS        |      |       AGENTIC AI SUBSYSTEM         |
-|  - React Web (Operator Workspace)    |      |  - Planner / Coordinator Agent    |
-|  - Flutter Mobile (Passenger App)    |      |  - Journey Analysis Agent          |
+|        EXTERNAL API CONSUMERS        |      |       AGENTIC AI SUBSYSTEM         |
+|  - External Mobile / Web Clients     |      |  - Planner / Coordinator Agent    |
+|  - Station Scanners / Partner APIs   |      |  - Journey Analysis Agent          |
 +--------------------------------------+      |  - Resource & Booking Agent        |
                                               |  - Validation & Safety Agent       |
                                               +------------------------------------+

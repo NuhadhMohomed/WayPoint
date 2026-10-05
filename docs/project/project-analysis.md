@@ -41,9 +41,12 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 
 ---
 
-## 4. Mandatory Frontend Requirements (`REQ-FE-xx`)
+## 4. Mandatory API Contract & Functional Requirements (`REQ-FE-xx`)
 
-### 4.1 React Web Application (Operator & Manager Workspace)
+> [!NOTE]
+> Per [ADR-006: Headless API-First Architecture](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md), all frontend UI rendering layers (`web/` and `mobile/`) have been decommissioned. The functional requirements below (`REQ-FE-xx`) are authoritatively served via ASP.NET Core REST API endpoints and OpenAPI 3.0 contracts.
+
+### 4.1 Operator & Management API Endpoints
 - `REQ-FE-01` (**Role-Based Dashboard**): Summary widgets covering route/service occupancy, revenue, upcoming departures, failed payments, disruptions, and journey planning analytics.
 - `REQ-FE-02` (**Business Data Management**): Full CRUD interfaces with validation, search, filtering, sorting, and pagination for routes, stops, tourist destinations, services, buses, drivers, seat layouts, amenities, and fare rules.
 - `REQ-FE-03` (**Disruption Workbench**): Workspace displaying candidate alternatives, resource feasibility evidence, and passenger impact analysis.
@@ -51,14 +54,14 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 - `REQ-FE-05` (**AI Agent Monitoring**): Real-time/historical execution summaries showing workflow states, tool invocation traces, validation outputs, step timings, error logs, retries, and final safe-failure outcomes.
 - `REQ-FE-06` (**UI Quality & Routing**): Protected routes, role-based navigation, responsive layouts, and explicit visual states for loading, empty data, success, and error handling.
 
-### 4.2 Flutter Mobile Application (Passenger Application)
-- `REQ-FE-07` (**Authentication & Security**): Registration, login, logout, secure JWT token storage (e.g., `flutter_secure_storage`), and protected screen routes.
-- `REQ-FE-08` (**Journey Search & Filtering**): Search by origin, destination, travel date/time, passenger count, with preference filters (arrival deadline, direct service, budget, bus amenities, boarding point).
-- `REQ-FE-09` (**Journey Comparison Cards**): Display candidate options comparing departure, arrival, duration, total fare, directness, boarding point, amenities, and real-time seat availability.
-- `REQ-FE-10` (**Interactive Seat Layout**): Visual bus seat template rendering, seat status indicators (available, held, booked), and interactive seat selection.
-- `REQ-FE-11` (**Ticketing & Wallet**): Payment sandbox checkout integration, digital e-ticket wallet, and QR code generation/scanning for ticket verification.
-- `REQ-FE-12` (**Disruption Rebooking & History**): Booking history view, cancellation/refund eligibility checking, push/in-app service alerts, and disruption rebooking responses.
-- `REQ-FE-13` (**Meaningful Device Feature**): Implementation of QR scanning, GPS/Map guidance for boarding points, date/time pickers, and push/local notifications.
+### 4.2 Passenger Application & Mobile Consumer API Endpoints
+- `REQ-FE-07` (**Authentication & Security**): Registration, login, token refresh, and secure JWT handling via `Authorization: Bearer <token>` headers.
+- `REQ-FE-08` (**Journey Search & Filtering**): Search endpoint by origin, destination, travel date/time, passenger count, with preference filters (arrival deadline, direct service, budget, bus amenities, boarding point).
+- `REQ-FE-09` (**Journey Comparison Contracts**): Journey search responses comparing departure, arrival, duration, total fare, directness, boarding point, amenities, and real-time seat availability.
+- `REQ-FE-10` (**Interactive Seat Layout**): Bus seat layout schema rendering, seat status indicators (available, held, booked), and atomic seat hold operations.
+- `REQ-FE-11` (**Ticketing & Wallet**): Payment sandbox checkout integration, digital e-ticket data endpoints, and cryptographically signed QR code payload generation/verification.
+- `REQ-FE-12` (**Disruption Rebooking & History**): Booking history endpoint, cancellation/refund calculation, webhook/service alerts, and disruption rebooking response submission.
+- `REQ-FE-13` (**Device & Client Integration Services**): Support for QR ticket verification, GPS coordinate guidance for boarding points, and push notification payload dispatching.
 
 ---
 
@@ -280,11 +283,12 @@ The team MUST resolve and document the following items in project documentation 
 
 - [ ] **Gate 1 — Component Ownership Assignment**: Assign Students 1 through 4 to the 4 business components (Journey Planning, Fleet/Resource, Booking/Ticketing, Disruption/Approval).
 - [ ] **Gate 2 — Architectural Decision Records (ADRs)**: Draft and approve preliminary ADRs in `docs/adr/`:
-  - `ADR-001`: React State Management (e.g., Zustand vs Redux Toolkit).
-  - `ADR-002`: Flutter State Management (e.g., Bloc vs Riverpod).
-  - `ADR-003`: Agentic AI Framework & LLM Orchestration (e.g., Semantic Kernel vs LangChain/LangGraph microservice).
+  - `ADR-001`: React State Management (Superseded by ADR-006).
+  - `ADR-002`: Flutter State Management (Superseded by ADR-006).
+  - `ADR-003`: Agentic AI Framework & LLM Orchestration.
   - `ADR-004`: AI Workflow State Schema & Persistence in PostgreSQL.
-  - `ADR-005`: Cloud Hosting Platform (e.g., Render vs Azure App Service).
+  - `ADR-005`: Cloud Hosting Platform (Railway Managed PostgreSQL 18 & Container API).
+  - `ADR-006`: Headless Architecture Transition (Decommissioning UI frontends).
 - [ ] **Gate 3 — Database Schema & ERD Approval**: Finalize relational schema for Routes, Stops, Buses, SeatLayouts, Services, Bookings, DisruptionCases, and `AiWorkflow` tables in `docs/architecture/`.
 - [ ] **Gate 4 — API Contract Specification**: Define Swagger/OpenAPI endpoints and DTO schemas for all 16+ API endpoints.
 - [ ] **Gate 5 — Allow-Listed Tool Contracts**: Define exact JSON schemas for the 10 allow-listed Agentic AI tools.

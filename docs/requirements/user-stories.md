@@ -11,7 +11,7 @@ This document outlines the user stories for the **WayPoint** AI-Powered Intercit
 - **Mapped Requirement**: `FR-AUTH-001`, `FR-AUTH-002`, `FR-FE-07`
 - **Acceptance Criteria**:
   1. Registration requires valid email, full name, phone number, and password.
-  2. Successful login stores JWT securely in `flutter_secure_storage` and navigates to the home screen.
+  2. Successful login returns signed JWT bearer token and user role profile.
   3. Invalid login displays a user-friendly error message.
 - **Priority**: Must Have
 

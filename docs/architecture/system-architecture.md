@@ -10,13 +10,13 @@ WayPoint is designed as an integrated multi-tier software system. The **ASP.NET 
 
 ```mermaid
 graph TD
-    subgraph Clients["Client Applications"]
-        Flutter["Flutter Mobile App (Passenger Client)"]
-        React["React Web App (Operator & Manager Workspace)"]
+    subgraph Consumers["API Consumers & Integrations"]
+        ExtClients["External Clients (Mobile Apps, Operator Consoles, IoT Boarding Scanners)"]
+        PartnerAPIs["Partner Transit & Tourism Integrations"]
     end
 
-    subgraph Backend["Authoritative Application Layer"]
-        API["ASP.NET Core Web API (REST / JSON)"]
+    subgraph Backend["Authoritative Headless Application Layer"]
+        API["ASP.NET Core Web API (REST / JSON / Swagger)"]
     end
 
     subgraph Storage["Relational Data Store"]
@@ -32,15 +32,15 @@ graph TD
         Maps["Map / Location Service"]
     end
 
-    Flutter -->|HTTPS / REST| API
-    React -->|HTTPS / REST| API
+    ExtClients -->|HTTPS / REST / JWT| API
+    PartnerAPIs -->|HTTPS / REST / JWT| API
     API -->|EF Core ORM| Postgres
     API -->|Internal Service Call & Allow-Listed Tools| Orchestration
     API -->|Secure Server-to-Server API Calls| External
 
     %% Boundary Violations (Prohibited Connections)
-    Flutter -. X Direct Access Prohibited X .- Postgres
-    React -. X Direct Access Prohibited X .- Postgres
+    ExtClients -. X Direct Access Prohibited X .- Postgres
+    PartnerAPIs -. X Direct Access Prohibited X .- Postgres
     Orchestration -. X Direct Access Prohibited X .- Postgres
 ```
 
@@ -94,8 +94,7 @@ graph TB
 | **4. Infrastructure Layer** (Persistence & External) | `WayPointDbContext` implementation, EF Core entity configurations, database migrations, repository implementations, Payment Sandbox HTTP proxy, Serilog logging. Infrastructure **implements interfaces** defined in the Application Layer; the `AppLayer --> InfraLayer` arrow in the diagram above represents runtime dependency resolution via Dependency Injection, not a compile-time coupling violation. | Domain Layer, Application Layer Interfaces. |
 | **5. AI Orchestration Subsystem** | Level 4 multi-agent workflow engine (Planner, Journey Analysis, Resource, Safety Agents), prompt engineering, allow-listed tool execution, workflow state persistence. | Internal API Layer endpoints / application tool contracts. |
 | **6. PostgreSQL Database** | Authoritative relational data persistence, primary/foreign key integrity, unique constraints, performance indexes, transaction isolation locks (`IDbContextTransaction`). | None. |
-| **7. React Web Application** | Operator/admin workspace, route/fleet CRUD management, disruption workbench, Manager Approval Workbench, AI execution summary monitoring. | ASP.NET Core API via HTTPS/REST. |
-| **8. Flutter Mobile Application** | Passenger mobile interface, journey search, preference filters, interactive seat picker, payment sandbox checkout, digital QR e-ticket wallet, device feature integration. | ASP.NET Core API via HTTPS/REST. |
+| **7. External API Consumers** | External mobile clients, operator portals, IoT boarding scanners, or partner platforms consuming public REST/JSON contracts documented via OpenAPI / Swagger (`/swagger`). | ASP.NET Core API via HTTPS/REST. |
 
 ---
 
@@ -108,7 +107,7 @@ WayPoint enforces strict architectural boundaries to guarantee security, data in
 |                             SYSTEM BOUNDARIES & ISOLATION                         |
 +-----------------------------------------------------------------------------------+
 
-[ Client Boundary ]       --> React & Flutter MUST consume only public ASP.NET Core API.
+[ Client Boundary ]       --> External consumers MUST consume only public ASP.NET Core API.
                               Direct database connections are strictly prohibited.
 
 [ Database Boundary ]     --> PostgreSQL is accessible ONLY via EF Core from ASP.NET Core.

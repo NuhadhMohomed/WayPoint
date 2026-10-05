@@ -79,7 +79,7 @@ record = {
 }
 ```
 
-This telemetry is mapped directly to `AiToolCall` database records in PostgreSQL via `workflow_persistence.py`, enabling complete visual auditability in the **AI Multi-Agent Observability Screen (`WEB-10`)**.
+This telemetry is mapped directly to `AiToolCall` database records in PostgreSQL via `workflow_persistence.py`, enabling complete auditability via the **AI Multi-Agent Observability API (`GET /api/v1/ai/workflows/{id}`)**.
 
 ---
 

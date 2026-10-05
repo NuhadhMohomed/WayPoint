@@ -4,12 +4,13 @@
 - **Component**: **Component 1 — Journey Planning & Route Catalogue**
 - **Core Domain Focus**: Intercity route networks, intermediate stops, timetables, tourist destinations, and journey candidate generation.
 - **Assigned Feature Branch**: `feature/journey-planning`
+- **Architecture**: **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 1**, you are responsible for the foundational transit infrastructure of WayPoint. Your work enables operators to manage routes, stops, and scheduled departures on the web, and enables passengers to search and compare feasible direct and connecting travel options across Sri Lankan corridors (e.g., Colombo–Ella, Colombo–Kandy, Colombo–Galle) on mobile.
+As the owner of **Component 1**, you are responsible for the foundational transit infrastructure of WayPoint. Your work enables transit operators to administer routes, stops, and scheduled departures via authoritative RESTful endpoints, and enables external client applications (mobile apps, booking platforms) to query, search, and rank feasible direct and connecting travel options across Sri Lankan transit corridors (e.g., Colombo–Ella, Colombo–Kandy, Colombo–Galle).
 
 ### Assigned User Stories
 - `US-PASS-002` (Intercity Journey Search & Preferences)
@@ -25,8 +26,7 @@ As the owner of **Component 1**, you are responsible for the foundational transi
    ```
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
    - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
-   - Web development server connects via `VITE_API_URL=http://localhost:5010/api/v1`.
-   - Mobile app connects via `FLUTTER_API_URL=http://localhost:5010/api/v1`.
+   - Swagger Documentation: `http://localhost:5010/swagger`.
 2. **Restore & Seed Database**:
    ```bash
    dotnet restore backend/WayPoint.sln
@@ -39,29 +39,53 @@ As the owner of **Component 1**, you are responsible for the foundational transi
 
 ---
 
-## 3. Design System & UI Contract (`docs/design/DESIGN.md`)
+## 3. Headless API Contract & OpenAPI Specification
 
-All UI screens must strictly comply with [`docs/design/DESIGN.md`](docs/design/DESIGN.md):
-- **Brand Tokens**: Lanka Blue (`#0056D2`), Sunset Amber (`#FEB300`), Jungle Green (`#005312`), Surface (`#F8F9FA` / `#FFFFFF`).
-- **Typography Pairing**: **Plus Jakarta Sans** (headings) and **Inter** (body, tabular timetables, and prices in LKR).
-- **Reusable Primitives**:
-  - Web: Use `Button`, `Card`, and `TransitBadge` in `web/src/components/ui/`.
-  - Mobile: Use `WayPointButton`, `WayPointCard`, and `TransitBadge` in `mobile/lib/core/widgets/`.
+All endpoints must be thoroughly annotated for OpenAPI/Swagger documentation (`/swagger`):
+- **Response Format**: Standard JSON with PascalCase/camelCase serialization compliance.
+- **Status Codes**: `200 OK` for lookups, `201 Created` for route definitions, `400 Bad Request` for invalid coordinates/stop sequences, `404 Not Found` for nonexistent route codes, `409 Conflict` for overlapping timetable slots.
+- **Currency Format**: All fares rendered in Sri Lankan Rupees (LKR / Rs.).
 
 ---
 
-## 4. Google Stitch UI Screen Specifications
+## 4. Authoritative Request & Response DTO Specifications
 
-Reference your assigned pre-designed screens in [`docs/design/stitch-screens-index.md`](docs/design/stitch-screens-index.md):
+### 4.1 Route Creation DTO (`CreateRouteDto`)
+```json
+{
+  "routeCode": "EX-08",
+  "originCity": "Colombo",
+  "destinationCity": "Ella",
+  "totalDistanceKm": 210.5,
+  "stops": [
+    { "stopName": "Colombo Fort", "sequenceOrder": 1, "arrivalOffsetMinutes": 0, "distanceFromOriginKm": 0 },
+    { "stopName": "Kumbalwella", "sequenceOrder": 2, "arrivalOffsetMinutes": 240, "distanceFromOriginKm": 195.0 },
+    { "stopName": "Ella Station", "sequenceOrder": 3, "arrivalOffsetMinutes": 270, "distanceFromOriginKm": 210.5 }
+  ]
+}
+```
 
-| Screen Code | Screen Title | Stitch Screen ID | Platform | Target File |
-| :--- | :--- | :--- | :--- | :--- |
-| **MOB-02** | Journey Search, Corridors & Dates | `4baf1853d7a14d7abd597916567b5370` | Mobile | `mobile/lib/features/journey/screens/journey_search_screen.dart` |
-| **MOB-03** | Preference Filter Sheet & Sliders | `fb4b74ea904c435b93f05e9dc324e989` | Mobile | `mobile/lib/features/journey/widgets/preference_filter_sheet.dart` |
-| **MOB-04** | Journey Comparison Cards & Buffer | `aa124497024b48a3adc01888fed1a5a3` | Mobile | `mobile/lib/features/journey/screens/journey_comparison_screen.dart` |
-| **WEB-02** | Route & Intermediate Stop Manager | `387e0fc877bb4f919e190d4c80b8ca56` | Web | `web/src/features/journey/RouteManagerPage.jsx` |
-| **WEB-03** | Tourist Corridor Destination Showcase | `b5395deeca344413844a9396e1ad0ace` | Web | `web/src/features/journey/TouristCorridorsPage.jsx` |
-| **WEB-04** | Timetable & Service Departure Scheduler | `4b4d5f6dbac54679beebab9ca5585e07` | Web | `web/src/features/journey/ServiceSchedulerPage.jsx` |
+### 4.2 Journey Search Query & Candidate Response DTO (`JourneySearchResponseDto`)
+```json
+{
+  "originCity": "Colombo",
+  "destinationCity": "Ella",
+  "travelDate": "2026-10-15",
+  "candidateJourneys": [
+    {
+      "candidateType": "Connecting",
+      "totalFare": 2400.0,
+      "totalDurationMinutes": 310,
+      "transferBufferMinutes": 25,
+      "matchScore": 0.94,
+      "legs": [
+        { "serviceCode": "SRV-CLKDY-01", "origin": "Colombo", "destination": "Kandy", "departure": "06:00", "arrival": "09:00" },
+        { "serviceCode": "SRV-KDYELA-04", "origin": "Kandy", "destination": "Ella", "departure": "09:25", "arrival": "11:10" }
+      ]
+    }
+  ]
+}
+```
 
 ---
 
@@ -85,7 +109,7 @@ Your component directly interacts with the following entities in `WayPoint.Domai
 ## 6. Backend Implementation Blueprint (`backend/`)
 
 ### 6.1 Controllers to Implement
-Create these controllers under `backend/WayPoint.API/Controllers/`:
+Controllers reside under `backend/WayPoint.API/Controllers/`:
 1. `RouteController.cs` (`/api/v1/routes`):
    - `GET /api/v1/routes` (List & filter routes by city, active status)
    - `GET /api/v1/routes/{id}` (Get route details with ordered stops & boarding points)
@@ -121,11 +145,11 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`WayPoint.Tests/JourneyTests.cs`)**:
+1. **Unit Tests (`backend/WayPoint.Tests/JourneyTests.cs`)**:
    - Test segment fare calculation formula (`BaseFare + (Distance * RatePerKm) * ClassMultiplier`).
    - Test candidate journey ranking algorithm under various passenger preference weightings.
 2. **Integration Tests**:
-   - Query test verifying connecting services with $<20$ min transfer buffer are rejected with proper status.
+   - Query test verifying connecting services with $<20$ min transfer buffer are rejected with proper status (`BR-TRANSFER-001`).
    - Database test validating ordered stop sequence retrieval (`OriginSeq < DestinationSeq`).
 
 ---

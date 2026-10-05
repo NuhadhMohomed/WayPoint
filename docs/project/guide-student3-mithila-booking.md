@@ -2,14 +2,15 @@
 
 - **Assigned Student**: **Mithila** (Student 3)
 - **Component**: **Component 3 — Booking, Ticketing & Passenger Options**
-- **Core Domain Focus**: Temporary seat holds, payment sandbox checkout, digital QR e-tickets, passenger cancellations, and refund eligibility processing.
+- **Core Domain Focus**: Temporary seat holds, payment sandbox checkout, QR e-tickets, cancellations, and tiered refund processing.
 - **Assigned Feature Branch**: `feature/booking-ticketing`
+- **Architecture**: **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 3**, you control transactional revenue and passenger ticketing. Your work ensures that passengers can securely reserve temporary 10-minute seat holds without race conditions, execute simulated checkout charges via the payment sandbox, receive cryptographically signed QR e-tickets on mobile, and process tiered cancellations and refunds.
+As the owner of **Component 3**, you build the core revenue and transactional engine of WayPoint. Your work protects seat inventory under high-concurrency conditions using temporary 10-minute holds, integrates with the payment sandbox gateway, signs tamper-proof HMAC-SHA256 digital QR ticket passes, and executes deterministic cancellation refund calculations.
 
 ### Assigned User Stories
 - `US-PASS-003` (Temporary Seat Hold)
@@ -26,8 +27,7 @@ As the owner of **Component 3**, you control transactional revenue and passenger
    ```
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
    - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
-   - Web development server connects via `VITE_API_URL=http://localhost:5010/api/v1`.
-   - Mobile app connects via `FLUTTER_API_URL=http://localhost:5010/api/v1`.
+   - Swagger Documentation: `http://localhost:5010/swagger`.
 2. **Restore & Seed Database**:
    ```bash
    dotnet restore backend/WayPoint.sln
@@ -40,28 +40,46 @@ As the owner of **Component 3**, you control transactional revenue and passenger
 
 ---
 
-## 3. Design System & UI Contract (`docs/design/DESIGN.md`)
+## 3. Headless API Contract & OpenAPI Specification
 
-All UI screens must strictly comply with [`docs/design/DESIGN.md`](docs/design/DESIGN.md):
-- **Brand Tokens**: Lanka Blue (`#0056D2`), Sunset Amber (`#FEB300`), Jungle Green (`#005312`), Surface (`#F8F9FA` / `#FFFFFF`).
-- **Typography Pairing**: **Plus Jakarta Sans** (headings) and **Inter** (body, payment forms, and ticket passes).
-- **Reusable Primitives**:
-  - Web: Use `Button`, `Card`, and `TransitBadge` in `web/src/components/ui/`.
-  - Mobile: Use `WayPointButton`, `WayPointCard`, and `TransitBadge` in `mobile/lib/core/widgets/`.
+All endpoints must be thoroughly annotated for OpenAPI/Swagger documentation (`/swagger`):
+- **Concurrency Protection**: Database transaction boundaries (`IDbContextTransaction`) locking seats during checkout.
+- **Temporary Seat Hold Expiry**: Server-side countdown enforcement (`HeldUntil = DateTime.UtcNow.AddMinutes(10)`).
+- **HMAC QR Signing**: Cryptographic verification endpoint validating boarding passes without requiring UI clients.
 
 ---
 
-## 4. Google Stitch UI Screen Specifications
+## 4. Authoritative Request & Response DTO Specifications
 
-Reference your assigned pre-designed screens in [`docs/design/stitch-screens-index.md`](docs/design/stitch-screens-index.md):
+### 4.1 Seat Hold Reservation Request DTO (`CreateSeatHoldDto`)
+```json
+{
+  "serviceId": "e1a90c12-3456-789a-bcde-f0123456789a",
+  "seatNumbers": ["1A", "1B"],
+  "passengerId": "USR-8821"
+}
+```
 
-| Screen Code | Screen Title | Stitch Screen ID | Platform | Target File |
-| :--- | :--- | :--- | :--- | :--- |
-| **MOB-06** | Payment Sandbox Checkout & Hold Bar | `01076854fa0e41d299d8fc02ab224ad1` | Mobile | `mobile/lib/features/booking/screens/payment_checkout_screen.dart` |
-| **MOB-07** | Digital QR Ticket Wallet & HMAC Pass | `ce33fd7d93b94ddf8f262655cc1ff1b1` | Mobile | `mobile/lib/features/booking/screens/ticket_wallet_screen.dart` |
-| **MOB-08** | Booking History & Tiered Refund Modal | `8a55332576044e36901d87cf3a14e772` | Mobile | `mobile/lib/features/booking/screens/booking_history_screen.dart` |
-| **WEB-01** | Operator Overview Dashboard | `b35108ca98ec4eb89ba8b0b9e464fb95` | Web | `web/src/features/bookings/OperatorDashboardPage.jsx` |
-| **WEB-11** | Booking Manifest & Payment Sandbox | `2828cbc93fdf4d3db64e00a5fd242cd3` | Web | `web/src/features/bookings/BookingManifestMonitorPage.jsx` |
+### 4.2 Hold Reservation Response DTO (`SeatHoldResponseDto`)
+```json
+{
+  "holdId": "hld-99210-ab34",
+  "serviceId": "e1a90c12-3456-789a-bcde-f0123456789a",
+  "seatNumbers": ["1A", "1B"],
+  "heldAt": "2026-10-15T08:00:00Z",
+  "heldUntil": "2026-10-15T08:10:00Z",
+  "expiresInSeconds": 600,
+  "status": "Held"
+}
+```
+
+### 4.3 QR Boarding Verification Request DTO (`VerifyTicketQrDto`)
+```json
+{
+  "ticketId": "tkt-001234-xyz",
+  "qrPayload": "WP|tkt-001234-xyz|SRV-CLKDY-01|1A| Kamalan |HMAC_SIGNATURE_HEX"
+}
+```
 
 ---
 
@@ -82,7 +100,7 @@ Your component directly interacts with the following entities in `WayPoint.Domai
 ## 6. Backend Implementation Blueprint (`backend/`)
 
 ### 6.1 Controllers to Implement
-Create these controllers under `backend/WayPoint.API/Controllers/`:
+Controllers reside under `backend/WayPoint.API/Controllers/`:
 1. `SeatHoldController.cs` (`/api/v1/bookings/hold`):
    - `POST /api/v1/bookings/hold` (Attempt 10-minute temporary seat hold; return 409 Conflict if already held/booked)
    - `DELETE /api/v1/bookings/hold/{id}` (Release active hold before expiration)
@@ -126,7 +144,7 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`WayPoint.Tests/BookingTests.cs`)**:
+1. **Unit Tests (`backend/WayPoint.Tests/BookingTests.cs`)**:
    - Test tiered cancellation refund percentage calculations across various departure offset timestamps (>24h, 12-24h, <12h).
    - Test HMAC-SHA256 signature generation and tampering detection on QR code payload.
 2. **Integration Tests**:
