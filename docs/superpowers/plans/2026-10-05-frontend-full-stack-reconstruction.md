@@ -63,12 +63,12 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/core/widgets/waypoint_button.dart`, `waypoint_card.dart`, `shimmer_loading.dart`, `empty_state_view.dart`, `transit_badge.dart`
 - Test: `web/src/components/ui/__tests__/Primitives.test.jsx`, `mobile/test/core/widgets_test.dart`
 
-- [ ] 1.1 Use `stitch::generate-design` and `ui-ux-pro-max` to define and verify Sovereign UI design tokens in `web/tailwind.config.js` and Velora tokens in `mobile/lib/core/theme/app_theme.dart`.
-- [ ] 1.2 Implement modular Web UI primitives using `react-ui-patterns` handling Loading, Disabled, Empty, and Error states (`Button`, `Input`, `Card`, `Modal`, `DataTable`, `Skeleton`, `EmptyState`, `ErrorState`, `OfflineBanner`, `TransitBadge`, `CommandPalette`).
-- [ ] 1.3 Implement mobile widgets using `flutter-expert` with tactile feedback, accessibility labels, and Velora styling (`WaypointButton`, `WaypointCard`, `ShimmerLoading`, `EmptyStateView`, `TransitBadge`).
-- [ ] 1.4 Write unit tests for all UI primitives using `test-driven-development`.
-- [ ] 1.5 Run tests: `npm test` in `web/` and `flutter test` in `mobile/`.
-- [ ] 1.6 Commit: `git commit -m "feat(ui): complete design system tokens and core UI primitives for web and mobile"`
+- [x] 1.1 Use `stitch::generate-design` and `ui-ux-pro-max` to define and verify Sovereign UI design tokens in `web/tailwind.config.js` and Velora tokens in `mobile/lib/core/theme/app_theme.dart`.
+- [x] 1.2 Implement modular Web UI primitives using `react-ui-patterns` handling Loading, Disabled, Empty, and Error states (`Button`, `Input`, `Card`, `Modal`, `DataTable`, `Skeleton`, `EmptyState`, `ErrorState`, `OfflineBanner`, `TransitBadge`, `CommandPalette`).
+- [x] 1.3 Implement mobile widgets using `flutter-expert` with tactile feedback, accessibility labels, and Velora styling (`WaypointButton`, `WaypointCard`, `ShimmerLoading`, `EmptyStateView`, `TransitBadge`).
+- [x] 1.4 Write unit tests for all UI primitives using `test-driven-development`.
+- [x] 1.5 Run tests: `npm test` in `web/` and `flutter test` in `mobile/`.
+- [x] 1.6 Commit: `git commit -m "feat(ui): complete design system tokens and core UI primitives for web and mobile"`
 
 ---
 
@@ -81,15 +81,15 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/core/network/api_client.dart`, `mobile/lib/core/storage/secure_storage_service.dart`, `mobile/lib/features/auth/bloc/auth_cubit.dart`, `mobile/lib/features/auth/screens/passenger_auth_screen.dart`, `mobile/lib/features/navigation/screens/auth_gate.dart`, `mobile/lib/features/navigation/screens/passenger_navigation_shell.dart`, `mobile/lib/features/navigation/screens/conductor_navigation_shell.dart`
 - Test: `web/src/pages/__tests__/AuthAndOverview.test.jsx`, `mobile/test/features/auth/passenger_auth_test.dart`
 
-- [ ] 2.1 Implement Axios client in `web/src/api/client.js` with JWT token injection, automated 401 refresh rotation, and structured ProblemDetails error mapping.
-- [ ] 2.2 Build Zustand `authStore.js` and `ProtectedRoute.jsx` enforcing RBAC (`RequireAdmin`, `RequireOperator`, `RequireManager`).
-- [ ] 2.3 Implement Web `LoginPage.jsx` and `RegisterPage.jsx` with input limits, inline validation, password show/hide, loading spinner, and double-submit prevention.
-- [ ] 2.4 Implement `DashboardLayout.jsx` with collapsible navigation, user role pill, theme switcher, and `Ctrl+K` Command Palette.
-- [ ] 2.5 Implement Dio `api_client.dart` and AES-encrypted `secure_storage_service.dart` in Flutter using `flutter-expert`.
-- [ ] 2.6 Implement `AuthCubit` and `passenger_auth_screen.dart` with TabBar for Sign In and Sign Up.
-- [ ] 2.7 Build `PassengerNavigationShell.dart` (Search, Wallet, Alerts, Settings) and `ConductorNavigationShell.dart` (Scanner, Manifest).
-- [ ] 2.8 Verify auth tests in Web and Mobile.
-- [ ] 2.9 Commit: `git commit -m "feat(auth): implement authentication, secure storage, and navigation shells"`
+- [x] 2.1 Implement Axios client in `web/src/api/client.js` with JWT token injection, automated 401 refresh rotation, and structured ProblemDetails error mapping.
+- [x] 2.2 Build Zustand `authStore.js` and `ProtectedRoute.jsx` enforcing RBAC (`RequireAdmin`, `RequireOperator`, `RequireManager`).
+- [x] 2.3 Implement Web `LoginPage.jsx` and `RegisterPage.jsx` with input limits, inline validation, password show/hide, loading spinner, and double-submit prevention.
+- [x] 2.4 Implement `DashboardLayout.jsx` with collapsible navigation, user role pill, theme switcher, and `Ctrl+K` Command Palette.
+- [x] 2.5 Implement Dio `api_client.dart` and AES-encrypted `secure_storage_service.dart` in Flutter using `flutter-expert`.
+- [x] 2.6 Implement `AuthCubit` and `passenger_auth_screen.dart` with TabBar for Sign In and Sign Up.
+- [x] 2.7 Build `PassengerNavigationShell.dart` (Search, Wallet, Alerts, Settings) and `ConductorNavigationShell.dart` (Scanner, Manifest).
+- [x] 2.8 Verify auth tests in Web and Mobile.
+- [x] 2.9 Commit: `git commit -m "feat(auth): implement authentication, secure storage, and navigation shells"`
 
 ---
 
@@ -102,16 +102,16 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/features/journey/services/journey_api_service.dart`, `mobile/lib/features/journey/models/journey_models.dart`, `mobile/lib/features/journey/screens/journey_search_screen.dart`, `mobile/lib/features/journey/screens/preference_filter_sheet.dart`, `mobile/lib/features/journey/screens/journey_comparison_screen.dart`
 - Test: `web/src/features/journey/__tests__/RouteManager.test.jsx`, `mobile/test/features/journey/journey_search_test.dart`
 
-- [ ] 3.1 Implement `journeyApi.js` connecting to `/api/v1/routes`, `/api/v1/services`, and `/api/v1/routes/tourist-corridors`.
-- [ ] 3.2 Build `RouteManagerPage.jsx` with stop sequencing table, duration inputs, and create/update route modal.
-- [ ] 3.3 Build `ServiceSchedulerPage.jsx` with timetable calendar, departure board, and bus/driver assignment selector.
-- [ ] 3.4 Build `TouristCorridorsPage.jsx` highlighting scenic routes (Colombo-Ella, Kandy, Galle) with tags.
-- [ ] 3.5 Implement `journey_api_service.dart` and `journey_models.dart` in Flutter connecting to `/api/v1/journeys/search`.
-- [ ] 3.6 Build `journey_search_screen.dart` using Velora tokens with dual origin/destination swap, date picker, and quick city chips.
-- [ ] 3.7 Build `preference_filter_sheet.dart` for AC, Wi-Fi, and arrival deadline filtering.
-- [ ] 3.8 Build `journey_comparison_screen.dart` rendering direct and multi-hop candidate cards with fares, transfer times, and seat counters.
-- [ ] 3.9 Run tests for journey features on Web and Mobile.
-- [ ] 3.10 Commit: `git commit -m "feat(journey): implement route manager, service scheduler, and mobile journey search"`
+- [x] 3.1 Implement `journeyApi.js` connecting to `/api/v1/routes`, `/api/v1/services`, and `/api/v1/routes/tourist-corridors`.
+- [x] 3.2 Build `RouteManagerPage.jsx` with stop sequencing table, duration inputs, and create/update route modal.
+- [x] 3.3 Build `ServiceSchedulerPage.jsx` with timetable calendar, departure board, and bus/driver assignment selector.
+- [x] 3.4 Build `TouristCorridorsPage.jsx` highlighting scenic routes (Colombo-Ella, Kandy, Galle) with tags.
+- [x] 3.5 Implement `journey_api_service.dart` and `journey_models.dart` in Flutter connecting to `/api/v1/journeys/search`.
+- [x] 3.6 Build `journey_search_screen.dart` using Velora tokens with dual origin/destination swap, date picker, and quick city chips.
+- [x] 3.7 Build `preference_filter_sheet.dart` for AC, Wi-Fi, and arrival deadline filtering.
+- [x] 3.8 Build `journey_comparison_screen.dart` rendering direct and multi-hop candidate cards with fares, transfer times, and seat counters.
+- [x] 3.9 Run tests for journey features on Web and Mobile.
+- [x] 3.10 Commit: `git commit -m "feat(journey): implement route manager, service scheduler, and mobile journey search"`
 
 ---
 
@@ -124,16 +124,16 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/features/fleet/data/fleet_api_service.dart`, `mobile/lib/features/fleet/bloc/seat_picker_bloc.dart`, `mobile/lib/features/fleet/screens/seat_picker_screen.dart`, `mobile/lib/features/fleet/presentation/pages/review_submission_screen.dart`
 - Test: `web/src/features/fleet/__tests__/SeatLayoutDesigner.test.jsx`, `mobile/test/features/fleet/seat_picker_bloc_test.dart`
 
-- [ ] 4.1 Implement `fleetApi.js` connecting to `/api/v1/buses`, `/api/v1/seats/layouts`, `/api/v1/drivers`, and `/api/v1/reviews`.
-- [ ] 4.2 Build `FleetMatrixBuilderPage.jsx` with bus inventory table, bus class filter, and maintenance toggle dialog with reason/cost inputs.
-- [ ] 4.3 Build `SeatLayoutDesignerPage.jsx`: interactive 2D grid builder supporting 2x2, 2x1, and luxury layouts with drag/click coordinate placement.
-- [ ] 4.4 Build `DriverRosteringPage.jsx` with driver directory, license validator, and shift assignment modal with rest-time overlap guard (`BR-RESOURCE-002`).
-- [ ] 4.5 Build `FleetReviewsDashboardPage.jsx` with sentiment indicators, star rating breakdowns, and feedback list.
-- [ ] 4.6 Implement `fleet_api_service.dart` and `seat_picker_bloc.dart` in Flutter connecting to `/api/v1/services/{id}/seats`.
-- [ ] 4.7 Build `seat_picker_screen.dart`: interactive bus coach layout rendering available, held, and booked seats with pinch/zoom (`InteractiveViewer`), selection summary bar, and real-time concurrency handling.
-- [ ] 4.8 Build `review_submission_screen.dart` with 5-star rating, cleanliness/comfort tags, and comment submission.
-- [ ] 4.9 Run fleet and seat tests: `npm test` in `web/` and `flutter test` in `mobile/`.
-- [ ] 4.10 Commit: `git commit -m "feat(fleet): implement fleet matrix, visual seat designer, and mobile seat picker"`
+- [x] 4.1 Implement `fleetApi.js` connecting to `/api/v1/buses`, `/api/v1/seats/layouts`, `/api/v1/drivers`, and `/api/v1/reviews`.
+- [x] 4.2 Build `FleetMatrixBuilderPage.jsx` with bus inventory table, bus class filter, and maintenance toggle dialog with reason/cost inputs.
+- [x] 4.3 Build `SeatLayoutDesignerPage.jsx`: interactive 2D grid builder supporting 2x2, 2x1, and luxury layouts with drag/click coordinate placement.
+- [x] 4.4 Build `DriverRosteringPage.jsx` with driver directory, license validator, and shift assignment modal with rest-time overlap guard (`BR-RESOURCE-002`).
+- [x] 4.5 Build `FleetReviewsDashboardPage.jsx` with sentiment indicators, star rating breakdowns, and feedback list.
+- [x] 4.6 Implement `fleet_api_service.dart` and `seat_picker_bloc.dart` in Flutter connecting to `/api/v1/services/{id}/seats`.
+- [x] 4.7 Build `seat_picker_screen.dart`: interactive bus coach layout rendering available, held, and booked seats with pinch/zoom (`InteractiveViewer`), selection summary bar, and real-time concurrency handling.
+- [x] 4.8 Build `review_submission_screen.dart` with 5-star rating, cleanliness/comfort tags, and comment submission.
+- [x] 4.9 Run fleet and seat tests: `npm test` in `web/` and `flutter test` in `mobile/`.
+- [x] 4.10 Commit: `git commit -m "feat(fleet): implement fleet matrix, visual seat designer, and mobile seat picker"`
 
 ---
 
@@ -146,17 +146,17 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/features/booking/services/booking_api_service.dart`, `mobile/lib/features/booking/models/booking_models.dart`, `mobile/lib/features/booking/screens/payment_checkout_screen.dart`, `mobile/lib/features/booking/screens/ticket_wallet_screen.dart`, `mobile/lib/features/booking/widgets/hold_countdown_bar.dart`, `mobile/lib/features/booking/widgets/qr_ticket_pass_card.dart`, `mobile/lib/features/booking/widgets/tiered_refund_modal.dart`
 - Test: `web/src/features/bookings/__tests__/BookingManifest.test.jsx`, `mobile/test/features/booking/booking_screen_test.dart`
 
-- [ ] 5.1 Implement `bookingApi.js` connecting to `/api/v1/bookings/manifest/{serviceId}`, `/api/v1/bookings/hold`, `/api/v1/payments/confirm`.
-- [ ] 5.2 Build `OperatorDashboardPage.jsx` with real-time departure metrics, occupancy KPI gauges, and revenue summary cards.
-- [ ] 5.3 Build `BookingManifestMonitorPage.jsx` with passenger search, filter by hold/booked, manual check-in override, and instant CSV/PDF export (`csvExport.js`).
-- [ ] 5.4 Implement `booking_api_service.dart` and `booking_models.dart` in Flutter.
-- [ ] 5.5 Build `hold_countdown_bar.dart`: persistent 10-minute hold ticker with circular progress arc and auto-expiration cleanup.
-- [ ] 5.6 Build `payment_checkout_screen.dart`: payment sandbox with card input validation, LKR formatting, and instant receipt generation.
-- [ ] 5.7 Build `ticket_wallet_screen.dart` displaying Active, Completed, and Cancelled digital boarding passes with offline encrypted caching.
-- [ ] 5.8 Build `qr_ticket_pass_card.dart`: HMAC-signed QR ticket with auto-brightness boost for scanning.
-- [ ] 5.9 Build `tiered_refund_modal.dart` displaying tiered refund preview (100%, 70%, 0%) before executing cancellation.
-- [ ] 5.10 Run booking and ticketing test suites.
-- [ ] 5.11 Commit: `git commit -m "feat(booking): implement operator manifest monitor, payment sandbox, and QR ticket wallet"`
+- [x] 5.1 Implement `bookingApi.js` connecting to `/api/v1/bookings/manifest/{serviceId}`, `/api/v1/bookings/hold`, `/api/v1/payments/confirm`.
+- [x] 5.2 Build `OperatorDashboardPage.jsx` with real-time departure metrics, occupancy KPI gauges, and revenue summary cards.
+- [x] 5.3 Build `BookingManifestMonitorPage.jsx` with passenger search, filter by hold/booked, manual check-in override, and instant CSV/PDF export (`csvExport.js`).
+- [x] 5.4 Implement `booking_api_service.dart` and `booking_models.dart` in Flutter.
+- [x] 5.5 Build `hold_countdown_bar.dart`: persistent 10-minute hold ticker with circular progress arc and auto-expiration cleanup.
+- [x] 5.6 Build `payment_checkout_screen.dart`: payment sandbox with card input validation, LKR formatting, and instant receipt generation.
+- [x] 5.7 Build `ticket_wallet_screen.dart` displaying Active, Completed, and Cancelled digital boarding passes with offline encrypted caching.
+- [x] 5.8 Build `qr_ticket_pass_card.dart`: HMAC-signed QR ticket with auto-brightness boost for scanning.
+- [x] 5.9 Build `tiered_refund_modal.dart` displaying tiered refund preview (100%, 70%, 0%) before executing cancellation.
+- [x] 5.10 Run booking and ticketing test suites.
+- [x] 5.11 Commit: `git commit -m "feat(booking): implement operator manifest monitor, payment sandbox, and QR ticket wallet"`
 
 ---
 
@@ -170,16 +170,16 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `mobile/lib/features/fleet/screens/conductor_scanner_screen.dart`, `mobile/lib/features/fleet/screens/conductor_manifest_screen.dart`
 - Test: `web/src/features/disruptions/__tests__/DisruptionHub.test.jsx`, `mobile/test/features/disruption/disruption_alert_test.dart`, `mobile/test/features/conductor_tools_test.dart`
 
-- [ ] 6.1 Implement `disruptionApi.js` connecting to `/api/v1/disruptions`, `/api/v1/approvals`, `/api/v1/ai/workflows`, `/api/v1/service-alerts`.
-- [ ] 6.2 Build `DisruptionIntakePage.jsx` with incident logging form (type, severity, delay minutes, affected routes) and double-submit prevention.
-- [ ] 6.3 Build `ManagerApprovalWorkbenchPage.jsx`: inspect AI rebooking proposals, side-by-side metric diffs, rationale textarea, and `Approve`, `Reject`, `Revise` actions.
-- [ ] 6.4 Build `AiObservabilityPage.jsx`: visual step-by-step trace timeline of multi-agent LangGraph workflow execution.
-- [ ] 6.5 Build `ServiceAlertBroadcastPage.jsx` to broadcast network alerts.
-- [ ] 6.6 Implement `disruption_service.dart` and `disruption_alert_screen.dart` in Flutter with in-app banner alert and one-tap rebooking acceptance sheet.
-- [ ] 6.7 Build `conductor_scanner_screen.dart` using `mobile_scanner` with audio/haptic feedback, torch toggle, and cryptographic HMAC validation (`/api/v1/tickets/verify`).
-- [ ] 6.8 Build `conductor_manifest_screen.dart` showing live checked-in vs. absent passengers with manual check-in toggle.
-- [ ] 6.9 Run disruption and conductor tests.
-- [ ] 6.10 Commit: `git commit -m "feat(disruption): implement AI approval workbench, disruption intake, and conductor QR scanner"`
+- [x] 6.1 Implement `disruptionApi.js` connecting to `/api/v1/disruptions`, `/api/v1/approvals`, `/api/v1/ai/workflows`, `/api/v1/service-alerts`.
+- [x] 6.2 Build `DisruptionIntakePage.jsx` with incident logging form (type, severity, delay minutes, affected routes) and double-submit prevention.
+- [x] 6.3 Build `ManagerApprovalWorkbenchPage.jsx`: inspect AI rebooking proposals, side-by-side metric diffs, rationale textarea, and `Approve`, `Reject`, `Revise` actions.
+- [x] 6.4 Build `AiObservabilityPage.jsx`: visual step-by-step trace timeline of multi-agent LangGraph workflow execution.
+- [x] 6.5 Build `ServiceAlertBroadcastPage.jsx` to broadcast network alerts.
+- [x] 6.6 Implement `disruption_service.dart` and `disruption_alert_screen.dart` in Flutter with in-app banner alert and one-tap rebooking acceptance sheet.
+- [x] 6.7 Build `conductor_scanner_screen.dart` using `mobile_scanner` with audio/haptic feedback, torch toggle, and cryptographic HMAC validation (`/api/v1/tickets/verify`).
+- [x] 6.8 Build `conductor_manifest_screen.dart` showing live checked-in vs. absent passengers with manual check-in toggle.
+- [x] 6.9 Run disruption and conductor tests.
+- [x] 6.10 Commit: `git commit -m "feat(disruption): implement AI approval workbench, disruption intake, and conductor QR scanner"`
 
 ---
 
@@ -192,9 +192,9 @@ To ensure maximum engineering quality, visual excellence, and zero regressions, 
 - Create: `tests/e2e/CrossPlatformWorkflow.test.cs` or Playwright test script `web/e2e/cross-platform.spec.js`
 - Test: `web/src/features/admin/__tests__/AdminUsersPage.test.jsx`
 
-- [ ] 7.1 Implement `adminApi.js` connecting to `/api/v1/admin/users` and `/api/v1/admin/users/{id}/role`.
-- [ ] 7.2 Build `AdminUsersPage.jsx` with user directory table, role provisioning modal, and role change dialog with destructive confirmation.
-- [ ] 7.3 Run full test suites across all tiers: `dotnet test backend/WayPoint.sln`, `npm test` in `web/`, `flutter test` in `mobile/`.
-- [ ] 7.4 Execute complete End-to-End trace: Passenger Search → Seat Hold (10m ticker) → Payment Sandbox → Disruption Incident → AI Rebooking → Manager Workbench Approval → Passenger Rebooking Acceptance → Conductor QR Scan.
-- [ ] 7.5 Audit the entire codebase against all 20 rules of the Production-Readiness Gate (verify absence of placeholders, dead buttons, raw error messages, layout shifts, or missing states).
-- [ ] 7.6 Commit: `git commit -m "feat(admin): complete admin governance, E2E cross-platform verification, and production audit"`
+- [x] 7.1 Implement `adminApi.js` connecting to `/api/v1/admin/users` and `/api/v1/admin/users/{id}/role`.
+- [x] 7.2 Build `AdminUsersPage.jsx` with user directory table, role provisioning modal, and role change dialog with destructive confirmation.
+- [x] 7.3 Run full test suites across all tiers: `dotnet test backend/WayPoint.sln`, `npm test` in `web/`, `flutter test` in `mobile/`.
+- [x] 7.4 Execute complete End-to-End trace: Passenger Search → Seat Hold (10m ticker) → Payment Sandbox → Disruption Incident → AI Rebooking → Manager Workbench Approval → Passenger Rebooking Acceptance → Conductor QR Scan.
+- [x] 7.5 Audit the entire codebase against all 20 rules of the Production-Readiness Gate (verify absence of placeholders, dead buttons, raw error messages, layout shifts, or missing states).
+- [x] 7.6 Commit: `git commit -m "feat(admin): complete admin governance, E2E cross-platform verification, and production audit"`
