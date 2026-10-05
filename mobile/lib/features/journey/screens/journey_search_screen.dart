@@ -8,6 +8,7 @@ import '../models/journey_models.dart';
 import '../services/journey_api_service.dart';
 import '../widgets/preference_filter_sheet.dart';
 import '../widgets/ai_journey_prompt_card.dart';
+import '../widgets/first_run_welcome_card.dart';
 import 'journey_comparison_screen.dart';
 
 class JourneySearchScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
 
   bool _isSearching = false;
   bool _isAiSearching = false;
+  bool _showFirstRunWelcome = true;
 
   final List<String> _majorCities = [
     'Colombo',
@@ -137,7 +139,10 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
       return;
     }
 
-    setState(() => _isSearching = true);
+    setState(() {
+      _isSearching = true;
+      _showFirstRunWelcome = false;
+    });
 
     final candidates = await _apiService.searchJourneys(
       originCity: _originCity,
@@ -233,6 +238,18 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_showFirstRunWelcome)
+              FirstRunWelcomeCard(
+                onSelectCorridor: (orig, dest) {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _originCity = orig;
+                    _destinationCity = dest;
+                  });
+                },
+                onDismiss: () => setState(() => _showFirstRunWelcome = false),
+              ),
+
             // AI Journey Prompt Card
             AiJourneyPromptCard(
               isSearching: _isAiSearching,
