@@ -49,7 +49,7 @@ class WayPointApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             themeMode: ThemeMode.light,
-            home: const AuthGate(),
+            home: AuthGate(storageService: storageService),
           );
         },
       ),
