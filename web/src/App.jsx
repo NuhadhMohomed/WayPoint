@@ -6,6 +6,10 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { JourneyHubLayout } from './features/journey/JourneyHubLayout'
+import { RouteManagerPage } from './features/journey/RouteManagerPage'
+import { ServiceSchedulerPage } from './features/journey/ServiceSchedulerPage'
+import { TouristCorridorsPage } from './features/journey/TouristCorridorsPage'
 
 export function App() {
   return (
@@ -17,10 +21,14 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<OverviewPage />} />
-          {/* Component 1: Routes & Network */}
-          <Route path="/routes/catalog" element={<div className="p-6">Route Catalogue</div>} />
-          <Route path="/routes/scheduler" element={<div className="p-6">Service Scheduler</div>} />
-          <Route path="/routes/corridors" element={<div className="p-6">Tourist Corridors</div>} />
+
+          {/* Component 1: Routes & Network (Sethum) */}
+          <Route path="/routes" element={<JourneyHubLayout />}>
+            <Route index element={<Navigate to="/routes/catalog" replace />} />
+            <Route path="catalog" element={<RouteManagerPage />} />
+            <Route path="scheduler" element={<ServiceSchedulerPage />} />
+            <Route path="corridors" element={<TouristCorridorsPage />} />
+          </Route>
 
           {/* Component 2: Fleet & Feasibility */}
           <Route path="/fleet/buses" element={<div className="p-6">Fleet Matrix</div>} />

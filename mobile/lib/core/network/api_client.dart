@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import '../storage/secure_storage_service.dart';
 
+typedef MobileApiClient = ApiClient;
+
 class ApiClient {
   final Dio dio;
   final SecureStorageService storageService;

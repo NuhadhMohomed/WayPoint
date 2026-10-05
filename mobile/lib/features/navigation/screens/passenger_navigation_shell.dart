@@ -5,6 +5,8 @@ import '../../../core/theme/theme_cubit.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/models/auth_models.dart';
 
+import '../../journey/screens/journey_search_screen.dart';
+
 class PassengerNavigationShell extends StatefulWidget {
   final UserModel user;
 
@@ -22,13 +24,8 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final List<Widget> pages = [
-      // 0: Journey Search Placeholder (Replaced in Task 3)
-      _buildPlaceholderTab(
-        title: 'Journey Search & Catalog',
-        subtitle: 'Find intercity coaches across Sri Lanka',
-        icon: Icons.search_rounded,
-        actionText: 'Explore Routes',
-      ),
+      // 0: Journey Search (Component 1 - Sethum)
+      const JourneySearchScreen(),
       // 1: Seat Matrix (Replaced in Task 4)
       _buildPlaceholderTab(
         title: 'Seat Layout & Coach Feasibility',

@@ -9,6 +9,9 @@ export default {
     extend: {
       colors: {
         waypoint: {
+          primary: '#4F46E5',
+          'primary-hover': '#4338CA',
+          onPrimary: '#FFFFFF',
           blue: '#0056D2',
           'blue-dark': '#003E9A',
           'blue-light': '#EBF2FF',
