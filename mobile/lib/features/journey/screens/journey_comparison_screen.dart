@@ -7,12 +7,15 @@ import '../../../core/widgets/waypoint_card.dart';
 import '../../fleet/data/fleet_api_service.dart';
 import '../../booking/screens/seat_picker_screen.dart';
 import '../models/journey_models.dart';
+import '../widgets/ai_insights_banner.dart';
 
 class JourneyComparisonScreen extends StatelessWidget {
   final String originCity;
   final String destinationCity;
   final DateTime travelDate;
   final List<JourneyCandidateModel> candidates;
+  final String? agentReasoning;
+  final bool isAiFallback;
 
   const JourneyComparisonScreen({
     super.key,
@@ -20,6 +23,8 @@ class JourneyComparisonScreen extends StatelessWidget {
     required this.destinationCity,
     required this.travelDate,
     required this.candidates,
+    this.agentReasoning,
+    this.isAiFallback = false,
   });
 
   @override
@@ -32,6 +37,7 @@ class JourneyComparisonScreen extends StatelessWidget {
     final dateFormat = DateFormat('EEE, dd MMM yyyy');
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final showAiBanner = (agentReasoning != null && agentReasoning!.isNotEmpty) || isAiFallback;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,10 +64,17 @@ class JourneyComparisonScreen extends StatelessWidget {
             )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: candidates.length,
+              itemCount: (showAiBanner ? 1 : 0) + candidates.length,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
-                final candidate = candidates[index];
+                if (showAiBanner && index == 0) {
+                  return AiInsightsBanner(
+                    agentReasoning: agentReasoning ?? '',
+                    isAiFallback: isAiFallback,
+                  );
+                }
+                final candidateIndex = showAiBanner ? index - 1 : index;
+                final candidate = candidates[candidateIndex];
                 final durationHours = candidate.durationMinutes ~/ 60;
                 final durationMins = candidate.durationMinutes % 60;
                 final formattedDep = DateFormat('hh:mm a').format(candidate.departureTime);
