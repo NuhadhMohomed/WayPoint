@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
+import '../../../core/widgets/waypoint_logo.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 
@@ -83,55 +84,11 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  // Velora Logo Header
                   Center(
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.directions_bus_rounded,
-                        color: Colors.white,
-                        size: 34,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      'WayPoint Mobile',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                        color: isDark ? Colors.white : AppTheme.primaryColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Center(
-                    child: Text(
-                      'Sri Lanka Intercity Express Network',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
+                    child: WayPointLogo(
+                      size: 64,
+                      variant: WayPointLogoVariant.stacked,
+                      isDark: isDark,
                     ),
                   ),
                   const SizedBox(height: 28),
