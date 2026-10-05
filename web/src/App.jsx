@@ -5,6 +5,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { OverviewPage } from './pages/OverviewPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 // Component 3: Booking & Operator (Mithila)
 import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
@@ -82,8 +83,8 @@ export function App() {
         </Route>
       </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Fallback 404 */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

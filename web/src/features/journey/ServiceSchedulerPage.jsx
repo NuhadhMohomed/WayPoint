@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { TransitBadge } from '@/components/ui/TransitBadge'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { TransitBadge } from '../../components/ui/TransitBadge'
+import { Skeleton } from '../../components/ui/Skeleton'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { downloadCsv } from '../../lib/csvExport'
 import { journeyApi } from './journeyApi'
 import { 
   Calendar, 
@@ -10,11 +13,9 @@ import {
   ArrowRight, 
   Filter, 
   RefreshCw, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle,
   Banknote,
-  Navigation
+  Navigation,
+  Download
 } from 'lucide-react'
 
 // Realistic fallback service departures across Sri Lankan corridors
@@ -110,7 +111,7 @@ export function ServiceSchedulerPage() {
       } else {
         setServices(DEFAULT_SERVICES)
       }
-    } catch (err) {
+    } catch {
       setServices(DEFAULT_SERVICES)
     } finally {
       setLoading(false)
@@ -130,6 +131,22 @@ export function ServiceSchedulerPage() {
     return s.routeNumber === selectedCorridor
   })
 
+  const handleExportCsv = () => {
+    const exportData = filteredServices.map((s) => ({
+      ServiceCode: s.serviceCode,
+      Route: s.routeNumber,
+      Origin: s.originCity,
+      Destination: s.destinationCity,
+      Departure: s.departureTime,
+      Arrival: s.arrivalTime,
+      Class: s.busClass,
+      FareLKR: s.baseFare,
+      AvailableSeats: s.availableSeats,
+      TotalSeats: s.totalSeats,
+    }))
+    downloadCsv(exportData, 'waypoint_timetables.csv')
+  }
+
   return (
     <div className="space-y-6">
       {/* Controls & Filter Bar */}
@@ -140,10 +157,10 @@ export function ServiceSchedulerPage() {
             <button
               key={c}
               onClick={() => setSelectedCorridor(c)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 selectedCorridor === c
-                  ? 'bg-waypoint-blue text-white shadow-sm'
-                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
+                  ? 'bg-waypoint-primary text-waypoint-onPrimary shadow-md shadow-waypoint-primary/10'
+                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white hover:bg-slate-900'
               }`}
             >
               {c === 'ALL' ? 'All Corridors' : `Route ${c}`}
@@ -151,10 +168,18 @@ export function ServiceSchedulerPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">
-            {filteredServices.length} Active Departure{filteredServices.length === 1 ? '' : 's'}
-          </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={filteredServices.length === 0}
+            className="flex items-center gap-1.5 text-xs"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -170,45 +195,49 @@ export function ServiceSchedulerPage() {
 
       {/* Services Timetable */}
       {loading ? (
-        <div className="flex items-center justify-center p-12 text-slate-500 gap-3">
-          <Loader2 className="w-5 h-5 animate-spin text-waypoint-blue" />
-          Loading timetables...
+        <div className="space-y-3">
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
         </div>
       ) : filteredServices.length === 0 ? (
-        <Card className="p-8 text-center text-slate-400">
-          No scheduled service departures found for this corridor.
-        </Card>
+        <EmptyState
+          title="No scheduled services found"
+          description="There are currently no active bus dispatches scheduled for this corridor."
+          actionLabel="Show All Corridors"
+          onAction={() => setSelectedCorridor('ALL')}
+        />
       ) : (
         <div className="space-y-3">
           {filteredServices.map((service) => {
             const depTime = new Date(service.departureTime)
             const arrTime = new Date(service.arrivalTime)
-            const formattedDep = depTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            const formattedArr = arrTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            const diffHours = Math.round((arrTime - depTime) / (1000 * 60 * 60))
+            const formattedDep = isNaN(depTime) ? service.departureTime : depTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            const formattedArr = isNaN(arrTime) ? service.arrivalTime : arrTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            const diffHours = !isNaN(depTime) && !isNaN(arrTime) ? Math.round((arrTime - depTime) / (1000 * 60 * 60)) : 0
 
             return (
               <Card
                 key={service.id}
-                className="p-5 border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-5 border border-slate-800 bg-slate-900/90 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md"
               >
                 {/* Route & Times */}
                 <div className="flex items-start md:items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center text-center flex-shrink-0">
-                    <Bus className="w-5 h-5 text-indigo-400" />
-                    <span className="text-[10px] font-mono text-slate-400 font-bold mt-0.5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center text-center flex-shrink-0 shadow-inner">
+                    <Bus className="w-5 h-5 text-waypoint-primary" />
+                    <span className="text-[10px] font-mono text-slate-300 font-bold mt-0.5">
                       {service.routeNumber}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-slate-400">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono font-bold text-slate-300">
                         {service.serviceCode}
                       </span>
-                      <TransitBadge status="available" customLabel={service.status || 'Active'} />
+                      <TransitBadge status="Available" label={service.status || 'Scheduled'} />
                       {service.busClass && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
                           {service.busClass}
                         </span>
                       )}
@@ -216,17 +245,17 @@ export function ServiceSchedulerPage() {
 
                     <div className="flex items-center gap-2 text-base font-bold text-white">
                       <span>{service.originCity || 'Colombo'}</span>
-                      <ArrowRight className="w-4 h-4 text-slate-500" />
+                      <ArrowRight className="w-4 h-4 text-waypoint-primary" />
                       <span>{service.destinationCity || 'Ella'}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-400">
+                    <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
                       <span className="flex items-center gap-1 font-semibold text-slate-200">
-                        <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                        <Clock className="w-3.5 h-3.5 text-waypoint-primary" />
                         {formattedDep} → {formattedArr}
                       </span>
                       <span>•</span>
-                      <span>approx. {diffHours > 0 ? `${diffHours} hrs` : 'direct'}</span>
+                      <span>{diffHours > 0 ? `${diffHours} hrs total` : 'Direct Dispatch'}</span>
                     </div>
                   </div>
                 </div>
@@ -234,17 +263,21 @@ export function ServiceSchedulerPage() {
                 {/* Fare & Capacity */}
                 <div className="flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-slate-800">
                   <div className="text-left md:text-right">
-                    <div className="text-xs text-slate-500 uppercase font-semibold">Standard Fare</div>
-                    <div className="text-lg font-bold font-mono text-emerald-400">
-                      Rs. {Number(service.baseFare).toFixed(2)}
+                    <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                      Standard Fare
+                    </div>
+                    <div className="text-lg font-bold font-mono text-waypoint-primary">
+                      Rs. {Number(service.baseFare).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </div>
                   </div>
 
                   {service.availableSeats !== undefined && (
                     <div className="text-left md:text-right">
-                      <div className="text-xs text-slate-500 uppercase font-semibold">Seat Matrix</div>
-                      <div className="text-sm font-semibold text-white">
-                        <span className="text-emerald-400">{service.availableSeats}</span>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                        Seat Matrix
+                      </div>
+                      <div className="text-sm font-semibold text-white font-mono">
+                        <span className="text-waypoint-primary font-bold">{service.availableSeats}</span>
                         <span className="text-slate-500"> / {service.totalSeats || 44} Left</span>
                       </div>
                     </div>
@@ -258,4 +291,3 @@ export function ServiceSchedulerPage() {
     </div>
   )
 }
-

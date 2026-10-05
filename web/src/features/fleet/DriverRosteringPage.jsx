@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { fleetApi } from './fleetApi'
-import { useFleetStore } from '@/store/fleetStore'
-import { Card, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { useFleetStore } from '../../store/fleetStore'
+import { Card, CardHeader } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { downloadCsv } from '../../lib/csvExport'
 import {
   Users, Plus, Search, ChevronLeft, ChevronRight,
   X, CheckCircle2, AlertCircle, AlertTriangle,
-  Loader2, Calendar, Clock
+  Loader2, Calendar, Clock, Download, ShieldCheck, ShieldAlert
 } from 'lucide-react'
 
 export function DriverRosteringPage() {
@@ -53,118 +54,157 @@ export function DriverRosteringPage() {
     }
   }
 
+  const handleExportCsv = () => {
+    const exportData = drivers.map((d) => ({
+      FullName: d.fullName,
+      LicenseNumber: d.licenseNumber,
+      ContactNumber: d.contactNumber,
+      Status: d.status,
+      AssignmentsCount: d.assignmentCount,
+    }))
+    downloadCsv(exportData, 'waypoint_driver_roster.csv')
+  }
+
   return (
     <div className="space-y-5">
-      {/* Toast */}
+      {/* Toast Notification */}
       {message && (
-        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border ${
-          message.type === 'success'
-            ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
-            : 'bg-rose-950/60 border-rose-800 text-rose-300'
-        }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          {message.text}
+        <div
+          role="status"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border ${
+            message.type === 'success'
+              ? 'bg-emerald-950/70 border-emerald-800 text-emerald-200'
+              : 'bg-red-950/70 border-red-800 text-red-200'
+          }`}
+        >
+          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />}
+          <span>{message.text}</span>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Drivers', value: driverPagination.totalCount, color: 'text-waypoint-blue' },
-          { label: 'Active', value: drivers.filter(d => d.status === 'Active').length, color: 'text-emerald-400' },
-          { label: 'Total Assignments', value: drivers.reduce((sum, d) => sum + d.assignmentCount, 0), color: 'text-indigo-400' },
+          { label: 'Total Licensed Drivers', value: driverPagination.totalCount, color: 'text-waypoint-primary' },
+          { label: 'Active on Shifts', value: drivers.filter(d => d.status === 'Active').length, color: 'text-emerald-400' },
+          { label: 'Total Scheduled Runs', value: drivers.reduce((sum, d) => sum + d.assignmentCount, 0), color: 'text-sky-400' },
         ].map((stat) => (
-          <div key={stat.label} className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <div className={`text-2xl font-bold font-display ${stat.color}`}>{stat.value}</div>
-            <div className="text-xs text-slate-400 mt-1">{stat.label}</div>
+          <div key={stat.label} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-inner">
+            <div className={`text-2xl font-black font-mono ${stat.color}`}>{stat.value}</div>
+            <div className="text-xs text-slate-400 mt-1 font-medium">{stat.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Driver Table */}
-      <Card>
-        <CardHeader
-          title="Driver Directory"
-          subtitle="Manage drivers, view assignments, and check rest compliance"
-          action={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowAssignModal(true)}>
-                <Calendar className="w-4 h-4 mr-1.5" /> Assign Driver
-              </Button>
-              <Button size="sm" onClick={() => setShowAddModal(true)}>
-                <Plus className="w-4 h-4 mr-1.5" /> Add Driver
-              </Button>
-            </div>
-          }
-        />
+      {/* Driver Table Card */}
+      <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-slate-800 pb-4">
+          <div>
+            <h3 className="text-lg font-bold font-display text-white">Driver Roster & Shift Assignments</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Enforce mandatory 8-hour rest periods (<strong>BR-RESOURCE-002</strong>) and track active dispatch hours.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={drivers.length === 0}
+              className="gap-1.5 text-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export Roster
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAssignModal(true)}
+              className="gap-1.5 text-xs"
+            >
+              <Calendar className="w-3.5 h-3.5" /> Assign Shift
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowAddModal(true)}
+              className="gap-1.5 font-bold shadow-lg shadow-waypoint-primary/20"
+            >
+              <Plus className="w-4 h-4" /> Add Driver
+            </Button>
+          </div>
+        </div>
 
         {/* Search */}
-        <div className="mb-5">
-          <div className="relative max-w-xs">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Search by name, license..."
+              placeholder="Search driver by name or license..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
+              className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
             />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs text-left">
             <thead>
-              <tr className="text-xs text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                <th className="text-left py-3 px-3 font-medium">Name</th>
-                <th className="text-left py-3 px-3 font-medium">License #</th>
-                <th className="text-left py-3 px-3 font-medium">Phone</th>
-                <th className="text-center py-3 px-3 font-medium">Status</th>
-                <th className="text-center py-3 px-3 font-medium">Assignments</th>
-                <th className="text-right py-3 px-3 font-medium">Actions</th>
+              <tr className="text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800 bg-slate-950/60 font-semibold">
+                <th className="py-3 px-3">Driver Name</th>
+                <th className="py-3 px-3">License Number</th>
+                <th className="py-3 px-3">Phone</th>
+                <th className="text-center py-3 px-3">Status</th>
+                <th className="text-center py-3 px-3">HOS Shifts</th>
+                <th className="text-right py-3 px-3">Timeline Gantt</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-800/60 font-mono">
               {driversLoading ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16">
-                    <Loader2 className="w-6 h-6 animate-spin text-waypoint-blue mx-auto" />
-                    <p className="text-xs text-slate-500 mt-2">Loading drivers...</p>
+                    <Loader2 className="w-6 h-6 animate-spin text-waypoint-primary mx-auto" />
+                    <p className="text-xs text-slate-400 mt-2 font-sans">Loading driver telemetry...</p>
                   </td>
                 </tr>
               ) : drivers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16">
                     <Users className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">No drivers found</p>
+                    <p className="text-sm font-semibold text-slate-300 font-sans">No drivers found</p>
+                    <p className="text-xs text-slate-500 mt-1 font-sans">Add a licensed driver to get started</p>
                   </td>
                 </tr>
               ) : (
                 drivers.map((driver) => (
-                  <tr key={driver.id} className="border-b border-slate-800/50 hover:bg-slate-950/50 transition-colors">
-                    <td className="py-3 px-3 font-medium text-white">{driver.fullName}</td>
-                    <td className="py-3 px-3 font-mono text-xs text-slate-400">{driver.licenseNumber}</td>
-                    <td className="py-3 px-3 text-slate-400 text-xs">{driver.phoneNumber || '—'}</td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded border ${
+                  <tr key={driver.id} className="hover:bg-slate-950/60 transition-colors">
+                    <td className="py-3 px-3">
+                      <span className="font-bold text-white font-sans text-xs">{driver.fullName}</span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-300 font-mono">{driver.licenseNumber}</td>
+                    <td className="py-3 px-3 text-slate-400">{driver.contactNumber || '—'}</td>
+                    <td className="py-3 px-3 text-center font-sans">
+                      <span className={`inline-flex px-2 py-0.5 text-[11px] font-bold rounded-full border ${
                         driver.status === 'Active'
                           ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                          : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}>
                         {driver.status}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                        {driver.assignmentCount}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-lg bg-waypoint-primary/10 text-waypoint-primary border border-waypoint-primary/30">
+                        {driver.assignmentCount} Runs
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right">
                       <button
                         onClick={() => handleViewGantt(driver)}
-                        className="p-1.5 rounded-md text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors"
-                        title="View schedule timeline"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-waypoint-primary hover:bg-slate-800 transition-colors"
+                        title="View HOS Rest Compliance Timeline"
                       >
                         <Clock className="w-4 h-4" />
                       </button>
@@ -179,7 +219,7 @@ export function DriverRosteringPage() {
         {/* Pagination */}
         {driverPagination.totalPages > 1 && (
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-800">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400 font-mono">
               Page {driverPagination.pageNumber} of {driverPagination.totalPages}
             </span>
             <div className="flex items-center gap-2">
@@ -210,7 +250,7 @@ export function DriverRosteringPage() {
           onSuccess={() => {
             setShowAddModal(false)
             fetchDrivers()
-            showToast('success', 'Driver added successfully!')
+            showToast('success', 'Driver registered successfully!')
           }}
           onError={(msg) => showToast('error', msg)}
         />
@@ -224,7 +264,7 @@ export function DriverRosteringPage() {
           onSuccess={() => {
             setShowAssignModal(false)
             fetchDrivers()
-            showToast('success', 'Driver assigned to service!')
+            showToast('success', 'Driver assigned to scheduled corridor service!')
           }}
           onError={(msg) => showToast('error', msg)}
         />
@@ -233,23 +273,18 @@ export function DriverRosteringPage() {
   )
 }
 
-// ─── Driver Gantt Chart ───
-
 function DriverGanttChart({ assignments, loading, onClose }) {
   if (loading) {
     return (
-      <Card>
-        <div className="text-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-waypoint-blue mx-auto" />
-          <p className="text-xs text-slate-500 mt-2">Loading schedule...</p>
-        </div>
+      <Card className="p-8 text-center border-slate-800 bg-slate-900/90">
+        <Loader2 className="w-6 h-6 animate-spin text-waypoint-primary mx-auto" />
+        <p className="text-xs text-slate-400 mt-2">Computing HOS rest telemetry...</p>
       </Card>
     )
   }
 
   const driverName = assignments.length > 0 ? assignments[0].driverName : 'Driver'
 
-  // Calculate rest gaps between consecutive assignments
   const sortedAssignments = [...assignments].sort(
     (a, b) => new Date(a.departureTime) - new Date(b.departureTime)
   )
@@ -262,16 +297,16 @@ function DriverGanttChart({ assignments, loading, onClose }) {
     restGaps.push({ afterIndex: i, hours, compliant: hours >= 8 })
   }
 
-  // Find time range for the Gantt
   if (sortedAssignments.length === 0) {
     return (
-      <Card>
-        <CardHeader title={`Schedule: ${driverName}`} action={
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
-        } />
+      <Card className="p-6 border-slate-800 bg-slate-900/90">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <h3 className="text-sm font-bold text-white font-display">Schedule Timeline: {driverName}</h3>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+        </div>
         <div className="text-center py-8">
           <Calendar className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">No assignments yet</p>
+          <p className="text-xs text-slate-400">No active corridor assignments mapped to this driver yet</p>
         </div>
       </Card>
     )
@@ -287,16 +322,20 @@ function DriverGanttChart({ assignments, loading, onClose }) {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title={`Rest Compliance Gantt: ${driverName}`}
-        subtitle="Colored bars show assigned shifts. Red warnings indicate < 8h rest gaps (BR-RESOURCE-002)."
-        action={
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
-        }
-      />
+    <Card className="p-6 border-slate-800 bg-slate-900/90 shadow-2xl">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div>
+          <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+            <Clock className="w-4 h-4 text-waypoint-primary" />
+            Hours-of-Service (HOS) Rest Compliance: {driverName}
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Colored bars indicate driving shifts. Red alerts highlight violations of the mandatory 8-hour rest rule (<strong>BR-RESOURCE-002</strong>).
+          </p>
+        </div>
+        <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+      </div>
 
-      {/* Timeline */}
       <div className="space-y-3">
         {sortedAssignments.map((assignment, idx) => {
           const depTime = new Date(assignment.departureTime).getTime()
@@ -306,67 +345,46 @@ function DriverGanttChart({ assignments, loading, onClose }) {
           const restGap = restGaps.find(g => g.afterIndex === idx)
 
           return (
-            <div key={assignment.id}>
-              {/* Assignment bar */}
-              <div className="relative h-12 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
+            <div key={assignment.id} className="space-y-1.5">
+              <div className="relative h-12 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner">
                 <div
-                  className="absolute top-1 bottom-1 rounded-md bg-waypoint-blue/80 border border-waypoint-blue flex items-center justify-center text-[10px] text-white font-medium px-2 overflow-hidden whitespace-nowrap"
-                  style={{ left: `${left}%`, width: `${width}%`, minWidth: '60px' }}
-                  title={`${assignment.serviceCode}: ${formatTime(assignment.departureTime)} → ${formatTime(assignment.arrivalTime)}`}
+                  className="absolute top-1 bottom-1 rounded-lg bg-waypoint-primary text-waypoint-onPrimary flex items-center justify-between text-xs font-mono font-bold px-3 shadow-md"
+                  style={{ left: `${left}%`, width: `${width}%`, minWidth: '80px' }}
                 >
-                  {assignment.serviceCode}
+                  <span className="truncate">{assignment.serviceCode}</span>
+                  <span className="text-[10px] opacity-80">{formatTime(assignment.departureTime)}</span>
                 </div>
               </div>
 
-              {/* Time labels */}
-              <div className="flex items-center justify-between mt-1 px-1">
-                <span className="text-[10px] text-slate-500">{formatTime(assignment.departureTime)}</span>
-                <span className="text-[10px] text-slate-500">{formatTime(assignment.arrivalTime)}</span>
-              </div>
-
-              {/* Rest gap indicator */}
               {restGap && (
-                <div className={`flex items-center gap-1.5 mt-2 mb-1 px-2 py-1.5 rounded text-xs border ${
-                  restGap.compliant
-                    ? 'bg-emerald-950/40 border-emerald-800/50 text-emerald-400'
-                    : 'bg-rose-950/40 border-rose-800/50 text-rose-400'
-                }`}>
-                  {restGap.compliant
-                    ? <CheckCircle2 className="w-3.5 h-3.5" />
-                    : <AlertTriangle className="w-3.5 h-3.5" />
-                  }
-                  <span className="font-medium">{restGap.hours.toFixed(1)}h rest</span>
-                  <span className="text-slate-500">
-                    {restGap.compliant ? '— compliant' : '— VIOLATION (min 8h required)'}
-                  </span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono">
+                  {restGap.compliant ? (
+                    <div className="flex items-center gap-1.5 text-emerald-400">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>{restGap.hours.toFixed(1)}h Rest Gap (Compliant with BR-RESOURCE-002 $\ge$ 8h)</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-red-400 bg-red-950/40 border border-red-800/60 px-2 py-0.5 rounded">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span className="font-bold">VIOLATION: Only {restGap.hours.toFixed(1)}h rest gap before next departure! (&lt; 8h mandatory)</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )
         })}
       </div>
-
-      {/* Summary */}
-      <div className="flex items-center gap-4 mt-5 pt-4 border-t border-slate-800">
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <div className="w-3 h-3 rounded-sm bg-waypoint-blue/80 border border-waypoint-blue" />
-          Active Shift
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-          <CheckCircle2 className="w-3 h-3" /> ≥ 8h Rest (Compliant)
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-rose-400">
-          <AlertTriangle className="w-3 h-3" /> &lt; 8h Rest (Violation)
-        </div>
-      </div>
     </Card>
   )
 }
 
-// ─── Add Driver Modal ───
-
 function AddDriverModal({ onClose, onSuccess, onError }) {
-  const [form, setForm] = useState({ fullName: '', licenseNumber: '', phoneNumber: '' })
+  const [form, setForm] = useState({
+    fullName: '',
+    licenseNumber: '',
+    contactNumber: '',
+  })
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -383,47 +401,53 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold font-display text-white">Add New Driver</h3>
+        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <h3 className="text-base font-bold font-display text-white">Register Licensed Driver</h3>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Full Name</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Full Legal Name</label>
             <input
-              type="text" required placeholder="e.g. Kamal Perera"
+              type="text"
+              required
+              placeholder="e.g. Sunil Gunawardena"
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">License Number</label>
-            <input
-              type="text" required placeholder="e.g. DL-2024-A1234"
-              value={form.licenseNumber}
-              onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Phone Number</label>
-            <input
-              type="text" placeholder="e.g. +94 77 123 4567"
-              value={form.phoneNumber}
-              onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">NTC Heavy Vehicle License</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. B1234567"
+              value={form.licenseNumber}
+              onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Contact Phone Number</label>
+            <input
+              type="tel"
+              placeholder="+94 77 987 6543"
+              value={form.contactNumber}
+              onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>Cancel</Button>
-            <Button size="sm" type="submit" disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Plus className="w-4 h-4 mr-1.5" />}
-              {submitting ? 'Adding...' : 'Add Driver'}
+            <Button variant="primary" size="sm" type="submit" isLoading={submitting} className="font-bold">
+              Register Driver
             </Button>
           </div>
         </form>
@@ -432,18 +456,17 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
   )
 }
 
-// ─── Assign Driver Modal ───
-
 function AssignDriverModal({ drivers, onClose, onSuccess, onError }) {
-  const [form, setForm] = useState({ driverId: '', serviceId: '' })
+  const [form, setForm] = useState({
+    driverId: '',
+    serviceCode: '',
+    departureTime: '',
+    arrivalTime: '',
+  })
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.driverId || !form.serviceId) {
-      onError('Please select both a driver and a service')
-      return
-    }
     setSubmitting(true)
     try {
       await fleetApi.assignDriver(form)
@@ -456,47 +479,68 @@ function AssignDriverModal({ drivers, onClose, onSuccess, onError }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold font-display text-white">Assign Driver to Service</h3>
+        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <h3 className="text-base font-bold font-display text-white">Assign Driver to Service</h3>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Select Driver</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Driver</label>
             <select
+              required
               value={form.driverId}
               onChange={(e) => setForm({ ...form, driverId: e.target.value })}
-              required
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
             >
-              <option value="">— Select a driver —</option>
-              {drivers.filter(d => d.status === 'Active').map(d => (
+              <option value="">— Select licensed driver —</option>
+              {drivers.map(d => (
                 <option key={d.id} value={d.id}>{d.fullName} ({d.licenseNumber})</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Service ID</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Service Code</label>
             <input
-              type="text" required placeholder="Paste Service UUID from Sethum's routes"
-              value={form.serviceId}
-              onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-blue"
+              type="text"
+              required
+              placeholder="e.g. SRV-COL-ELLA-0630"
+              value={form.serviceCode}
+              onChange={(e) => setForm({ ...form, serviceCode: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
             />
-            <p className="text-[10px] text-slate-600 mt-1">
-              Overlap & 8h rest checks are enforced server-side (BR-TIME-001 / BR-RESOURCE-002)
-            </p>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Departure Time</label>
+              <input
+                type="datetime-local"
+                required
+                value={form.departureTime}
+                onChange={(e) => setForm({ ...form, departureTime: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Arrival Time</label>
+              <input
+                type="datetime-local"
+                required
+                value={form.arrivalTime}
+                onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>Cancel</Button>
-            <Button size="sm" type="submit" disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Calendar className="w-4 h-4 mr-1.5" />}
-              {submitting ? 'Assigning...' : 'Assign Driver'}
+            <Button variant="primary" size="sm" type="submit" isLoading={submitting} className="font-bold">
+              Confirm Assignment
             </Button>
           </div>
         </form>

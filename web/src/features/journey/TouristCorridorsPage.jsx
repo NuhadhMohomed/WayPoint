@@ -1,7 +1,7 @@
 import React from 'react'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { TransitBadge } from '@/components/ui/TransitBadge'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { TransitBadge } from '../../components/ui/TransitBadge'
 import { Link } from 'react-router-dom'
 import { 
   Compass, 
@@ -13,7 +13,8 @@ import {
   Sparkles, 
   Sun,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Waves
 } from 'lucide-react'
 
 const CORRIDORS = [
@@ -36,7 +37,6 @@ const CORRIDORS = [
     ],
     recommendedDeparture: '06:30 AM (Morning Vista Express)',
     fareLkr: 2400.0,
-    accentColor: 'from-amber-500/20 to-emerald-500/10 border-amber-500/30',
   },
   {
     id: 'corridor-kandy',
@@ -56,7 +56,6 @@ const CORRIDORS = [
     ],
     recommendedDeparture: '07:00 AM (Intercity Super Line)',
     fareLkr: 1100.0,
-    accentColor: 'from-blue-500/20 to-indigo-500/10 border-blue-500/30',
   },
   {
     id: 'corridor-galle',
@@ -76,82 +75,86 @@ const CORRIDORS = [
     ],
     recommendedDeparture: '08:15 AM (Express Coach)',
     fareLkr: 1250.0,
-    accentColor: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30',
   },
   {
     id: 'corridor-jaffna',
-    title: 'The Northern Heritage Corridor',
+    title: 'Northern Peninsula Line',
     routeNumber: 'RT-87',
     origin: 'Colombo Bastian Mawatha',
     destination: 'Jaffna Central Stand',
     distanceKm: 395,
     avgDuration: '8h 00m',
-    highlightTag: 'Cross-Island Odyssey',
+    highlightTag: 'Heritage & Coastline',
     description:
-      'Spans the central plains through the ancient kingdom of Anuradhapura and across the historic Elephant Pass causeway into the Jaffna peninsula.',
+      'Connects Colombo to the historic Jaffna peninsula via Anuradhapura, crossing Elephant Pass into the northern heartland.',
     attractions: [
-      { name: 'Nallur Kandaswamy Kovil', category: 'Historic Dravidian Temple', landmark: 'Point Pedro Road' },
-      { name: 'Jaffna Star Fort', category: 'Coastal Fortification', landmark: 'Jaffna Lagoon' },
-      { name: 'Elephant Pass Causeway', category: 'Geographic Isthmus', landmark: 'A9 Highway' },
+      { name: 'Nallur Kandaswamy Kovil', category: 'Historic Hindu Temple', landmark: 'Nallur' },
+      { name: 'Jaffna Fort', category: 'Dutch Colonial Fortress', landmark: 'Jaffna Town' },
+      { name: 'Elephant Pass Causeway', category: 'Historic Gateway', landmark: 'Peninsula Neck' },
     ],
-    recommendedDeparture: '20:00 PM (Night Luxury Sleeper)',
+    recommendedDeparture: '20:00 PM (Night Cruiser Luxury)',
     fareLkr: 3200.0,
-    accentColor: 'from-purple-500/20 to-rose-500/10 border-purple-500/30',
   },
 ]
 
 export function TouristCorridorsPage() {
   return (
     <div className="space-y-6">
-      {/* Intro Header */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-950 to-slate-900 border border-indigo-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* Intro Banner */}
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-waypoint-amber" />
-            <span className="text-xs font-semibold text-waypoint-amber uppercase tracking-wider">
-              Scenic Travel Showcase (WEB-03)
-            </span>
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+            <Sun className="w-3.5 h-3.5" />
+            Curated Sri Lankan Tourist Corridors
           </div>
-          <h2 className="text-xl font-bold font-display text-white">
-            Sri Lankan Intercity Tourist Corridors
+          <h2 className="text-xl font-black text-white tracking-tight font-display">
+            Scenic Highway & Rail Connections
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            WayPoint curates high-demand travel corridors with scheduled departures, stop sequence milestones, and attraction markers designed for international and local travelers.
+          <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Standardized intercity tourist corridors with verified intermediate sightseeing waypoints, luxury coach timetables, and direct booking integrations.
           </p>
         </div>
 
-        <Link to="/routes/scheduler">
-          <Button size="sm" className="flex items-center gap-2 whitespace-nowrap">
-            <Calendar className="w-4 h-4" />
-            View Service Timetables
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/routes/scheduler">
+            <Button variant="primary" size="sm" className="font-bold gap-1.5 shadow-lg shadow-waypoint-primary/20">
+              <Calendar className="w-3.5 h-3.5" />
+              View Departure Schedules
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Corridor Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Corridors Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {CORRIDORS.map((corridor) => (
           <Card
             key={corridor.id}
-            className={`p-6 border bg-gradient-to-br ${corridor.accentColor} bg-slate-900/90 relative overflow-hidden flex flex-col justify-between`}
+            className="p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg group relative overflow-hidden"
           >
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="px-2.5 py-1 text-xs font-mono font-bold rounded bg-slate-950 text-white border border-slate-800">
-                  {corridor.routeNumber}
-                </span>
-                <span className="text-[11px] font-semibold text-waypoint-amber px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                  {corridor.highlightTag}
-                </span>
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-lg bg-waypoint-primary/10 text-waypoint-primary border border-waypoint-primary/30 font-mono font-bold text-xs">
+                    {corridor.routeNumber}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                    {corridor.highlightTag}
+                  </span>
+                </div>
+                <div className="text-xs font-mono font-semibold text-waypoint-primary">
+                  LKR {corridor.fareLkr.toLocaleString()}
+                </div>
               </div>
 
-              <h3 className="text-lg font-bold font-display text-white mb-1">
+              <h3 className="text-lg font-bold text-white mb-1.5 font-display">
                 {corridor.title}
               </h3>
 
-              <div className="flex items-center gap-2 text-sm text-slate-300 font-semibold mb-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 mb-2">
                 <span>{corridor.origin}</span>
-                <ArrowRight className="w-4 h-4 text-slate-500" />
+                <ArrowRight className="w-3.5 h-3.5 text-waypoint-primary flex-shrink-0" />
                 <span>{corridor.destination}</span>
               </div>
 
@@ -159,52 +162,44 @@ export function TouristCorridorsPage() {
                 {corridor.description}
               </p>
 
-              {/* Transit Specs */}
-              <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 mb-4 text-center">
-                <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-medium">Distance</div>
-                  <div className="text-xs font-bold text-white font-mono mt-0.5">{corridor.distanceKm} km</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-medium">Transit Time</div>
-                  <div className="text-xs font-bold text-white font-mono mt-0.5">{corridor.avgDuration}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-medium">From Rate</div>
-                  <div className="text-xs font-bold text-emerald-400 font-mono mt-0.5">Rs. {corridor.fareLkr}</div>
-                </div>
-              </div>
-
-              {/* Highlights List */}
-              <div className="space-y-2 mb-4">
-                <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5 text-indigo-400" />
-                  Key Attraction Stops:
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Waypoints & Attractions */}
+              <div className="mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                  Sightseeing Highlights & Waypoints:
+                </span>
+                <div className="grid grid-cols-2 gap-2">
                   {corridor.attractions.map((att, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-lg bg-slate-950/50 border border-slate-800/60 text-xs"
+                      className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px]"
                     >
-                      <div className="font-semibold text-slate-200">{att.name}</div>
-                      <div className="text-[10px] text-slate-500">{att.landmark}</div>
+                      <div className="font-semibold text-slate-200 truncate">{att.name}</div>
+                      <div className="text-[10px] text-slate-500 truncate">{att.category}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Bottom Actions */}
-            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-              <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                <Clock className="w-3 h-3 text-slate-500" />
-                <span>Prime departure: <strong className="text-slate-200">{corridor.recommendedDeparture}</strong></span>
+            {/* Footer metrics */}
+            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center gap-3 font-mono">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                  {corridor.distanceKm} km
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  {corridor.avgDuration}
+                </span>
               </div>
-              <Link to="/routes/catalog">
-                <Button variant="outline" size="sm" className="text-xs">
-                  Inspect Route
-                </Button>
+
+              <Link
+                to="/routes/scheduler"
+                className="text-waypoint-primary font-bold text-xs hover:underline flex items-center gap-1"
+              >
+                Book Seats <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </Card>
@@ -213,4 +208,3 @@ export function TouristCorridorsPage() {
     </div>
   )
 }
-

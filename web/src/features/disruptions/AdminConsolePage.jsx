@@ -4,6 +4,7 @@ import { useDisruptionStore } from '@/store/disruptionStore'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { TransitBadge } from '@/components/ui/TransitBadge'
+import { JsonDiffViewer } from '@/components/ui/JsonDiffViewer'
 import {
   ShieldAlert, Lock, History, Search, Filter, RefreshCw,
   ChevronDown, ChevronRight, FileCode, CheckCircle2, User,
@@ -210,33 +211,15 @@ export function AdminConsolePage() {
                   {/* Expandable State Diff Viewer */}
                   {isExpanded && (
                     <div className="p-4 bg-slate-950/90 border-t border-slate-800/80 space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Before State */}
-                        <div>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-400 block mb-1.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                            Before State Snapshot
-                          </span>
-                          <pre className="bg-slate-900 border border-slate-800 p-3 rounded-lg text-rose-300 text-[11px] font-mono overflow-x-auto whitespace-pre-wrap max-h-48">
-                            {formatJson(log.beforeStateJson)}
-                          </pre>
-                        </div>
+                      <JsonDiffViewer
+                        oldData={log.beforeStateJson}
+                        newData={log.afterStateJson}
+                        title={`State Mutation: ${log.actionType} (${log.entityName})`}
+                      />
 
-                        {/* After State */}
-                        <div>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 block mb-1.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            After State Snapshot
-                          </span>
-                          <pre className="bg-slate-900 border border-slate-800 p-3 rounded-lg text-emerald-300 text-[11px] font-mono overflow-x-auto whitespace-pre-wrap max-h-48">
-                            {formatJson(log.afterStateJson)}
-                          </pre>
-                        </div>
-                      </div>
-
-                      <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                      <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-800/60 flex items-center justify-between font-mono">
                         <span>Ledger Transaction Entry ID: {log.id}</span>
-                        <span>Immutable Record Guaranteed</span>
+                        <span className="text-emerald-400 font-bold">✓ SHA-256 Immutable Proof</span>
                       </div>
                     </div>
                   )}

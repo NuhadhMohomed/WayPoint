@@ -16,11 +16,14 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   Play,
-  RotateCcw
+  RotateCcw,
+  Printer,
+  Download
 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { TransitBadge } from '@/components/ui/TransitBadge'
+import { downloadCsv } from '../../lib/csvExport'
 import { bookingApi } from './bookingApi'
 
 /**
@@ -264,10 +267,16 @@ export function BookingManifestMonitorPage() {
         reason: cancelReason,
       })
 
-      // Update state locally
+      // Update state locally under BR-REFUND-001
       setBookings(prev => prev.map(b => {
         if (b.bookingReference === cancelModalBooking.bookingReference) {
-          const refundPct = cancelModalBooking.hoursUntilDeparture > 24 ? 0.90 : cancelModalBooking.hoursUntilDeparture >= 12 ? 0.50 : 0.0
+          const hours = cancelModalBooking.hoursUntilDeparture || 0
+          let refundPct = 0.0
+          if (hours > 24) refundPct = 0.90
+          else if (hours >= 12) refundPct = 0.70
+          else if (hours >= 2) refundPct = 0.50
+          else refundPct = 0.0
+
           return {
             ...b,
             status: 'Cancelled',
@@ -293,6 +302,19 @@ export function BookingManifestMonitorPage() {
       currency: 'LKR',
       minimumFractionDigits: 2,
     }).format(amount).replace('LKR', 'Rs.')
+  }
+
+  const handleExportCsv = () => {
+    const exportData = filteredBookings.map((b) => ({
+      BookingRef: b.bookingReference,
+      Passenger: b.passengerName,
+      Phone: b.passengerPhone,
+      Seats: Array.isArray(b.seatNumbers) ? b.seatNumbers.join('; ') : b.seatNumbers,
+      BoardingPoint: b.boardingPoint,
+      TotalFareLKR: b.totalFareAmount,
+      Status: b.status,
+    }))
+    downloadCsv(exportData, `manifest_${selectedServiceId}.csv`)
   }
 
   return (
@@ -410,13 +432,34 @@ export function BookingManifestMonitorPage() {
                   onClick={() => setStatusFilter(f)}
                   className={`px-3 py-1 rounded-md transition-all font-medium ${
                     statusFilter === f
-                      ? 'bg-waypoint-blue text-white shadow-sm'
+                      ? 'bg-waypoint-primary text-waypoint-onPrimary shadow-sm font-bold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {f}
                 </button>
               ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCsv}
+                className="gap-1.5 text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="gap-1.5 text-xs"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Print Manifest
+              </Button>
             </div>
           </div>
         </div>
@@ -723,8 +766,10 @@ export function BookingManifestMonitorPage() {
                   {cancelModalBooking.hoursUntilDeparture > 24
                     ? 'Tier 1: 90% Refund (10% platform fee)'
                     : cancelModalBooking.hoursUntilDeparture >= 12
-                    ? 'Tier 2: 50% Refund (50% late fee)'
-                    : 'Tier 3: 0% Non-refundable'}
+                    ? 'Tier 2: 70% Refund (30% late fee)'
+                    : cancelModalBooking.hoursUntilDeparture >= 2
+                    ? 'Tier 3: 50% Refund (50% late fee)'
+                    : 'Tier 4: 0% Non-refundable (< 2h)'}
                 </span>
               </div>
               <div className="border-t border-slate-800 pt-2 flex justify-between font-bold">
@@ -735,6 +780,8 @@ export function BookingManifestMonitorPage() {
                       (cancelModalBooking.hoursUntilDeparture > 24
                         ? 0.90
                         : cancelModalBooking.hoursUntilDeparture >= 12
+                        ? 0.70
+                        : cancelModalBooking.hoursUntilDeparture >= 2
                         ? 0.50
                         : 0.0)
                   )}

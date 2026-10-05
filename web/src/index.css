@@ -1,55 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 20% 98%;
-    --foreground: 224 71% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    /* High-Visibility Light Theme Canvas */
+    --background: 210 40% 98%;      /* #F8FAFC */
+    --foreground: 222 47% 11%;      /* #0F172A */
+    --card: 0 0% 100%;              /* #FFFFFF */
+    --card-foreground: 222 47% 11%; /* #0F172A */
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 215 28% 94%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Brand Tokens - Spring Green (#32DE84) & Forest Black (#042611) */
+    --primary: 149 71% 53%;         /* #32DE84 */
+    --primary-foreground: 140 81% 8%; /* #042611 - WCAG AAA >= 7:1 */
+    
+    /* Semantic Status Accents */
+    --secondary: 38 92% 50%;        /* #F59E0B Sunset Amber */
     --secondary-foreground: 222 47% 11%;
-    --muted: 215 28% 95%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 215 28% 92%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
+    --tertiary: 201 96% 39%;        /* #0284C7 Sky Blue */
+    --destructive: 0 84% 60%;       /* #EF4444 Crimson Alert */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Neutral Surfaces & Strokes */
+    --muted: 210 40% 96%;           /* #F1F5F9 */
+    --muted-foreground: 215 16% 47%;/* #64748B */
+    --accent: 149 71% 53%;
+    --accent-foreground: 140 81% 8%;
+    --border: 214 32% 91%;          /* #E2E8F0 */
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --ring: 149 71% 53%;
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 6%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 28% 17%;
-    --muted-foreground: 217 10% 65%;
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 215 28% 18%;
-    --input: 215 28% 18%;
-    --ring: 217 91% 60%;
+    /* Dark Operations Cockpit Canvas */
+    --background: 223 43% 6%;       /* #090D16 Midnight Navy */
+    --foreground: 210 40% 98%;      /* #F8FAFC High Contrast Slate */
+    --card: 223 41% 13%;            /* #131B2E Deep Navy Slate */
+    --card-foreground: 210 40% 98%; /* #F8FAFC */
+    --popover: 223 41% 13%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Brand Tokens - Spring Green (#32DE84) & Forest Black (#042611) */
+    --primary: 149 71% 53%;         /* #32DE84 */
+    --primary-foreground: 140 81% 8%; /* #042611 */
+    
+    /* Semantic Status Accents */
+    --secondary: 38 92% 50%;        /* #F59E0B Sunset Amber */
+    --secondary-foreground: 223 43% 6%;
+    --tertiary: 201 96% 39%;        /* #0284C7 Sky Blue */
+    --destructive: 0 84% 60%;       /* #EF4444 Crimson Alert */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Neutral Surfaces & Strokes */
+    --muted: 222 39% 17%;           /* #1A243B Elevated Navy Slate */
+    --muted-foreground: 215 20% 65%;/* #94A3B8 */
+    --accent: 149 71% 53%;
+    --accent-foreground: 140 81% 8%;
+    --border: 221 37% 22%;          /* #23304D Navy Border */
+    --input: 221 37% 22%;
+    --ring: 149 71% 53%;
   }
 }
 
 body {
-  @apply bg-background text-foreground font-sans antialiased;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  @apply bg-background text-foreground font-sans antialiased selection:bg-waypoint-primary selection:text-waypoint-onPrimary;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom Scrollbar for Dense Transit Tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(35, 48, 77, 0.7);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(50, 222, 132, 0.5);
+}
+
+/* Compact Cockpit Density Mode */
+.density-compact table td,
+.density-compact table th {
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+}
+
+.density-compact .density-card-padding {
+  padding: 1rem !important;
+}
+
+/* Print Styles for A4 Departure Manifest */
+@media print {
+  aside,
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-page-break {
+    page-break-after: always;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #d1d5db !important;
+    padding: 6px 8px !important;
+    color: #111827 !important;
+  }
 }
