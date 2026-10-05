@@ -7,6 +7,7 @@ import '../../../core/widgets/waypoint_card.dart';
 import '../models/journey_models.dart';
 import '../services/journey_api_service.dart';
 import '../widgets/preference_filter_sheet.dart';
+import '../widgets/ai_journey_prompt_card.dart';
 import 'journey_comparison_screen.dart';
 
 class JourneySearchScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
   JourneySearchPreferences _preferences = JourneySearchPreferences();
 
   bool _isSearching = false;
+  bool _isAiSearching = false;
 
   final List<String> _majorCities = [
     'Colombo',
@@ -160,6 +162,43 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
     );
   }
 
+  Future<void> _executeAiSearch(String objective) async {
+    setState(() => _isAiSearching = true);
+
+    try {
+      final result = await _apiService.getAiRecommendations(
+        objective: objective,
+        passengerCount: _passengerCount,
+        travelDate: _travelDate,
+      );
+
+      if (!mounted) return;
+      setState(() => _isAiSearching = false);
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => JourneyComparisonScreen(
+            originCity: _originCity,
+            destinationCity: _destinationCity,
+            travelDate: _travelDate,
+            candidates: result.candidates,
+            agentReasoning: result.agentReasoning,
+            isAiFallback: result.isAiFallback,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isAiSearching = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to get AI recommendations. Please try standard search.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
   void _setDatePreset(int daysFromNow) {
     HapticFeedback.selectionClick();
     setState(() {
@@ -194,6 +233,12 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // AI Journey Prompt Card
+            AiJourneyPromptCard(
+              isSearching: _isAiSearching,
+              onSubmit: _executeAiSearch,
+            ),
+
             // Explore Corridors Header & Carousel
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
