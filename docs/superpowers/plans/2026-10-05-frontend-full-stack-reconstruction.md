@@ -13,14 +13,32 @@
 
 **Spec:** [docs/superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md)
 
+---
+
+## 🛠️ Specialized Skills Matrix
+
+To ensure maximum engineering quality, visual excellence, and zero regressions, each task is mapped to specific specialized skills:
+
+| Domain | Assigned Skills | Purpose & Responsibilities |
+| :--- | :--- | :--- |
+| **Design System & Aesthetics** | `ui-ux-pro-max`, `frontend-design`, `web-design-guidelines` | High-density enterprise layout discipline (Sovereign UI), mobile transit aesthetics (Velora), accessible contrast tokens, 48px touch targets, micro-interactions, and Web Interface Guidelines compliance. |
+| **Stitch Integration** | `stitch::generate-design`, `stitch::react-components`, `enhance-prompt` | Structured prompt enhancement, screen generation via Stitch MCP, style token extraction into `tailwind.config.js`, modular component breakdown, and AST validation. |
+| **React Architecture** | `react-patterns`, `react-ui-patterns`, `react-best-practices` | Query key factories, optimistic cache updates with rollback, custom hook abstraction (`usePagination`, `useDebounce`), re-render prevention, and explicit 18-state UI machines. |
+| **Flutter Architecture** | `flutter-expert` | BLoC / Cubit event streams, immutable state classes, Dio interceptors with JWT refresh, hardware camera scanner with torch, secure storage, and pinch-to-zoom interactive viewer. |
+| **Testing & Verification** | `test-driven-development`, `verification-before-completion`, `code-reviewer`, `systematic-debugging` | Red-Green-Refactor test cycles, component rendering tests, widget tests, cross-platform E2E workflow verification, and pre-completion audits. |
+
+---
+
 ## Global Constraints
 
-- Never implement only the happy path: every interactive view must handle Loading, Skeleton, Empty, No-Results, Error, Retry, Offline, Unauthorized, Session-Expired, 404, Processing, Success, Failure, Read-Only, and Destructive Confirmation states.
-- Authoritative API base URL is `http://localhost:5010/api/v1`. Clients must NEVER connect directly to PostgreSQL.
-- React Web application must use Sovereign UI design tokens from Stitch project `3726083092669162278` (Geist font, `#4F46E5` primary, slate canvas `#F8FAFC`, 4px grid).
-- Flutter Mobile application must use Velora design tokens from Stitch project `15831387990617273223` (Plus Jakarta Sans font, `#0D5C46` deep jade primary, `#2BB673` secondary, pill geometries).
-- Concurrency tokens (`RowVersion`) and 10-minute countdown timers must be respected for temporary seat holds.
-- Sensitive credentials and JWT tokens must be stored in `localStorage` with refresh rotation on Web and `FlutterSecureStorage` (AES) on Mobile.
+- **20-Rule Production-Readiness Gate**: Never implement only the happy path: every interactive view must handle Loading, Skeleton, Empty, No-Results, Error, Retry, Offline, Unauthorized, Session-Expired, 404, Processing, Success, Failure, Read-Only, and Destructive Confirmation states.
+- **Authoritative API Base URL**: `http://localhost:5010/api/v1`. Clients must NEVER connect directly to PostgreSQL.
+- **Web Design Tokens**: Sovereign UI (Geist font, `#4F46E5` primary, slate canvas `#F8FAFC`, 4px grid) from Stitch project `3726083092669162278`.
+- **Mobile Design Tokens**: Velora Transit (Plus Jakarta Sans font, `#0D5C46` deep jade primary, `#2BB673` secondary, pill geometries) from Stitch project `15831387990617273223`.
+- **Seat Reservation Locking**: Concurrency tokens (`RowVersion`) and 10-minute countdown timers must be respected for temporary seat holds.
+- **Security & Storage**: JWT tokens stored in `localStorage` with refresh rotation on Web; `FlutterSecureStorage` (AES) on Mobile.
+
+---
 
 ## Review Focus
 
@@ -36,6 +54,8 @@
 
 ### Task 1: Scaffolding, Core UI Primitives & Design System Tokens
 
+**Skills Applied:** `stitch::generate-design`, `ui-ux-pro-max`, `react-ui-patterns`, `flutter-expert`, `test-driven-development`
+
 **Files:**
 - Create: `web/package.json`, `web/vite.config.js`, `web/tailwind.config.js`, `web/src/index.css`, `web/src/main.jsx`, `web/src/App.jsx`
 - Create: `web/src/components/ui/Button.jsx`, `Input.jsx`, `Card.jsx`, `Modal.jsx`, `DataTable.jsx`, `Skeleton.jsx`, `EmptyState.jsx`, `ErrorState.jsx`, `OfflineBanner.jsx`, `TransitBadge.jsx`, `CommandPalette.jsx`
@@ -43,28 +63,29 @@
 - Create: `mobile/lib/core/widgets/waypoint_button.dart`, `waypoint_card.dart`, `shimmer_loading.dart`, `empty_state_view.dart`, `transit_badge.dart`
 - Test: `web/src/components/ui/__tests__/Primitives.test.jsx`, `mobile/test/core/widgets_test.dart`
 
-- [ ] 1.1 Scaffold `web/` with Vite, React 18, Tailwind CSS v3, Lucide React, and TanStack Query.
-- [ ] 1.2 Implement Sovereign UI tokens in `web/tailwind.config.js` and base CSS in `web/src/index.css`.
-- [ ] 1.3 Build modular Web UI primitives handling Loading, Disabled, and Error states (`Button`, `Input`, `Card`, `Modal`, `DataTable`, `Skeleton`, `EmptyState`, `ErrorState`, `OfflineBanner`, `TransitBadge`, `CommandPalette`).
-- [ ] 1.4 Scaffold `mobile/` with Flutter 3.x, configure `pubspec.yaml` with `flutter_bloc`, `dio`, `flutter_secure_storage`, `mobile_scanner`, `qr_flutter`, `intl`.
-- [ ] 1.5 Implement Velora theme system in `mobile/lib/core/theme/app_theme.dart` and build reusable Flutter widgets (`WaypointButton`, `WaypointCard`, `ShimmerLoading`, `EmptyStateView`, `TransitBadge`).
-- [ ] 1.6 Run component tests: `npm test` in `web/` and `flutter test` in `mobile/`.
-- [ ] 1.7 Commit: `git commit -m "feat(ui): scaffold web and mobile projects with design tokens and UI primitives"`
+- [ ] 1.1 Use `stitch::generate-design` and `ui-ux-pro-max` to define and verify Sovereign UI design tokens in `web/tailwind.config.js` and Velora tokens in `mobile/lib/core/theme/app_theme.dart`.
+- [ ] 1.2 Implement modular Web UI primitives using `react-ui-patterns` handling Loading, Disabled, Empty, and Error states (`Button`, `Input`, `Card`, `Modal`, `DataTable`, `Skeleton`, `EmptyState`, `ErrorState`, `OfflineBanner`, `TransitBadge`, `CommandPalette`).
+- [ ] 1.3 Implement mobile widgets using `flutter-expert` with tactile feedback, accessibility labels, and Velora styling (`WaypointButton`, `WaypointCard`, `ShimmerLoading`, `EmptyStateView`, `TransitBadge`).
+- [ ] 1.4 Write unit tests for all UI primitives using `test-driven-development`.
+- [ ] 1.5 Run tests: `npm test` in `web/` and `flutter test` in `mobile/`.
+- [ ] 1.6 Commit: `git commit -m "feat(ui): complete design system tokens and core UI primitives for web and mobile"`
 
 ---
 
 ### Task 2: Authentication, Security & Navigation Shells
+
+**Skills Applied:** `react-patterns`, `flutter-expert`, `api-security-testing`, `test-driven-development`
 
 **Files:**
 - Create: `web/src/api/client.js`, `web/src/store/authStore.js`, `web/src/store/themeStore.js`, `web/src/components/ProtectedRoute.jsx`, `web/src/layouts/DashboardLayout.jsx`, `web/src/pages/LoginPage.jsx`, `web/src/pages/RegisterPage.jsx`, `web/src/pages/NotFoundPage.jsx`
 - Create: `mobile/lib/core/network/api_client.dart`, `mobile/lib/core/storage/secure_storage_service.dart`, `mobile/lib/features/auth/bloc/auth_cubit.dart`, `mobile/lib/features/auth/screens/passenger_auth_screen.dart`, `mobile/lib/features/navigation/screens/auth_gate.dart`, `mobile/lib/features/navigation/screens/passenger_navigation_shell.dart`, `mobile/lib/features/navigation/screens/conductor_navigation_shell.dart`
 - Test: `web/src/pages/__tests__/AuthAndOverview.test.jsx`, `mobile/test/features/auth/passenger_auth_test.dart`
 
-- [ ] 2.1 Implement Axios/Fetch client in `web/src/api/client.js` with JWT request interceptor and 401 response refresh handling.
-- [ ] 2.2 Build Zustand `authStore.js` and `ProtectedRoute.jsx` for RBAC (`RequireAdmin`, `RequireOperator`, `RequireManager`).
-- [ ] 2.3 Implement Web `LoginPage.jsx` and `RegisterPage.jsx` with input validation, password toggle, loading spinner, and error banners.
-- [ ] 2.4 Implement `DashboardLayout.jsx` with collapsible sidebar, active route indicators, user profile pill, theme toggle, and `Ctrl+K` Command Palette.
-- [ ] 2.5 Implement Dio `api_client.dart` and `secure_storage_service.dart` in Flutter with token persistence.
+- [ ] 2.1 Implement Axios client in `web/src/api/client.js` with JWT token injection, automated 401 refresh rotation, and structured ProblemDetails error mapping.
+- [ ] 2.2 Build Zustand `authStore.js` and `ProtectedRoute.jsx` enforcing RBAC (`RequireAdmin`, `RequireOperator`, `RequireManager`).
+- [ ] 2.3 Implement Web `LoginPage.jsx` and `RegisterPage.jsx` with input limits, inline validation, password show/hide, loading spinner, and double-submit prevention.
+- [ ] 2.4 Implement `DashboardLayout.jsx` with collapsible navigation, user role pill, theme switcher, and `Ctrl+K` Command Palette.
+- [ ] 2.5 Implement Dio `api_client.dart` and AES-encrypted `secure_storage_service.dart` in Flutter using `flutter-expert`.
 - [ ] 2.6 Implement `AuthCubit` and `passenger_auth_screen.dart` with TabBar for Sign In and Sign Up.
 - [ ] 2.7 Build `PassengerNavigationShell.dart` (Search, Wallet, Alerts, Settings) and `ConductorNavigationShell.dart` (Scanner, Manifest).
 - [ ] 2.8 Verify auth tests in Web and Mobile.
@@ -73,6 +94,8 @@
 ---
 
 ### Task 3: Component 1 — Journey Planning & Route Catalogue (Sethum)
+
+**Skills Applied:** `stitch::react-components`, `ui-ux-pro-max`, `react-best-practices`, `flutter-expert`, `test-driven-development`
 
 **Files:**
 - Create: `web/src/features/journey/journeyApi.js`, `RouteManagerPage.jsx`, `ServiceSchedulerPage.jsx`, `TouristCorridorsPage.jsx`, `JourneyHubLayout.jsx`
@@ -84,15 +107,17 @@
 - [ ] 3.3 Build `ServiceSchedulerPage.jsx` with timetable calendar, departure board, and bus/driver assignment selector.
 - [ ] 3.4 Build `TouristCorridorsPage.jsx` highlighting scenic routes (Colombo-Ella, Kandy, Galle) with tags.
 - [ ] 3.5 Implement `journey_api_service.dart` and `journey_models.dart` in Flutter connecting to `/api/v1/journeys/search`.
-- [ ] 3.6 Build `journey_search_screen.dart` with dual origin/destination swap, date picker, and quick city chips.
+- [ ] 3.6 Build `journey_search_screen.dart` using Velora tokens with dual origin/destination swap, date picker, and quick city chips.
 - [ ] 3.7 Build `preference_filter_sheet.dart` for AC, Wi-Fi, and arrival deadline filtering.
-- [ ] 3.8 Build `journey_comparison_screen.dart` rendering direct and multi-hop candidate cards with fares and amenities.
+- [ ] 3.8 Build `journey_comparison_screen.dart` rendering direct and multi-hop candidate cards with fares, transfer times, and seat counters.
 - [ ] 3.9 Run tests for journey features on Web and Mobile.
 - [ ] 3.10 Commit: `git commit -m "feat(journey): implement route manager, service scheduler, and mobile journey search"`
 
 ---
 
 ### Task 4: Component 2 — Fleet Matrix, Seat Layout Designer & Seat Picker (Nuhadh)
+
+**Skills Applied:** `stitch::react-components`, `frontend-design`, `ui-ux-pro-max`, `flutter-expert`, `test-driven-development`
 
 **Files:**
 - Create: `web/src/features/fleet/fleetApi.js`, `FleetMatrixBuilderPage.jsx`, `SeatLayoutDesignerPage.jsx`, `DriverRosteringPage.jsx`, `FleetHubLayout.jsx`, `web/src/pages/fleet/FleetReviewsDashboardPage.jsx`
@@ -113,6 +138,8 @@
 ---
 
 ### Task 5: Component 3 — Booking, Payment Sandbox, Ticket Wallet & Manifest (Mithila)
+
+**Skills Applied:** `react-ui-patterns`, `stitch::react-components`, `flutter-expert`, `test-driven-development`
 
 **Files:**
 - Create: `web/src/features/bookings/bookingApi.js`, `OperatorDashboardPage.jsx`, `BookingManifestMonitorPage.jsx`, `web/src/lib/csvExport.js`
@@ -135,6 +162,8 @@
 
 ### Task 6: Component 4 — Disruption Intake, AI Approval Workbench & Conductor Ops (Dineth)
 
+**Skills Applied:** `react-patterns`, `flutter-expert`, `stitch::generate-design`, `test-driven-development`
+
 **Files:**
 - Create: `web/src/features/disruptions/disruptionApi.js`, `DisruptionIntakePage.jsx`, `ManagerApprovalWorkbenchPage.jsx`, `AiObservabilityPage.jsx`, `ServiceAlertBroadcastPage.jsx`, `DisruptionHubLayout.jsx`
 - Create: `mobile/lib/features/disruption/services/disruption_service.dart`, `mobile/lib/features/disruption/screens/disruption_alert_screen.dart`, `mobile/lib/features/disruption/widgets/disruption_alert_card.dart`
@@ -156,6 +185,8 @@
 
 ### Task 7: Admin Governance, Production-Readiness Gate Verification & E2E Cross-Platform Audit
 
+**Skills Applied:** `web-design-guidelines`, `e2e-testing-patterns`, `verification-before-completion`, `code-reviewer`
+
 **Files:**
 - Create: `web/src/features/admin/adminApi.js`, `AdminUsersPage.jsx`, `AdminHubLayout.jsx`, `ChangeRoleModal.jsx`, `ProvisionUserModal.jsx`
 - Create: `tests/e2e/CrossPlatformWorkflow.test.cs` or Playwright test script `web/e2e/cross-platform.spec.js`
@@ -164,6 +195,6 @@
 - [ ] 7.1 Implement `adminApi.js` connecting to `/api/v1/admin/users` and `/api/v1/admin/users/{id}/role`.
 - [ ] 7.2 Build `AdminUsersPage.jsx` with user directory table, role provisioning modal, and role change dialog with destructive confirmation.
 - [ ] 7.3 Run full test suites across all tiers: `dotnet test backend/WayPoint.sln`, `npm test` in `web/`, `flutter test` in `mobile/`.
-- [ ] 7.4 Execute complete End-to-End trace: Passenger Search → Seat Hold (10m ticker) → Payment Sandbox → Disruption Trigger → AI Rebooking → Manager Workbench Approval → Passenger Rebooking Acceptance → Conductor QR Scan.
+- [ ] 7.4 Execute complete End-to-End trace: Passenger Search → Seat Hold (10m ticker) → Payment Sandbox → Disruption Incident → AI Rebooking → Manager Workbench Approval → Passenger Rebooking Acceptance → Conductor QR Scan.
 - [ ] 7.5 Audit the entire codebase against all 20 rules of the Production-Readiness Gate (verify absence of placeholders, dead buttons, raw error messages, layout shifts, or missing states).
 - [ ] 7.6 Commit: `git commit -m "feat(admin): complete admin governance, E2E cross-platform verification, and production audit"`
