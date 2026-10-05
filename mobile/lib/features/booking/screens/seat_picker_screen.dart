@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
@@ -8,6 +8,10 @@ import '../../fleet/bloc/seat_picker_bloc.dart';
 import '../../fleet/data/fleet_api_service.dart';
 import '../models/booking_models.dart';
 import 'payment_checkout_screen.dart';
+import '../../auth/bloc/auth_cubit.dart';
+import '../../auth/bloc/auth_state.dart';
+import '../../auth/screens/passenger_auth_screen.dart';
+import '../widgets/auth_prompt_modal.dart';
 
 class SeatPickerScreen extends StatelessWidget {
   final String serviceId;
@@ -373,6 +377,25 @@ class _QuickSelectionBar extends StatelessWidget {
                   ? null
                   : () {
                       HapticFeedback.mediumImpact();
+                      final authState = context.read<AuthCubit>().state;
+                      if (authState is! Authenticated) {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          builder: (bottomSheetContext) => AuthPromptModal(
+                            onSignIn: () {
+                              Navigator.pop(bottomSheetContext);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PassengerAuthScreen()),
+                              );
+                            },
+                            onCancel: () => Navigator.pop(bottomSheetContext),
+                          ),
+                        );
+                        return;
+                      }
                       context.read<SeatPickerBloc>().add(const HoldSeats());
                     },
               style: ElevatedButton.styleFrom(

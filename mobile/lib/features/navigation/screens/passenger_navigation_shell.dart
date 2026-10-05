@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/models/auth_models.dart';
+import '../../auth/screens/passenger_auth_screen.dart';
 
 import '../../journey/screens/journey_search_screen.dart';
 import '../../booking/screens/seat_picker_screen.dart';
@@ -12,9 +13,9 @@ import '../../settings/screens/passenger_settings_screen.dart';
 import '../../fleet/data/fleet_api_service.dart';
 
 class PassengerNavigationShell extends StatefulWidget {
-  final UserModel user;
+  final UserModel? user;
 
-  const PassengerNavigationShell({super.key, required this.user});
+  const PassengerNavigationShell({super.key, this.user});
 
   @override
   State<PassengerNavigationShell> createState() => _PassengerNavigationShellState();
@@ -110,6 +111,8 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
   }
 
   Widget _buildProfileTab(BuildContext context) {
+    final user = widget.user;
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -121,7 +124,9 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
                 radius: 30,
                 backgroundColor: AppTheme.primaryColor,
                 child: Text(
-                  widget.user.fullName.isNotEmpty ? widget.user.fullName[0].toUpperCase() : 'U',
+                  user != null && user.fullName.isNotEmpty
+                      ? user.fullName[0].toUpperCase()
+                      : 'G',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
@@ -131,11 +136,11 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.user.fullName,
+                      user != null ? user.fullName : 'Guest Explorer',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      widget.user.email,
+                      user != null ? user.email : 'Explore routes and schedules freely',
                       style: TextStyle(color: Colors.grey[500], fontSize: 13),
                     ),
                     const SizedBox(height: 4),
@@ -146,7 +151,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        widget.user.role.toUpperCase(),
+                        (user != null ? user.role : 'GUEST').toUpperCase(),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -185,16 +190,26 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
           const Spacer(),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.read<AuthCubit>().logout(),
-              icon: const Icon(Icons.logout, color: AppTheme.errorColor),
-              label: const Text('Sign Out', style: TextStyle(color: AppTheme.errorColor)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.errorColor),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+            child: user != null
+                ? OutlinedButton.icon(
+                    onPressed: () => context.read<AuthCubit>().logout(),
+                    icon: const Icon(Icons.logout, color: AppTheme.errorColor),
+                    label: const Text('Sign Out', style: TextStyle(color: AppTheme.errorColor)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppTheme.errorColor),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  )
+                : ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PassengerAuthScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.login),
+                    label: const Text('Sign In / Register'),
+                  ),
           ),
         ],
       ),
