@@ -130,64 +130,71 @@ class _ConductorScannerScreenState extends State<ConductorScannerScreen> {
 
                 // Scan target overlay with corner reticles
                 if (state is ScannerReady)
-                  Column(
-                    children: [
-                      const SizedBox(height: 40),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 24),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.65),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
+                  SafeArea(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.qr_code_2, color: Color(0xFF32DE84), size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Align digital or printed QR within frame',
-                              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                            const SizedBox(height: 12),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 24),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.65),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.qr_code_2, color: Color(0xFF32DE84), size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Align digital or printed QR within frame',
+                                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: Container(
+                                width: 220,
+                                height: 220,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFF32DE84), width: 2.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF32DE84).withOpacity(0.2),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Manual reference entry fallback button
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showManualEntryDialog(context),
+                                icon: const Icon(Icons.keyboard_outlined, size: 20),
+                                label: const Text('Enter Booking Ref Manually'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.black.withOpacity(0.75),
+                                  foregroundColor: Colors.white,
+                                  side: const BorderSide(color: Color(0xFF32DE84), width: 1.5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const Spacer(),
-                      Center(
-                        child: Container(
-                          width: 260,
-                          height: 260,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF32DE84), width: 2.5),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF32DE84).withOpacity(0.2),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      // Manual reference entry fallback button
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 32.0),
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showManualEntryDialog(context),
-                          icon: const Icon(Icons.keyboard_outlined, size: 20),
-                          label: const Text('Enter Booking Ref Manually'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black.withOpacity(0.75),
-                            foregroundColor: Colors.white,
-                            side: const BorderSide(color: Color(0xFF32DE84), width: 1.5),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
 
                 // Loading overlay

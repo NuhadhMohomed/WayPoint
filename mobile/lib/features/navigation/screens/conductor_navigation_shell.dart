@@ -4,6 +4,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/models/auth_models.dart';
 
+import '../../fleet/screens/conductor_scanner_screen.dart';
+import '../../fleet/screens/conductor_manifest_screen.dart';
+
 class ConductorNavigationShell extends StatefulWidget {
   final UserModel user;
 
@@ -19,18 +22,10 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      // 0: Boarding QR Scanner (Replaced in Task 6)
-      _buildStaffTab(
-        title: 'Boarding Pass Scanner',
-        subtitle: 'Scan passenger QR codes to validate tickets offline/online',
-        icon: Icons.qr_code_scanner_rounded,
-      ),
-      // 1: Manifest Inspection
-      _buildStaffTab(
-        title: 'Passenger Manifest',
-        subtitle: 'Live verified passenger roster & unboarded seats',
-        icon: Icons.list_alt_rounded,
-      ),
+      // 0: Boarding QR Scanner (Component 4 - Dineth)
+      const ConductorScannerScreen(),
+      // 1: Manifest Inspection (Component 3 - Mithila / Component 4)
+      const ConductorManifestScreen(),
       // 2: Operational Dispatch & Logout
       _buildStaffSettingsTab(context),
     ];

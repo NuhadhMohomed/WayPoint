@@ -24,6 +24,18 @@ import { FleetReviewsDashboardPage } from './pages/fleet/FleetReviewsDashboardPa
 import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
 import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
 
+// Component 4: Disruption & AI Ops (Dineth)
+import { DisruptionHubLayout } from './features/disruptions/DisruptionHubLayout'
+import { DisruptionIntakePage } from './features/disruptions/DisruptionIntakePage'
+import { ManagerApprovalWorkbenchPage } from './features/disruptions/ManagerApprovalWorkbenchPage'
+import { ServiceAlertBroadcastPage } from './features/disruptions/ServiceAlertBroadcastPage'
+import { AiObservabilityPage } from './features/disruptions/AiObservabilityPage'
+import { AdminConsolePage } from './features/disruptions/AdminConsolePage'
+
+// Platform Governance (Admin)
+import { AdminHubLayout } from './features/admin/AdminHubLayout'
+import { AdminUsersPage } from './features/admin/AdminUsersPage'
+
 export function App() {
   return (
     <Routes>
@@ -57,14 +69,21 @@ export function App() {
           <Route path="/bookings/manifest" element={<BookingManifestMonitorPage />} />
           <Route path="/bookings/operator" element={<OperatorDashboardPage />} />
 
-          {/* Component 4: Disruption & AI Ops */}
-          <Route path="/disruptions/intake" element={<div className="p-6">Disruption Intake</div>} />
-          <Route path="/disruptions/approvals" element={<div className="p-6">Manager Approvals</div>} />
-          <Route path="/disruptions/alerts" element={<div className="p-6">Service Alerts</div>} />
-          <Route path="/disruptions/ai-traces" element={<div className="p-6">AI Observability</div>} />
+          {/* Component 4: Disruption & AI Ops (Dineth) */}
+          <Route path="/disruptions" element={<DisruptionHubLayout />}>
+            <Route index element={<Navigate to="/disruptions/intake" replace />} />
+            <Route path="intake" element={<DisruptionIntakePage />} />
+            <Route path="approvals" element={<ManagerApprovalWorkbenchPage />} />
+            <Route path="alerts" element={<ServiceAlertBroadcastPage />} />
+            <Route path="ai-traces" element={<AiObservabilityPage />} />
+            <Route path="admin" element={<AdminConsolePage />} />
+          </Route>
 
-          {/* Governance */}
-          <Route path="/admin/users" element={<div className="p-6">User Governance</div>} />
+          {/* Platform Governance */}
+          <Route path="/admin" element={<AdminHubLayout />}>
+            <Route index element={<Navigate to="/admin/users" replace />} />
+            <Route path="users" element={<AdminUsersPage />} />
+          </Route>
         </Route>
       </Route>
 

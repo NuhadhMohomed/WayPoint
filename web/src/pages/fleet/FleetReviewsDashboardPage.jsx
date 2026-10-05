@@ -51,7 +51,7 @@ const DEMO_REVIEWS = [
   },
 ]
 
-export default function FleetReviewsDashboardPage() {
+export function FleetReviewsDashboardPage() {
   const { entityType, entityId } = useParams() // entityType can be 'bus' or 'driver'
   const [reviews, setReviews] = useState([])
   const [summary, setSummary] = useState(null)
@@ -263,3 +263,5 @@ export default function FleetReviewsDashboardPage() {
     </div>
   )
 }
+
+export default FleetReviewsDashboardPage
