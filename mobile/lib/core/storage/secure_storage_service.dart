@@ -10,6 +10,16 @@ class SecureStorageService {
   static const String _tokenKey = 'waypoint_auth_token';
   static const String _refreshTokenKey = 'waypoint_refresh_token';
   static const String _userKey = 'waypoint_user_profile';
+  static const String _onboardingKey = 'waypoint_has_completed_onboarding';
+
+  Future<bool> isOnboardingCompleted() async {
+    final val = await _storage.read(key: _onboardingKey);
+    return val == 'true';
+  }
+
+  Future<void> setOnboardingCompleted({bool completed = true}) async {
+    await _storage.write(key: _onboardingKey, value: completed ? 'true' : 'false');
+  }
 
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
