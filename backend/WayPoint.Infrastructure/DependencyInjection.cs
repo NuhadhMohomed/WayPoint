@@ -54,6 +54,14 @@ public static class DependencyInjection
         // Passenger Notifications
         services.AddScoped<INotificationService, NotificationService>();
 
+        // AI Microservice Gateway Client
+        var aiBaseUrl = configuration["AI_SERVICE_URL"] ?? configuration["AiSubsystem:BaseUrl"] ?? "http://localhost:8000";
+        services.AddHttpClient<IAiRecommendationClient, AiRecommendationClient>(client =>
+        {
+            client.BaseAddress = new Uri(aiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         return services;
     }
 
