@@ -6,10 +6,19 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+
+// Component 1: Routes & Network (Sethum)
 import { JourneyHubLayout } from './features/journey/JourneyHubLayout'
 import { RouteManagerPage } from './features/journey/RouteManagerPage'
 import { ServiceSchedulerPage } from './features/journey/ServiceSchedulerPage'
 import { TouristCorridorsPage } from './features/journey/TouristCorridorsPage'
+
+// Component 2: Fleet & Feasibility (Nuhadh)
+import { FleetHubLayout } from './features/fleet/FleetHubLayout'
+import { FleetMatrixBuilderPage } from './features/fleet/FleetMatrixBuilderPage'
+import { SeatLayoutDesignerPage } from './features/fleet/SeatLayoutDesignerPage'
+import { DriverRosteringPage } from './features/fleet/DriverRosteringPage'
+import { FleetReviewsDashboardPage } from './pages/fleet/FleetReviewsDashboardPage'
 
 export function App() {
   return (
@@ -30,11 +39,14 @@ export function App() {
             <Route path="corridors" element={<TouristCorridorsPage />} />
           </Route>
 
-          {/* Component 2: Fleet & Feasibility */}
-          <Route path="/fleet/buses" element={<div className="p-6">Fleet Matrix</div>} />
-          <Route path="/fleet/layouts" element={<div className="p-6">Seat Layout Designer</div>} />
-          <Route path="/fleet/drivers" element={<div className="p-6">Driver Rostering</div>} />
-          <Route path="/fleet/reviews" element={<div className="p-6">Fleet Reviews</div>} />
+          {/* Component 2: Fleet & Feasibility (Nuhadh) */}
+          <Route path="/fleet" element={<FleetHubLayout />}>
+            <Route index element={<Navigate to="/fleet/buses" replace />} />
+            <Route path="buses" element={<FleetMatrixBuilderPage />} />
+            <Route path="layouts" element={<SeatLayoutDesignerPage />} />
+            <Route path="drivers" element={<DriverRosteringPage />} />
+            <Route path="reviews" element={<FleetReviewsDashboardPage />} />
+          </Route>
 
           {/* Component 3: Manifest & Ticketing */}
           <Route path="/bookings" element={<div className="p-6">Passenger Manifest</div>} />

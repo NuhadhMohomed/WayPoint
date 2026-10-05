@@ -59,7 +59,7 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
     });
 
     try {
-      final token = widget.authToken ?? await SecureStorageService.getToken();
+      final token = widget.authToken ?? await SecureStorageService().getToken();
       const baseUrl = ApiConstants.baseUrl;
       final isBus = widget.entityType.toLowerCase() == 'bus';
       final endpoint = isBus 

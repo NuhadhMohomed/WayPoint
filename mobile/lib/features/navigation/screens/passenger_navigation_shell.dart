@@ -6,6 +6,9 @@ import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/models/auth_models.dart';
 
 import '../../journey/screens/journey_search_screen.dart';
+import '../../booking/screens/seat_picker_screen.dart';
+import '../../booking/screens/ticket_wallet_screen.dart';
+import '../../fleet/data/fleet_api_service.dart';
 
 class PassengerNavigationShell extends StatefulWidget {
   final UserModel user;
@@ -26,21 +29,14 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
     final List<Widget> pages = [
       // 0: Journey Search (Component 1 - Sethum)
       const JourneySearchScreen(),
-      // 1: Seat Matrix (Replaced in Task 4)
-      _buildPlaceholderTab(
-        title: 'Seat Layout & Coach Feasibility',
-        subtitle: 'Interactive seat selection matrix',
-        icon: Icons.event_seat_rounded,
-        actionText: 'Select Coach',
+      // 1: Seat Matrix (Component 2 - Nuhadh)
+      SeatPickerScreen(
+        serviceId: 'srv-colombo-galle-01',
+        apiService: FleetApiService(),
       ),
-      // 2: Ticket Wallet (Replaced in Task 5)
-      _buildPlaceholderTab(
-        title: 'My Tickets Wallet',
-        subtitle: 'Active QR boarding passes & history',
-        icon: Icons.confirmation_number_rounded,
-        actionText: 'View E-Tickets',
-      ),
-      // 3: Profile & Disruption Alerts
+      // 2: Ticket Wallet (Component 3 - Mithila)
+      const TicketWalletScreen(),
+      // 3: Profile & Settings
       _buildProfileTab(context, isDark),
     ];
 
