@@ -219,3 +219,4 @@ docs/reference/WayPoint_Revised_Project_Proposal.docx
 *.sql.bak
 *.sql.tmp
 
+tools/capture_all_screenshots.js

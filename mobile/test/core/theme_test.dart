@@ -22,7 +22,7 @@ void main() {
 
   test('ThemeCubit initializes and changes theme modes', () {
     final cubit = ThemeCubit();
-    expect(cubit.state, ThemeMode.system);
+    expect(cubit.state, ThemeMode.light);
     cubit.setTheme(ThemeMode.dark);
     expect(cubit.state, ThemeMode.dark);
     cubit.setTheme(ThemeMode.light);

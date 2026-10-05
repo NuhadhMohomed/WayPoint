@@ -8,7 +8,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
 
   ThemeCubit({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage(),
-        super(ThemeMode.system) {
+        super(ThemeMode.light) {
     _loadTheme();
   }
 
