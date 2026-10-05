@@ -108,8 +108,9 @@ To guarantee that 100% of backend capabilities are exposed, all 22 controllers a
   - `ServiceSchedulerPage.jsx`: Calendar and timetable departure planner assigning routes, departure times, buses, and drivers, with base fare pricing rules.
 - **Mobile UI**:
   - `JourneySearchScreen.dart`: Sri Lankan origin/destination autocomplete dropdowns, departure date picker, and passenger count selector.
+  - `AiJourneyAssistantWidget.dart`: Interactive natural-language prompt card anchored at the top of the search view. Passengers can type or tap quick-prompt chips (e.g., *"Colombo to Ella scenic stop"*, *"Express AC to Galle before noon"*, *"Family trip with 30m Kandy transfer"*). Invokes the `JourneyAnalysisAgent` to return ranked multi-leg itineraries with natural-language reasoning.
   - `PreferenceFilterSheet.dart`: Bottom sheet slider controls for departure time windows, budget limits, direct-only toggle, and bus amenity checkboxes (AC, Wi-Fi, USB, Reclining).
-  - `JourneyComparisonScreen.dart`: Candidate journey cards showing departure/arrival times, total duration, direct vs connecting badge, and transfer window safety alert (green if $\ge 20$ min, red warning if $< 20$ min).
+  - `JourneyComparisonScreen.dart`: Candidate journey cards showing departure/arrival times, total duration, direct vs connecting badge, AI reasoning pill ("Optimized for scenic corridor & 40m tea transfer"), and transfer window safety alert (green if $\ge 20$ min, red warning if $< 20$ min).
 
 ### 3.3 Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
 - **Endpoints**:
@@ -213,6 +214,7 @@ To elevate the system from an academic project into an elite transit platform, t
 6. **Multi-Language Switcher (Sinhala, Tamil, English)**: Instant client-side localization toggle allowing passengers to switch interface languages with zero page reload.
 7. **Conductor Fast-Scan Torch & Audio Confirmation**: Instant flashlight toggle on camera scanner screen with audible "success chime" and green screen flash on valid ticket scan.
 8. **Passenger Fare & Luggage Calculator Widget**: Client-side widget showing instant fare breakdowns, group ticket estimates, and extra baggage fees before checkout.
+9. **AI Smart Journey Assistant Prompt Widget**: Interactive conversational card on the mobile home screen where passengers can type or tap natural language travel objectives (e.g., *"Colombo to Ella with scenic tea stop"*, *"Fastest luxury AC to Kandy tomorrow morning"*). Calls the `JourneyAnalysisAgent` to generate personalized itineraries with reasoning badges and safe transfer windows.
 
 ---
 
