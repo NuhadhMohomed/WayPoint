@@ -48,8 +48,7 @@ class WayPointApp extends StatelessWidget {
             title: 'WayPoint Transit',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeMode,
+            themeMode: ThemeMode.light,
             home: const AuthGate(),
           );
         },

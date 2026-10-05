@@ -53,11 +53,9 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E293B)
-                : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -97,8 +95,7 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textMuted = isDark ? Colors.grey[400] : Colors.grey[600];
+    final textMuted = Colors.grey[600];
 
     return Scaffold(
       appBar: AppBar(
@@ -152,40 +149,37 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
             ),
             const SizedBox(height: 8),
             WayPointCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text('Theme Mode', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text('Choose your preferred visual theme across the app.', style: TextStyle(fontSize: 12, color: textMuted)),
-                  const SizedBox(height: 14),
-                  BlocBuilder<ThemeCubit, ThemeMode>(
-                    builder: (context, currentMode) {
-                      return SegmentedButton<ThemeMode>(
-                        segments: const [
-                          ButtonSegment(
-                            value: ThemeMode.system,
-                            icon: Icon(Icons.brightness_auto, size: 18),
-                            label: Text('System'),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.light,
-                            icon: Icon(Icons.light_mode, size: 18),
-                            label: Text('Light'),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.dark,
-                            icon: Icon(Icons.dark_mode, size: 18),
-                            label: Text('Dark'),
-                          ),
-                        ],
-                        selected: {currentMode},
-                        onSelectionChanged: (selected) {
-                          HapticFeedback.selectionClick();
-                          context.read<ThemeCubit>().setThemeMode(selected.first);
-                        },
-                      );
-                    },
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.wb_sunny_rounded, color: AppTheme.primaryColor, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Visual Theme: Sovereign Light', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text('Authoritative Sri Lankan transit light theme active.', style: TextStyle(fontSize: 12, color: textMuted)),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Light Active',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    ),
                   ),
                 ],
               ),

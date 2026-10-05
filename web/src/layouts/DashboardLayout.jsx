@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useThemeStore } from '../store/themeStore'
 import { OfflineBanner } from '../components/ui/OfflineBanner'
 import { CommandPalette } from '../components/ui/CommandPalette'
 import { KeyboardShortcutsModal } from '../components/ui/KeyboardShortcutsModal'
@@ -22,8 +21,6 @@ import {
   Cpu,
   ShieldAlert,
   LogOut,
-  Moon,
-  Sun,
   Search,
   Menu,
   X,
@@ -32,7 +29,6 @@ import {
 
 export function DashboardLayout() {
   const { user, logout } = useAuthStore()
-  const { isDarkMode, toggleDarkMode } = useThemeStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
@@ -214,15 +210,6 @@ export function DashboardLayout() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={toggleDarkMode}
-                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 transition-colors"
-                title="Toggle Theme"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-              </button>
-
               <button
                 type="button"
                 onClick={() => setIsShortcutsOpen(true)}

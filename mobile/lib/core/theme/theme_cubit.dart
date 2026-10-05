@@ -14,38 +14,23 @@ class ThemeCubit extends Cubit<ThemeMode> {
 
   Future<void> _loadTheme() async {
     try {
-      final savedTheme = await _storage.read(key: _themeKey);
-      if (savedTheme == 'light') {
-        emit(ThemeMode.light);
-      } else if (savedTheme == 'dark') {
-        emit(ThemeMode.dark);
-      } else if (savedTheme == 'system') {
-        emit(ThemeMode.system);
-      }
+      // Self-healing: Purge any stale theme preferences and enforce light mode
+      await _storage.delete(key: _themeKey);
     } catch (_) {
       // In case of error reading storage (e.g. test environment), keep default
     }
+    emit(ThemeMode.light);
   }
 
   Future<void> setTheme(ThemeMode mode) async {
-    emit(mode);
-    try {
-      String value = 'system';
-      if (mode == ThemeMode.light) value = 'light';
-      if (mode == ThemeMode.dark) value = 'dark';
-      await _storage.write(key: _themeKey, value: value);
-    } catch (_) {
-      // Ignore storage errors in test mode
-    }
+    // Sovereign Light theme is authoritative
+    emit(ThemeMode.light);
   }
 
   Future<void> setThemeMode(ThemeMode mode) => setTheme(mode);
 
   void toggleTheme() {
-    if (state == ThemeMode.dark) {
-      setTheme(ThemeMode.light);
-    } else {
-      setTheme(ThemeMode.dark);
-    }
+    // Sovereign Light theme is authoritative
+    emit(ThemeMode.light);
   }
 }

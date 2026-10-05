@@ -86,53 +86,7 @@ class AppTheme {
     );
   }
 
-  static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: darkBackground,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryColor,
-        onPrimary: onPrimaryColor,
-        primaryContainer: primaryContainerDark,
-        secondary: secondaryColor,
-        tertiary: tertiaryColor,
-        error: errorColor,
-        surface: darkCardBackground,
-        onSurface: textPrimaryDark,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: darkBackground,
-        foregroundColor: textPrimaryDark,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      cardTheme: const CardThemeData(
-        color: darkCardBackground,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: darkBorderColor, width: 1),
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: onPrimaryColor,
-          elevation: 0,
-          minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-      ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkCardBackground,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textMutedDark,
-        elevation: 8,
-      ),
-    );
-  }
+  /// Deprecated: Dark mode is removed. Returns [lightTheme] for backward compatibility.
+  @Deprecated('Dark mode is removed across WayPoint. Use lightTheme.')
+  static ThemeData get darkTheme => lightTheme;
 }

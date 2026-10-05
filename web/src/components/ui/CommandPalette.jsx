@@ -19,7 +19,6 @@ export const COMMAND_ITEMS = [
   { id: 'nav-ai-observability', title: 'AI Observability & Trace Waterfall', category: 'Navigation', path: '/ai-observability', keywords: 'agents gemini tokens execution latency' },
   { id: 'nav-admin', title: 'User Governance & Admin Console', category: 'Navigation', path: '/admin-console', keywords: 'security logs users rbac roles' },
   // Quick Actions
-  { id: 'act-theme', title: 'Toggle Dark / Light Theme', category: 'Actions', action: 'toggle-theme', keywords: 'theme appearance mode style' },
   { id: 'act-sidebar', title: 'Toggle Sidebar Collapse', category: 'Actions', action: 'toggle-sidebar', keywords: 'sidebar expand collapse width' },
 ]
 
@@ -30,7 +29,7 @@ export function CommandPalette({ isOpen, onClose }) {
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const navigate = useNavigate()
-  const { toggleDarkMode, toggleSidebar } = useThemeStore()
+  const { toggleSidebar } = useThemeStore()
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -61,8 +60,6 @@ export function CommandPalette({ isOpen, onClose }) {
 
     if (item.path) {
       navigate(item.path)
-    } else if (item.action === 'toggle-theme') {
-      toggleDarkMode()
     } else if (item.action === 'toggle-sidebar') {
       toggleSidebar()
     }
@@ -118,7 +115,7 @@ export function CommandPalette({ isOpen, onClose }) {
             ref={inputRef}
             type="text"
             className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-400 outline-none"
-            placeholder="Type a command or transit corridor... (e.g. Ella, Matrix, Theme)"
+            placeholder="Type a command or transit corridor... (e.g. Ella, Matrix, Roster)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}

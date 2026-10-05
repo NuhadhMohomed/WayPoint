@@ -10,7 +10,7 @@ import 'package:waypoint_mobile/core/network/api_client.dart';
 import 'package:waypoint_mobile/core/storage/secure_storage_service.dart';
 
 void main() {
-  testWidgets('PassengerSettingsScreen renders Light, Dark, and System theme selectors', (tester) async {
+  testWidgets('PassengerSettingsScreen renders Appearance and authoritative Light theme status', (tester) async {
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
@@ -23,8 +23,9 @@ void main() {
       ),
     );
     expect(find.text('Appearance'), findsOneWidget);
-    expect(find.text('Light'), findsOneWidget);
-    expect(find.text('Dark'), findsOneWidget);
+    expect(find.text('Visual Theme: Sovereign Light'), findsOneWidget);
+    expect(find.text('Light Active'), findsOneWidget);
+    expect(find.text('Dark'), findsNothing);
     expect(find.text('Saved Travelers'), findsOneWidget);
     expect(find.text('National Transit Helpline: 1955'), findsOneWidget);
   });

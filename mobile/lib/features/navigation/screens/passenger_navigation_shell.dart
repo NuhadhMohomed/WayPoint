@@ -8,6 +8,7 @@ import '../../auth/models/auth_models.dart';
 import '../../journey/screens/journey_search_screen.dart';
 import '../../booking/screens/seat_picker_screen.dart';
 import '../../booking/screens/ticket_wallet_screen.dart';
+import '../../settings/screens/passenger_settings_screen.dart';
 import '../../fleet/data/fleet_api_service.dart';
 
 class PassengerNavigationShell extends StatefulWidget {
@@ -24,8 +25,6 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final List<Widget> pages = [
       // 0: Journey Search (Component 1 - Sethum)
       const JourneySearchScreen(),
@@ -37,7 +36,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
       // 2: Ticket Wallet (Component 3 - Mithila)
       const TicketWalletScreen(),
       // 3: Profile & Settings
-      _buildProfileTab(context, isDark),
+      _buildProfileTab(context),
     ];
 
     return Scaffold(
@@ -110,7 +109,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
     );
   }
 
-  Widget _buildProfileTab(BuildContext context, bool isDark) {
+  Widget _buildProfileTab(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -166,13 +165,21 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           const SizedBox(height: 8),
+          const ListTile(
+            leading: Icon(Icons.wb_sunny_outlined, color: AppTheme.primaryColor),
+            title: Text('Visual Theme'),
+            subtitle: Text('Sovereign Transit Light Theme', style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ),
           ListTile(
-            leading: const Icon(Icons.dark_mode_outlined),
-            title: const Text('Dark Mode'),
-            trailing: Switch(
-              value: isDark,
-              onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
-            ),
+            leading: const Icon(Icons.tune, color: AppTheme.primaryColor),
+            title: const Text('Preferences & Travelers'),
+            subtitle: const Text('Transit alerts, saved travelers & helpline', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PassengerSettingsScreen()),
+              );
+            },
           ),
           const Divider(),
           const Spacer(),

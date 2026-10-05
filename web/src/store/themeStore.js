@@ -1,28 +1,24 @@
 import { create } from 'zustand';
 
+// Self-healing: Enforce authoritative light mode and remove any stale dark classes/tokens
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.remove('dark');
+}
+if (typeof localStorage !== 'undefined') {
+  localStorage.removeItem('waypoint_theme');
+}
+
 export const useThemeStore = create((set) => {
-  const storedTheme = localStorage.getItem('waypoint_theme') || 'light';
-  if (storedTheme === 'dark') {
-    document.documentElement.classList.add('dark');
-  }
-
   return {
-    isDarkMode: storedTheme === 'dark',
-    sidebarCollapsed: localStorage.getItem('waypoint_sidebar') === 'collapsed',
-    soundEnabled: localStorage.getItem('waypoint_sound') !== 'disabled',
+    isDarkMode: false,
+    sidebarCollapsed: typeof localStorage !== 'undefined' ? localStorage.getItem('waypoint_sidebar') === 'collapsed' : false,
+    soundEnabled: typeof localStorage !== 'undefined' ? localStorage.getItem('waypoint_sound') !== 'disabled' : true,
 
+    // Safe no-op preserved for backwards compatibility with any legacy callers
     toggleDarkMode: () => {
-      set((state) => {
-        const next = !state.isDarkMode;
-        if (next) {
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('waypoint_theme', 'dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('waypoint_theme', 'light');
-        }
-        return { isDarkMode: next };
-      });
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark');
+      }
     },
 
     toggleSidebar: () => {
