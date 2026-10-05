@@ -34,6 +34,10 @@ import { ServiceAlertBroadcastPage } from './features/disruptions/ServiceAlertBr
 import { AiObservabilityPage } from './features/disruptions/AiObservabilityPage'
 import { AdminConsolePage } from './features/disruptions/AdminConsolePage'
 
+// Administration & User Governance Hub
+import { AdminHubLayout } from './features/admin/AdminHubLayout'
+import { AdminUsersPage } from './features/admin/AdminUsersPage'
+
 export function App() {
   return (
     <Routes>
@@ -79,6 +83,13 @@ export function App() {
             <Route path="alerts" element={<ServiceAlertBroadcastPage />} />
             <Route path="ai-traces" element={<AiObservabilityPage />} />
             <Route path="admin" element={<AdminConsolePage />} />
+          </Route>
+
+          {/* Administration & User Governance Hub */}
+          <Route path="/admin" element={<AdminHubLayout />}>
+            <Route index element={<Navigate to="users" replace />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="audit" element={<AdminConsolePage />} />
           </Route>
         </Route>
       </Route>

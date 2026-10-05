@@ -29,7 +29,8 @@ import {
   Clock,
   Sliders,
   HelpCircle,
-  Layers
+  Layers,
+  ShieldCheck
 } from 'lucide-react'
 
 export function DashboardLayout() {
@@ -181,6 +182,13 @@ export function DashboardLayout() {
       subtext: 'Incidents, Approvals, Alerts & Traces',
       icon: AlertTriangle,
       roles: ['Admin', 'TransportManager', 'Operator']
+    },
+    {
+      to: '/admin',
+      label: 'Admin Console & Users',
+      subtext: 'User Directory, Role RBAC & Audit Vault',
+      icon: ShieldCheck,
+      roles: ['Admin']
     },
   ]
 
