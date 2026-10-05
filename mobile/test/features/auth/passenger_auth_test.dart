@@ -9,6 +9,7 @@ import 'package:waypoint_mobile/features/auth/bloc/auth_cubit.dart';
 import 'package:waypoint_mobile/features/auth/bloc/auth_state.dart';
 import 'package:waypoint_mobile/features/auth/models/auth_models.dart';
 import 'package:waypoint_mobile/features/auth/screens/passenger_auth_screen.dart';
+import 'package:waypoint_mobile/core/widgets/waypoint_logo.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockSecureStorageService extends Mock implements SecureStorageService {}
@@ -118,8 +119,9 @@ void main() {
         ),
       );
 
-      expect(find.text('WayPoint Mobile'), findsOneWidget);
-      expect(find.text('Sri Lanka Intercity Express Network'), findsOneWidget);
+      expect(find.byType(WayPointLogo), findsOneWidget);
+      expect(find.text('WayPoint'), findsOneWidget);
+      expect(find.text('Sri Lanka Transit'), findsOneWidget);
       expect(find.byKey(const Key('login_email_field')), findsOneWidget);
       expect(find.byKey(const Key('login_password_field')), findsOneWidget);
       expect(find.byKey(const Key('login_submit_button')), findsOneWidget);
