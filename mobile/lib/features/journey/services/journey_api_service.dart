@@ -75,4 +75,36 @@ class JourneyApiService {
 
     return [];
   }
+
+  /// Get AI journey recommendations based on natural language objective
+  Future<AiJourneyRecommendationModel> getAiRecommendations({
+    required String objective,
+    int passengerCount = 1,
+    DateTime? travelDate,
+  }) async {
+    try {
+      final response = await _client.dio.post(
+        '/journeys/ai-recommendation',
+        data: {
+          'objective': objective,
+          'passengerCount': passengerCount,
+          if (travelDate != null)
+            'travelDate':
+                "${travelDate.year}-${travelDate.month.toString().padLeft(2, '0')}-${travelDate.day.toString().padLeft(2, '0')}",
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return AiJourneyRecommendationModel.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+    } catch (_) {
+      // Safe fallback handled below
+    }
+
+    return AiJourneyRecommendationModel.sampleFallback(
+      destination: objective,
+    );
+  }
 }
+

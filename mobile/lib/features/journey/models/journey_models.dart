@@ -271,3 +271,55 @@ class JourneySearchPreferences {
     this.departureWindow = 'Any',
   });
 }
+
+class AiJourneyRecommendationModel {
+  final String workflowId;
+  final String status;
+  final String agentReasoning;
+  final bool isAiFallback;
+  final List<JourneyCandidateModel> candidates;
+
+  AiJourneyRecommendationModel({
+    required this.workflowId,
+    required this.status,
+    required this.agentReasoning,
+    required this.isAiFallback,
+    required this.candidates,
+  });
+
+  factory AiJourneyRecommendationModel.fromJson(Map<String, dynamic> json) {
+    final rawCandidates = json['candidates'] as List<dynamic>? ?? [];
+    return AiJourneyRecommendationModel(
+      workflowId: json['workflowId']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'Completed',
+      agentReasoning: json['agentReasoning']?.toString() ?? '',
+      isAiFallback: json['isAiFallback'] == true,
+      candidates: rawCandidates
+          .map((c) => JourneyCandidateModel.fromJson(c as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  factory AiJourneyRecommendationModel.sampleFallback({String? destination}) {
+    final dest = destination?.toLowerCase() ?? '';
+    List<JourneyCandidateModel> fallbackCandidates;
+    if (dest.contains('ella')) {
+      fallbackCandidates = [
+        JourneyCandidateModel.sampleColomboToEllaDirect(),
+        JourneyCandidateModel.sampleConnectingViaKandy(),
+      ];
+    } else {
+      fallbackCandidates = [
+        JourneyCandidateModel.sampleColomboToKandyDirect(),
+        JourneyCandidateModel.sampleColomboToEllaDirect(),
+      ];
+    }
+    return AiJourneyRecommendationModel(
+      workflowId: 'fallback-workflow',
+      status: 'SafeFailure',
+      agentReasoning: 'Showing verified direct and connecting routes (AI offline).',
+      isAiFallback: true,
+      candidates: fallbackCandidates,
+    );
+  }
+}
