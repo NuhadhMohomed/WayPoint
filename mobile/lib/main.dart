@@ -2,20 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
-import 'core/widgets/waypoint_button.dart';
+import 'core/network/api_client.dart';
+import 'core/storage/secure_storage_service.dart';
+import 'features/auth/bloc/auth_cubit.dart';
+import 'features/navigation/screens/auth_gate.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const WayPointApp());
+  final storageService = SecureStorageService();
+  final apiClient = ApiClient(storage: storageService);
+
+  runApp(WayPointApp(
+    storageService: storageService,
+    apiClient: apiClient,
+  ));
 }
 
 class WayPointApp extends StatelessWidget {
-  const WayPointApp({super.key});
+  final SecureStorageService storageService;
+  final ApiClient apiClient;
+
+  const WayPointApp({
+    super.key,
+    required this.storageService,
+    required this.apiClient,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ThemeCubit>(
-      create: (_) => ThemeCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ThemeCubit>(
+          create: (_) => ThemeCubit(),
+        ),
+        BlocProvider<AuthCubit>(
+          create: (_) => AuthCubit(
+            apiClient: apiClient,
+            storageService: storageService,
+          ),
+        ),
+      ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp(
@@ -24,30 +50,7 @@ class WayPointApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeMode,
-            home: const Scaffold(
-              body: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.directions_bus_rounded, size: 64, color: AppTheme.primaryColor),
-                      SizedBox(height: 16),
-                      Text(
-                        'WayPoint Passenger Mobile',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Core UI Primitives and Velora Theme Initialized.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            home: const AuthGate(),
           );
         },
       ),
