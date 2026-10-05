@@ -20,6 +20,10 @@ import { SeatLayoutDesignerPage } from './features/fleet/SeatLayoutDesignerPage'
 import { DriverRosteringPage } from './features/fleet/DriverRosteringPage'
 import { FleetReviewsDashboardPage } from './pages/fleet/FleetReviewsDashboardPage'
 
+// Component 3: Manifest & Ticketing (Mithila)
+import { BookingManifestMonitorPage } from './features/bookings/BookingManifestMonitorPage'
+import { OperatorDashboardPage } from './features/bookings/OperatorDashboardPage'
+
 export function App() {
   return (
     <Routes>
@@ -48,8 +52,10 @@ export function App() {
             <Route path="reviews" element={<FleetReviewsDashboardPage />} />
           </Route>
 
-          {/* Component 3: Manifest & Ticketing */}
-          <Route path="/bookings" element={<div className="p-6">Passenger Manifest</div>} />
+          {/* Component 3: Manifest & Ticketing (Mithila) */}
+          <Route path="/bookings" element={<BookingManifestMonitorPage />} />
+          <Route path="/bookings/manifest" element={<BookingManifestMonitorPage />} />
+          <Route path="/bookings/operator" element={<OperatorDashboardPage />} />
 
           {/* Component 4: Disruption & AI Ops */}
           <Route path="/disruptions/intake" element={<div className="p-6">Disruption Intake</div>} />
