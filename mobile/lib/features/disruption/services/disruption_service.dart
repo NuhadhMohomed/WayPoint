@@ -6,12 +6,17 @@ import '../../../core/storage/secure_storage_service.dart';
 /// Service responsible for fetching disruption cases and service alerts.
 class DisruptionService {
   final http.Client _client;
+  final SecureStorageService _storageService;
 
-  DisruptionService({http.Client? client}) : _client = client ?? http.Client();
+  DisruptionService({
+    http.Client? client,
+    SecureStorageService? storageService,
+  })  : _client = client ?? http.Client(),
+        _storageService = storageService ?? SecureStorageService();
 
   /// Fetches all active disruption cases from the backend.
   Future<List<Map<String, dynamic>>> getDisruptions() async {
-    final token = await SecureStorageService.getToken();
+    final token = await _storageService.getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/disruptions');
 
     final response = await _client.get(
@@ -32,7 +37,7 @@ class DisruptionService {
 
   /// Fetches a specific disruption case by ID.
   Future<Map<String, dynamic>> getDisruptionById(String id) async {
-    final token = await SecureStorageService.getToken();
+    final token = await _storageService.getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/disruptions/$id');
 
     final response = await _client.get(
