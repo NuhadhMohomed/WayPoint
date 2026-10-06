@@ -13,7 +13,7 @@ vi.mock('../journeyApi', () => ({
   },
 }))
 
-describe('RouteManagerPage (WEB-02)', () => {
+describe('RouteManagerPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     journeyApi.getRoutes.mockResolvedValue([
@@ -78,7 +78,7 @@ describe('RouteManagerPage (WEB-02)', () => {
 
     fireEvent.click(screen.getByText('Create Intercity Route'))
 
-    expect(screen.getByText('Create Intercity Route (WEB-02)')).toBeInTheDocument()
+    expect(screen.getByText('New Intercity Route')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('e.g. EX-09')).toBeInTheDocument()
   })
 

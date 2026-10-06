@@ -101,23 +101,23 @@ export function TouristCorridorsPage() {
   return (
     <div className="space-y-6">
       {/* Intro Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-indigo-500/5 to-white border border-amber-200/60 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-semibold mb-2">
             <Sun className="w-3.5 h-3.5" />
             Curated Sri Lankan Tourist Corridors
           </div>
-          <h2 className="text-xl font-black text-white tracking-tight font-display">
+          <h2 className="text-xl font-black text-slate-900 tracking-tight font-display">
             Scenic Highway & Rail Connections
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
             Standardized intercity tourist corridors with verified intermediate sightseeing waypoints, luxury coach timetables, and direct booking integrations.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link to="/routes/scheduler">
-            <Button variant="primary" size="sm" className="font-bold gap-1.5 shadow-lg shadow-waypoint-primary/20">
+            <Button variant="primary" size="sm" className="font-bold gap-1.5 shadow-md shadow-waypoint-primary/10">
               <Calendar className="w-3.5 h-3.5" />
               View Departure Schedules
             </Button>
@@ -130,7 +130,7 @@ export function TouristCorridorsPage() {
         {CORRIDORS.map((corridor) => (
           <Card
             key={corridor.id}
-            className="p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg group relative overflow-hidden"
+            className="p-6 flex flex-col justify-between hover:border-indigo-300 transition-all shadow-xs group relative overflow-hidden bg-white"
           >
             <div>
               {/* Header */}
@@ -139,7 +139,7 @@ export function TouristCorridorsPage() {
                   <span className="px-2.5 py-1 rounded-lg bg-waypoint-primary/10 text-waypoint-primary border border-waypoint-primary/30 font-mono font-bold text-xs">
                     {corridor.routeNumber}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                     {corridor.highlightTag}
                   </span>
                 </div>
@@ -148,32 +148,32 @@ export function TouristCorridorsPage() {
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-white mb-1.5 font-display">
+              <h3 className="text-lg font-bold text-slate-900 mb-1.5 font-display">
                 {corridor.title}
               </h3>
 
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 mb-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-2">
                 <span>{corridor.origin}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-waypoint-primary flex-shrink-0" />
                 <span>{corridor.destination}</span>
               </div>
 
-              <p className="text-xs text-slate-400 leading-relaxed mb-4">
+              <p className="text-xs text-slate-600 leading-relaxed mb-4">
                 {corridor.description}
               </p>
 
               {/* Waypoints & Attractions */}
               <div className="mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
                   Sightseeing Highlights & Waypoints:
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   {corridor.attractions.map((att, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px]"
+                      className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px]"
                     >
-                      <div className="font-semibold text-slate-200 truncate">{att.name}</div>
+                      <div className="font-semibold text-slate-800 truncate">{att.name}</div>
                       <div className="text-[10px] text-slate-500 truncate">{att.category}</div>
                     </div>
                   ))}
@@ -182,15 +182,15 @@ export function TouristCorridorsPage() {
             </div>
 
             {/* Footer metrics */}
-            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center gap-3 font-mono">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
                   {corridor.distanceKm} km
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
                   {corridor.avgDuration}
                 </span>
               </div>

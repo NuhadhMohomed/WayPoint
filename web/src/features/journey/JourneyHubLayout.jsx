@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { MapPin, Calendar, Compass, GitBranch, Sparkles } from 'lucide-react'
+import { MapPin, Calendar, Compass } from 'lucide-react'
 
 const journeyTabs = [
   { to: '/routes/catalog', label: 'Route Catalog & Stops', icon: MapPin },
@@ -15,31 +15,21 @@ export function JourneyHubLayout() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-waypoint-primary/20 text-waypoint-primary border border-waypoint-primary/30 uppercase tracking-wide">
-              Component 1
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              Lead Engineer: <strong className="text-white">Sethum</strong>
+            <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 tracking-wide">
+              Network & Routing
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 tracking-tight">
             Journey Planning & Route Catalogue
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Manage intercity corridors, intermediate stops, scheduled bus departures, and scenic Sri Lankan tourist highlights.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 shadow-inner">
-            <GitBranch className="w-3.5 h-3.5 text-waypoint-primary" />
-            <span>feature/c1-journey-planning</span>
-          </div>
         </div>
       </div>
 
       {/* Tab Navigation Bar */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-slate-950 border border-slate-800 rounded-2xl shadow-lg">
+      <div className="flex items-center gap-1.5 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-x-auto">
         {journeyTabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -49,8 +39,8 @@ export function JourneyHubLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex-1 justify-center ${
                   isActive
-                    ? 'bg-waypoint-primary text-waypoint-onPrimary shadow-md shadow-waypoint-primary/10'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`
               }
             >
@@ -68,3 +58,5 @@ export function JourneyHubLayout() {
     </div>
   )
 }
+
+export default JourneyHubLayout

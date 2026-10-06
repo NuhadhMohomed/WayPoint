@@ -160,7 +160,7 @@ export function ServiceSchedulerPage() {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 selectedCorridor === c
                   ? 'bg-waypoint-primary text-waypoint-onPrimary shadow-md shadow-waypoint-primary/10'
-                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white hover:bg-slate-900'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               {c === 'ALL' ? 'All Corridors' : `Route ${c}`}
@@ -219,38 +219,38 @@ export function ServiceSchedulerPage() {
             return (
               <Card
                 key={service.id}
-                className="p-5 border border-slate-800 bg-slate-900/90 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md"
+                className="p-5 border border-slate-200 bg-white hover:border-indigo-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs"
               >
                 {/* Route & Times */}
                 <div className="flex items-start md:items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center text-center flex-shrink-0 shadow-inner">
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center text-center flex-shrink-0 shadow-xs">
                     <Bus className="w-5 h-5 text-waypoint-primary" />
-                    <span className="text-[10px] font-mono text-slate-300 font-bold mt-0.5">
+                    <span className="text-[10px] font-mono text-slate-700 font-bold mt-0.5">
                       {service.routeNumber}
                     </span>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-bold text-slate-300">
+                      <span className="text-xs font-mono font-bold text-slate-600">
                         {service.serviceCode}
                       </span>
                       <TransitBadge status="Available" label={service.status || 'Scheduled'} />
                       {service.busClass && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                           {service.busClass}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-base font-bold text-white">
+                    <div className="flex items-center gap-2 text-base font-bold text-slate-900">
                       <span>{service.originCity || 'Colombo'}</span>
                       <ArrowRight className="w-4 h-4 text-waypoint-primary" />
                       <span>{service.destinationCity || 'Ella'}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
-                      <span className="flex items-center gap-1 font-semibold text-slate-200">
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                      <span className="flex items-center gap-1 font-semibold text-slate-800">
                         <Clock className="w-3.5 h-3.5 text-waypoint-primary" />
                         {formattedDep} → {formattedArr}
                       </span>
@@ -261,7 +261,7 @@ export function ServiceSchedulerPage() {
                 </div>
 
                 {/* Fare & Capacity */}
-                <div className="flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-slate-800">
+                <div className="flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                   <div className="text-left md:text-right">
                     <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
                       Standard Fare
@@ -276,7 +276,7 @@ export function ServiceSchedulerPage() {
                       <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
                         Seat Matrix
                       </div>
-                      <div className="text-sm font-semibold text-white font-mono">
+                      <div className="text-sm font-semibold text-slate-900 font-mono">
                         <span className="text-waypoint-primary font-bold">{service.availableSeats}</span>
                         <span className="text-slate-500"> / {service.totalSeats || 44} Left</span>
                       </div>
