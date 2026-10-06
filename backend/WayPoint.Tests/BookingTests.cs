@@ -301,54 +301,35 @@ public class BookingTests
 
     private static WayPointDbContext CreateDbContext(string? sharedDbName = null)
     {
-        var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-        if (string.IsNullOrWhiteSpace(dbUrl))
+        if (string.Equals(Environment.GetEnvironmentVariable("USE_POSTGRES_TESTS"), "true", StringComparison.OrdinalIgnoreCase))
         {
-            var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, ".env")))
+            var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+            if (!string.IsNullOrWhiteSpace(dbUrl))
             {
-                dir = dir.Parent;
-            }
-
-            if (dir != null)
-            {
-                var envPath = Path.Combine(dir.FullName, ".env");
-                foreach (var line in File.ReadAllLines(envPath))
+                try
                 {
-                    if (line.StartsWith("DATABASE_URL=", StringComparison.OrdinalIgnoreCase))
+                    var config = new ConfigurationBuilder()
+                        .AddInMemoryCollection(new Dictionary<string, string?> { { "ConnectionStrings:DATABASE_URL", dbUrl } })
+                        .Build();
+                    var connStr = DependencyInjection.ResolveConnectionString(config);
+
+                    var options = new DbContextOptionsBuilder<WayPointDbContext>()
+                        .UseNpgsql(connStr, npgsql => npgsql.EnableRetryOnFailure(3))
+                        .Options;
+                    var context = new WayPointDbContext(options);
+                    if (context.Database.CanConnect())
                     {
-                        dbUrl = line["DATABASE_URL=".Length..].Trim();
-                        break;
+                        return context;
                     }
                 }
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(dbUrl))
-        {
-            try
-            {
-                var config = new ConfigurationBuilder()
-                    .AddInMemoryCollection(new Dictionary<string, string?> { { "ConnectionStrings:DATABASE_URL", dbUrl } })
-                    .Build();
-                var connStr = DependencyInjection.ResolveConnectionString(config);
-
-                var options = new DbContextOptionsBuilder<WayPointDbContext>()
-                    .UseNpgsql(connStr, npgsql => npgsql.EnableRetryOnFailure(3))
-                    .Options;
-                var context = new WayPointDbContext(options);
-                if (context.Database.CanConnect())
+                catch
                 {
-                    return context;
+                    // Fall back to in-memory store if PostgreSQL is unreachable
                 }
             }
-            catch
-            {
-                // Fall back to in-memory store if PostgreSQL is unreachable
-            }
         }
 
-        var databaseName = sharedDbName ?? $"WayPoint_Test_{Guid.NewGuid()}";
+        var databaseName = sharedDbName ?? $"WayPoint_Booking_Test_{Guid.NewGuid()}";
         var inMemoryOptions = new DbContextOptionsBuilder<WayPointDbContext>()
             .UseInMemoryDatabase(databaseName: databaseName)
             .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
