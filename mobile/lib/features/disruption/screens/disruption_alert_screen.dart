@@ -93,14 +93,50 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
 
   void _handleAccept() async {
     setState(() => _isProcessing = true);
+    RebookingConsentResult result;
+
     if (_disruption.proposalId != null && _disruption.proposalId!.isNotEmpty) {
-      await _apiService.executeRebooking(proposalId: _disruption.proposalId!);
+      result = await _apiService.executeRebooking(
+        proposalId: _disruption.proposalId!,
+        proposalStatus: _disruption.proposalStatus,
+      );
     } else {
       await Future.delayed(const Duration(milliseconds: 300));
+      result = const RebookingConsentResult(
+        status: RebookingConsentStatus.pendingManagerApproval,
+        message:
+            'Alternative preference recorded. Held pending Transport Manager operational sign-off.',
+      );
     }
+
     if (!mounted) return;
+    setState(() => _isProcessing = false);
+
+    if (result.status == RebookingConsentStatus.failed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  result.message,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     setState(() {
-      _isProcessing = false;
       _isAccepted = true;
     });
 
@@ -110,7 +146,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _buildAcceptConfirmationSheet(ctx),
+      builder: (ctx) => _buildAcceptConfirmationSheet(ctx, result.status),
     );
   }
 
@@ -290,7 +326,12 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
     );
   }
 
-  Widget _buildAcceptConfirmationSheet(BuildContext ctx) {
+  Widget _buildAcceptConfirmationSheet(BuildContext ctx,
+      [RebookingConsentStatus? consentStatus]) {
+    final isPending = consentStatus ==
+            RebookingConsentStatus.pendingManagerApproval ||
+        (consentStatus == null && _disruption.isPendingApproval);
+
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF1E293B),
@@ -304,22 +345,30 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFF14532D),
+            decoration: BoxDecoration(
+              color: isPending ? const Color(0xFF0C4A6E) : const Color(0xFF14532D),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle,
-                color: Color(0xFF4ADE80), size: 36),
+            child: Icon(
+              isPending ? Icons.pending_actions : Icons.check_circle,
+              color:
+                  isPending ? const Color(0xFF38BDF8) : const Color(0xFF4ADE80),
+              size: 36,
+            ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Rebooking Confirmed!',
-            style: TextStyle(
+          Text(
+            isPending
+                ? 'Alternative Preference Reserved!'
+                : 'Rebooking Confirmed!',
+            style: const TextStyle(
                 color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
-            'Your booking ${_disruption.bookingReference} has been successfully transferred to ${_disruption.replacementBusPlate}.',
+            isPending
+                ? 'Your selection of ${_disruption.replacementBusPlate} is held. Under WayPoint safety policy (BR-APPROVAL-001), operations dispatch is confirming final vehicle departure.'
+                : 'Your booking ${_disruption.bookingReference} has been successfully transferred to ${_disruption.replacementBusPlate}.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
           ),
@@ -384,8 +433,8 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
           ),
           const SizedBox(height: 24),
           WayPointButton(
-            text: 'View Updated Digital Ticket',
-            icon: Icons.qr_code,
+            text: isPending ? 'Keep My Seat Lock' : 'View Updated Digital Ticket',
+            icon: isPending ? Icons.check : Icons.qr_code,
             onPressed: () {
               Navigator.of(ctx).pop();
             },
@@ -465,19 +514,32 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14532D),
+                  color: _disruption.isPendingApproval
+                      ? const Color(0xFF0C4A6E)
+                      : const Color(0xFF14532D),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF22C55E)),
+                  border: Border.all(
+                      color: _disruption.isPendingApproval
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF22C55E)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.check_circle,
-                        color: Color(0xFF4ADE80), size: 20),
-                    SizedBox(width: 8),
+                    Icon(
+                        _disruption.isPendingApproval
+                            ? Icons.pending_actions
+                            : Icons.check_circle,
+                        color: _disruption.isPendingApproval
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF4ADE80),
+                        size: 20),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'You accepted the recommended replacement service.',
-                        style: TextStyle(
+                        _disruption.isPendingApproval
+                            ? 'Alternative preference reserved. Held pending Transport Manager final dispatch (BR-APPROVAL-001).'
+                            : 'You accepted the recommended replacement service.',
+                        style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 13),

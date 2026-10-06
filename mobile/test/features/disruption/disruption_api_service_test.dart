@@ -76,7 +76,7 @@ void main() {
     expect(result.replacementBusPlate, contains('WP-CAD-4120'));
   });
 
-  test('executeRebooking sends post and returns true on success', () async {
+  test('executeRebooking sends post and returns confirmed on 200 success', () async {
     when(() => mockDio.post('/rebooking/prop-123/execute')).thenAnswer(
       (_) async => Response(
         requestOptions: RequestOptions(path: '/rebooking/prop-123/execute'),
@@ -84,19 +84,42 @@ void main() {
       ),
     );
 
-    final success = await service.executeRebooking(proposalId: 'prop-123');
-    expect(success, isTrue);
+    final result = await service.executeRebooking(proposalId: 'prop-123');
+    expect(result.status, equals(RebookingConsentStatus.confirmed));
+    expect(result.isSuccess, isTrue);
   });
 
-  test('executeRebooking returns false on error', () async {
-    when(() => mockDio.post('/rebooking/prop-err/execute')).thenThrow(
+  test('executeRebooking returns pendingManagerApproval on 403 requiring manager approval', () async {
+    when(() => mockDio.post('/rebooking/prop-pending/execute')).thenThrow(
       DioException(
-        requestOptions: RequestOptions(path: '/rebooking/prop-err/execute'),
+        requestOptions: RequestOptions(path: '/rebooking/prop-pending/execute'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/rebooking/prop-pending/execute'),
+          statusCode: 403,
+        ),
         type: DioExceptionType.badResponse,
       ),
     );
 
-    final success = await service.executeRebooking(proposalId: 'prop-err');
-    expect(success, isFalse);
+    final result = await service.executeRebooking(
+      proposalId: 'prop-pending',
+      proposalStatus: 'PendingManagerApproval',
+    );
+    expect(result.status, equals(RebookingConsentStatus.pendingManagerApproval));
+    expect(result.isSuccess, isTrue);
+    expect(result.message, contains('operational sign-off'));
+  });
+
+  test('executeRebooking returns failed on connection error without pending approval', () async {
+    when(() => mockDio.post('/rebooking/prop-err/execute')).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/rebooking/prop-err/execute'),
+        type: DioExceptionType.connectionError,
+      ),
+    );
+
+    final result = await service.executeRebooking(proposalId: 'prop-err');
+    expect(result.status, equals(RebookingConsentStatus.failed));
+    expect(result.isSuccess, isFalse);
   });
 }

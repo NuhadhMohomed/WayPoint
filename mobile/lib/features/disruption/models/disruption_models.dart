@@ -33,9 +33,13 @@ class DisruptionAlertModel extends Equatable {
   // Hold expiry (15-minute rebooking seat lock)
   final DateTime holdExpiresAt;
 
+  /// Operational status of the rebooking proposal (e.g. 'PendingManagerApproval', 'Approved', 'Executed').
+  final String proposalStatus;
+
   const DisruptionAlertModel({
     this.proposalId,
     this.disruptionCaseId,
+    this.proposalStatus = 'PendingManagerApproval',
     required this.bookingReference,
     required this.passengerName,
     required this.disruptionTitle,
@@ -68,10 +72,12 @@ class DisruptionAlertModel extends Equatable {
     final candidate = (candidates.isNotEmpty ? candidates.first : <String, dynamic>{}) as Map<String, dynamic>;
     final wfId = json['workflowId']?.toString() ?? '000000';
     final refSuffix = wfId.length >= 6 ? wfId.substring(0, 6).toUpperCase() : wfId.toUpperCase();
+    final status = json['status']?.toString() ?? 'PendingManagerApproval';
 
     return DisruptionAlertModel(
       proposalId: json['proposalId']?.toString(),
       disruptionCaseId: disruptionCaseId,
+      proposalStatus: status,
       bookingReference: 'WP-$refSuffix',
       passengerName: 'Passenger',
       disruptionTitle: 'Service Disrupted: AI Rebooking Available',
@@ -121,9 +127,17 @@ class DisruptionAlertModel extends Equatable {
 
   bool get isExpired => DateTime.now().isAfter(holdExpiresAt);
 
+  /// True if proposal is awaiting human Transport Manager operational sign-off (BR-APPROVAL-001).
+  bool get isPendingApproval => proposalStatus == 'PendingManagerApproval';
+
+  /// True if proposal has been formally approved or executed by operations.
+  bool get isApprovedOrExecuted =>
+      proposalStatus == 'Approved' || proposalStatus == 'Executed';
+
   /// Sample scenario matching Google Stitch Screen MOB-09 (Screen ID: 2bfd1cb2561245a99f17148299e4099d).
   factory DisruptionAlertModel.sampleColomboToElla() {
     return DisruptionAlertModel(
+      proposalStatus: 'PendingManagerApproval',
       bookingReference: 'WP-8F29K1',
       passengerName: 'Nimal Silva',
       disruptionTitle: 'Service Disrupted: Bus ND-8821 Mechanical Failure',
@@ -158,6 +172,7 @@ class DisruptionAlertModel extends Equatable {
         disruptionReason,
         originalBusPlate,
         replacementBusPlate,
+        proposalStatus,
         holdExpiresAt,
       ];
 }
