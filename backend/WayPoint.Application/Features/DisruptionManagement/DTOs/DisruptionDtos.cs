@@ -1,10 +1,27 @@
 using WayPoint.Domain.Enums;
+using WayPoint.Application.Features.JourneyPlanning.DTOs;
 
 namespace WayPoint.Application.Features.DisruptionManagement.DTOs;
 
 // ──────────────────────────────────────────────────────
 // Request / Input DTOs
 // ──────────────────────────────────────────────────────
+
+public class GenerateAiRebookingProposalDto
+{
+    public Guid DisruptionCaseId { get; set; }
+    public string? Objective { get; set; }
+}
+
+public class GenerateAiRebookingProposalResultDto
+{
+    public Guid? ProposalId { get; set; }
+    public Guid WorkflowId { get; set; }
+    public string Status { get; set; } = "Completed";
+    public string AgentReasoning { get; set; } = string.Empty;
+    public bool IsAiFallback { get; set; }
+    public List<CandidateJourneyDto> Candidates { get; set; } = new();
+}
 
 public class LogDisruptionDto
 {

@@ -27,4 +27,14 @@ public class AiRecommendationClient : IAiRecommendationClient
         var result = await response.Content.ReadFromJsonAsync<AiWorkflowResultDto>(JsonOptions, cancellationToken);
         return result ?? new AiWorkflowResultDto { Status = "Completed" };
     }
+
+    public async Task<AiWorkflowResultDto> GetDisruptionRebookingAsync(string disruptionCaseId, string objective, CancellationToken cancellationToken = default)
+    {
+        var requestBody = new { disruption_case_id = disruptionCaseId, objective };
+        var response = await _httpClient.PostAsJsonAsync("/api/ai/disruption-rebooking", requestBody, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<AiWorkflowResultDto>(JsonOptions, cancellationToken);
+        return result ?? new AiWorkflowResultDto { Status = "SafeFailure" };
+    }
 }
