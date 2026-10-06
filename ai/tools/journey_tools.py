@@ -55,22 +55,31 @@ async def search_routes(
     if isinstance(result, dict) and result.get("error"):
         return json.dumps(result)
 
-    # Normalise paginated response (PaginatedResponseDto<RouteSummaryDto>)
-    items = result.get("items", [result] if isinstance(result, dict) else result)
+    if isinstance(result, list):
+        items = result
+        total_count = len(items)
+    elif isinstance(result, dict):
+        items = result.get("items", [result])
+        total_count = result.get("totalCount", len(items))
+    else:
+        items = []
+        total_count = 0
+
     output = SearchRoutesOutput(
         routes=[
             {
                 "id": str(r.get("id", "")),
-                "route_code": r.get("routeCode", ""),
-                "name": r.get("name", ""),
+                "route_code": r.get("routeCode", "") or r.get("routeNumber", ""),
+                "name": r.get("name", "") or f"{r.get('originCity', '')} - {r.get('destinationCity', '')}",
                 "origin_city": r.get("originCity", ""),
                 "destination_city": r.get("destinationCity", ""),
                 "total_distance_km": r.get("totalDistanceKm", 0),
                 "is_active": r.get("isActive", True),
             }
             for r in items
+            if isinstance(r, dict)
         ],
-        total_count=result.get("totalCount", len(items)),
+        total_count=total_count,
     )
     return output.model_dump_json()
 

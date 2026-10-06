@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
 import 'package:waypoint_mobile/core/network/api_client.dart';
-import 'package:waypoint_mobile/features/journey/models/journey_models.dart';
 import 'package:waypoint_mobile/features/journey/services/journey_api_service.dart';
 
 class MockDio extends Mock implements Dio {}

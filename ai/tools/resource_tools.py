@@ -40,6 +40,9 @@ async def check_seat_availability(service_id: str) -> str:
     if isinstance(result, dict) and result.get("error"):
         return json.dumps(result)
 
+    if not isinstance(result, dict):
+        result = {}
+
     # Map camelCase backend response → snake_case Pydantic model
     output = CheckSeatAvailabilityOutput(
         service_id=str(result.get("serviceId", validated.service_id)),

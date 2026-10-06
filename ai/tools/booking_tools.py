@@ -49,8 +49,8 @@ async def calculate_fare_difference(
         if isinstance(result, dict) and result.get("error"):
             return json.dumps(result)
 
-    original_fare = float(original.get("baseFare", 0))
-    replacement_fare = float(replacement.get("baseFare", 0))
+    original_fare = float(original.get("baseFare", 0)) if isinstance(original, dict) else 0.0
+    replacement_fare = float(replacement.get("baseFare", 0)) if isinstance(replacement, dict) else 0.0
     fare_diff = replacement_fare - original_fare
 
     output = CalculateFareDifferenceOutput(

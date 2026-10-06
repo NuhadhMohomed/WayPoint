@@ -81,12 +81,16 @@ SAFETY_AGENT_TOOLS = [
 ]
 
 
+def _normalize_name(name: str) -> str:
+    return name.lower().replace("_", "").replace("-", "")
+
+
 def get_tool(name: str) -> Callable:
     """
     Retrieve an allow-listed tool by name.
 
     Args:
-        name: The tool name (must match one of the 10 allowed tools).
+        name: The tool name (matches one of the 10 allowed tools, in PascalCase or snake_case).
 
     Returns:
         The tool callable.
@@ -94,15 +98,28 @@ def get_tool(name: str) -> Callable:
     Raises:
         ToolNotAllowedError: If the tool name is not in the allow-list.
     """
-    if name not in ALLOWED_TOOLS:
-        raise ToolNotAllowedError(
-            f"Tool '{name}' is not in the allow-list. "
-            f"Only these tools are permitted: "
-            f"{sorted(ALLOWED_TOOLS.keys())}"
-        )
-    return ALLOWED_TOOLS[name]
+    if name in ALLOWED_TOOLS:
+        return ALLOWED_TOOLS[name]
+
+    # Support snake_case or attribute matching for LangChain bound tool calls
+    norm = _normalize_name(name)
+    for k, v in ALLOWED_TOOLS.items():
+        if _normalize_name(k) == norm or _normalize_name(getattr(v, "name", "")) == norm:
+            return v
+
+    raise ToolNotAllowedError(
+        f"Tool '{name}' is not in the allow-list. "
+        f"Only these tools are permitted: "
+        f"{sorted(ALLOWED_TOOLS.keys())}"
+    )
 
 
 def is_allowed(name: str) -> bool:
     """Check whether a tool name is in the allow-list."""
-    return name in ALLOWED_TOOLS
+    if name in ALLOWED_TOOLS:
+        return True
+    norm = _normalize_name(name)
+    return any(
+        _normalize_name(k) == norm or _normalize_name(getattr(v, "name", "")) == norm
+        for k, v in ALLOWED_TOOLS.items()
+    )

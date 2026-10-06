@@ -10,12 +10,17 @@ WayPoint uses an enterprise cloud-hosted headless infrastructure topology on **R
 
 ```mermaid
 graph TB
-    subgraph Consumers["External API Consumers & Integrations"]
-        ExtClients["External Clients (Mobile Apps / Partner Gateways)"]
+    subgraph ClientDevices["Client Applications & Terminals"]
+        MobileDevice["Android Mobile Device (Flutter APK)"]
+        Browser["Web Browser (React Web App on Render)"]
         Operators["Operator Terminals & Station Scanners"]
     end
 
-    subgraph CloudInfra["Production Cloud Infrastructure (Railway)"]
+    subgraph StaticHosting["Frontend Cloud Host (Render)"]
+        RenderStatic["Render Static Site (React 18 + Vite SPA)\nhttps://waypoint-web.onrender.com"]
+    end
+
+    subgraph CloudInfra["Backend Cloud Infrastructure (Railway)"]
         subgraph ContainerHosting["Container Host (Railway)"]
             APIApp["ASP.NET Core Web API (.NET 8 Docker Container)"]
             AIModule["Agentic AI Service (FastAPI / LangGraph in ai/)"]
@@ -26,13 +31,16 @@ graph TB
         end
     end
 
-    ExtClients -->|HTTPS / REST / JWT| APIApp
+    Browser -->|HTTP GET Static Assets| RenderStatic
+    RenderStatic -->|HTTPS / REST / JWT| APIApp
+    MobileDevice -->|HTTPS / REST / JWT| APIApp
     Operators -->|HTTPS / REST / JWT| APIApp
     APIApp -->|Npgsql 9 Direct SSL / EF Core 9| PostgresCloud
     APIApp -->|Internal HTTP Tool Wrappers| AIModule
 
     %% No direct access
-    ExtClients -. X Prohibited X .- PostgresCloud
+    RenderStatic -. X Prohibited X .- PostgresCloud
+    MobileDevice -. X Prohibited X .- PostgresCloud
     Operators -. X Prohibited X .- PostgresCloud
     AIModule -. X Prohibited X .- PostgresCloud
 ```
@@ -53,11 +61,18 @@ graph TB
 - **Direct SSL & ALPN**: Fully configured via **Npgsql 9** with `SslNegotiation = SslNegotiation.Direct` and ALPN `postgresql`.
 - **Access Credentials**: Private internal host networking within the Railway project environment.
 
-### 2.3 Headless API Consumption & Interactive Swagger Console
+### 2.3 React Web Application
+- **Deployment Platform**: **Render** (Static Site service).
+- **Configuration**: Root directory `web`, build command `npm install && npm run build`, publish directory `dist`.
+- **Environment Variable**: `VITE_API_URL` set to the Railway Web API domain (`https://<railway-domain>/api/v1`).
+- **SPA Rewrite Rule**: Rewrite `/*` to `/index.html` (configured via root `render.yaml`) ensuring deep links resolve without 404 errors.
+- **Continuous Deployment**: Automated git-push tracking on `main` branch.
+
+### 2.4 Headless API Consumption & Interactive Swagger Console
 - **Evaluator Access**: Real-time evaluation of all transit routes, seat matrices, bookings, refunds, and multi-agent AI mitigation is facilitated via the interactive Swagger/OpenAPI 3.0 interface (`/swagger`).
 - **Client Agnostic**: Any HTTP client (Postman, cURL, third-party mobile clients, automated load test scripts) can execute authenticated requests using JWT Bearer headers.
 
-### 2.4 Agentic AI Subsystem
+### 2.5 Agentic AI Subsystem
 - **Deployment Platform**: Internal Python container service in `ai/` connected via private internal HTTP to ASP.NET Core.
 - **Startup Sequence**:
   1. Railway Managed PostgreSQL Database instance verified active.

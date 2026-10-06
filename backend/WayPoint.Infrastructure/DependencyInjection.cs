@@ -59,7 +59,8 @@ public static class DependencyInjection
         services.AddHttpClient<IAiRecommendationClient, AiRecommendationClient>(client =>
         {
             client.BaseAddress = new Uri(aiBaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(10);
+            var timeoutSeconds = int.TryParse(configuration["AI_TIMEOUT_SECONDS"], out var sec) ? sec : 30;
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         });
 
         return services;

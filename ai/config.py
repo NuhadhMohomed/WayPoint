@@ -30,23 +30,23 @@ API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:5010/api/v1")
 # ---------------------------------------------------------------------------
 # Google Gemini LLM Configuration
 # ---------------------------------------------------------------------------
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-2.0-flash")
+GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY", "")
+LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-3.5-flash")
 LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.1"))
 
 # ---------------------------------------------------------------------------
 # AI Service Account Credentials (for authenticated backend tool calls)
 # ---------------------------------------------------------------------------
-AI_SERVICE_EMAIL: str = os.getenv("AI_SERVICE_EMAIL", "ai-agent@waypoint.lk")
+AI_SERVICE_EMAIL: str = os.getenv("AI_SERVICE_EMAIL", "admin@waypoint.lk")
 AI_SERVICE_PASSWORD: str = os.getenv(
-    "AI_SERVICE_PASSWORD", "WayPoint_AI_Service_2026"
+    "AI_SERVICE_PASSWORD", "Password123!"
 )
 
 # ---------------------------------------------------------------------------
 # Execution Guardrails (NFR-PERF-004, BR-AIVAL-002)
 # ---------------------------------------------------------------------------
 AI_EXECUTION_TIMEOUT_SECONDS: int = int(
-    os.getenv("AI_EXECUTION_TIMEOUT_SECONDS", "10")
+    os.getenv("AI_EXECUTION_TIMEOUT_SECONDS", "30")
 )
 AI_MAX_RETRIES: int = int(os.getenv("AI_MAX_RETRIES", "3"))
 HTTP_TIMEOUT_SECONDS: int = int(os.getenv("HTTP_TIMEOUT_SECONDS", "8"))
