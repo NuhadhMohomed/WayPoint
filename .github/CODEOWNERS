@@ -1,0 +1,34 @@
+# ==============================================================================
+# WayPoint Repository Code Ownership Specification (Frontend Scoped)
+# Aligned with docs/project/team-responsibilities.md and SE3090 Assignment 1
+# ==============================================================================
+
+# Default fallback owner for all repositories, backend, mobile, AI, CI/CD, and administration:
+*                                                           @NuhadhMohomed
+
+# ==============================================================================
+# Frontend Web Component Ownership
+# ==============================================================================
+
+# Component 1: Journey Planning & Route Catalogue (Student 1: Sethum)
+/web/src/features/journey/                                  @IT24100374
+
+# Component 2: Fleet, Seat & Resource Feasibility (Student 2: Nuhadh)
+/web/src/features/fleet/                                    @NuhadhMohomed
+
+# Component 3: Booking, Ticketing & Passenger Options (Student 3: Mithila)
+/web/src/features/bookings/                                 @Mithila-Dissanayaka
+
+# Component 4: Disruption, Rebooking & Approvals (Student 4: Dineth)
+/web/src/features/disruptions/                              @dsasmitha4588
+
+# ==============================================================================
+# Shared Web Infrastructure, Shell & Layouts (Student 2: Nuhadh)
+# ==============================================================================
+/web/src/features/admin/                                    @NuhadhMohomed
+/web/src/layouts/                                           @NuhadhMohomed
+/web/src/pages/                                             @NuhadhMohomed
+/web/src/components/                                        @NuhadhMohomed
+/web/src/store/                                             @NuhadhMohomed
+/web/src/api/                                               @NuhadhMohomed
+/web/src/lib/                                               @NuhadhMohomed

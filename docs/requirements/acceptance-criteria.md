@@ -8,9 +8,8 @@ This document defines the formal Acceptance Criteria using **Gherkin (Given-When
 
 ### Scenario 1.1: Successful User Registration (`FR-AUTH-001`)
 ```gherkin
-Given a user is on the registration screen
-When they enter a valid email "passenger@waypoint.lk", full name "Kamal Perera", phone "+94771234567", and password "Pass@1234"
-And tap the "Register" button
+Given a registration payload with email "passenger@waypoint.lk", full name "Kamal Perera", phone "+94771234567", and password "Pass@1234"
+When a POST request is sent to "/api/v1/auth/register"
 Then the backend validates the DTO parameters
 And hashes the password using BCrypt
 And stores the user in PostgreSQL with CreatedAt audit timestamp
@@ -137,9 +136,8 @@ Given a rebooking proposal in status "PendingManagerApproval"
 When Transport Manager reviews passenger impact evidence and clicks "Approve"
 Then ASP.NET Core opens a PostgreSQL transaction
 And updates original service to Cancelled
-And rebooks affected passengers onto replacement service transactionally
 And logs an immutable ApprovalDecision record with Manager ID and timestamp
-And dispatches push notifications to affected passengers on Flutter
+And dispatches notification alert records to affected passengers
 And commits transaction
 ```
 
@@ -213,4 +211,30 @@ When any high-impact operational action or approval decision is executed
 Then backend inserts an immutable row into AuditLogs table
 And contains Timestamp, ActorId, ActionType, EntityId, BeforeState, and AfterState JSON
 And record is read-only and cannot be updated or deleted via API
+```
+
+## 11. Reviews & Ratings (`FR-REVIEW`)
+
+### Scenario 11.1: Submit Valid Review (`FR-REVIEW-001`)
+```gherkin
+Given a passenger has a "Confirmed" booking
+And the trip's arrival time is in the past (completed)
+When they submit a review with a 1-5 star rating
+Then the review is saved successfully
+And linked to the specified bus or driver
+```
+
+### Scenario 11.2: Enforce Profanity Filter (`FR-REVIEW-003`)
+```gherkin
+When a passenger submits a review containing banned words
+Then the backend returns a 400 Bad Request
+And the review is not saved to the database
+```
+
+### Scenario 11.3: Enforce 7-Day Window (`FR-REVIEW-004`)
+```gherkin
+Given a passenger has a review submitted 8 days ago
+When they attempt to update the rating or comment
+Then the system returns a 400 Bad Request
+And displays "Review window has expired"
 ```

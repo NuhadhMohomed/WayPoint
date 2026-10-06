@@ -6,39 +6,39 @@ This document defines the deployment topology, cloud infrastructure strategy, co
 
 ## 1. Deployment Topology
 
-WayPoint uses a cloud-hosted infrastructure topology. All public client requests flow into the ASP.NET Core API.
+WayPoint uses an integrated cloud-hosted infrastructure topology combining **Railway** (ASP.NET Core Web API & Managed PostgreSQL 18 DB), **Render** (React Web Application static site), and compiled **Android APK** artifacts (Flutter Mobile Application). All client requests and integration workflows flow directly into the authoritative ASP.NET Core Web API.
 
 ```mermaid
 graph TB
-    subgraph ClientDevices["Client Devices"]
-        MobileDevice["Android Mobile Device (Flutter APK)"]
-        Browser["Desktop Browser (React Web App)"]
+    subgraph ClientDevices["Client Applications & Terminals"]
+        MobileDevice["Android Mobile Device (Flutter APK)\nPassenger Discovery & Conductor Scanner"]
+        Browser["Web Browser (React Web App on Render)\nOperator & Manager Console"]
     end
 
-    subgraph CloudInfra["Production Cloud Infrastructure (Railway & Vercel)"]
-        subgraph StaticHosting["Static Frontend Host (Vercel Edge CDN)"]
-            ReactApp["Deployed React SPA (Vite Production Build)"]
-        end
+    subgraph StaticHosting["Frontend Cloud Host (Render)"]
+        RenderStatic["Render Static Site (React 18 + Vite SPA)\nhttps://waypoint-web.onrender.com"]
+    end
 
+    subgraph CloudInfra["Backend Cloud Infrastructure (Railway)"]
         subgraph ContainerHosting["Container Host (Railway)"]
-            APIApp["ASP.NET Core Web API (.NET 8 Docker Container)"]
+            APIApp["ASP.NET Core Web API (.NET 8 Docker Container)\nhttps://waypoint-api.up.railway.app"]
             AIModule["Agentic AI Service (FastAPI / LangGraph in ai/)"]
         end
 
         subgraph ManagedDB["Managed Relational DB (Railway)"]
-            PostgresCloud[(Railway Managed PostgreSQL DB)]
+            PostgresCloud[(Railway Managed PostgreSQL 18.6 DB)]
         end
     end
 
-    MobileDevice -->|HTTPS / REST| APIApp
-    Browser -->|HTTP GET Static Assets| ReactApp
-    ReactApp -->|HTTPS / REST| APIApp
-    APIApp -->|Npgsql / EF Core (Private Network)| PostgresCloud
+    Browser -->|HTTP GET Static Assets| RenderStatic
+    RenderStatic -->|HTTPS / REST / JWT| APIApp
+    MobileDevice -->|HTTPS / REST / JWT| APIApp
+    APIApp -->|Npgsql 9 Direct SSL / EF Core 9| PostgresCloud
     APIApp -->|Internal HTTP Tool Wrappers| AIModule
 
-    %% No direct access
+    %% Prohibited connections
+    RenderStatic -. X Prohibited X .- PostgresCloud
     MobileDevice -. X Prohibited X .- PostgresCloud
-    ReactApp -. X Prohibited X .- PostgresCloud
     AIModule -. X Prohibited X .- PostgresCloud
 ```
 
@@ -49,26 +49,46 @@ graph TB
 ### 2.1 ASP.NET Core Web API
 - **Deployment Platform**: Railway (Linux Docker container running .NET 8 Kestrel).
 - **Public Health Endpoint**: `GET https://<railway-host>/health` returning `200 OK` with database connectivity status (`REQ-DEP-01`).
-- **Swagger Documentation URL**: `https://<railway-host>/swagger`.
-- **Environment Configuration**: `DATABASE_URL` (private Railway database URL), `JWT_SECRET`, and `CORS_ORIGINS` loaded via Railway service variables.
+- **Interactive Swagger Documentation URL**: `https://<railway-host>/swagger` providing live execution and testing for all 4 student components.
+- **Environment Configuration**: `DATABASE_URL` (private Railway database URL with SSL ALPN), `JWT_SECRET`, and `CORS_ORIGINS` loaded via Railway service variables.
 
 ### 2.2 PostgreSQL Managed Cloud Database
-- **Deployment Platform**: Railway Managed PostgreSQL Database service (`waypoint` database).
+- **Deployment Platform**: Railway Managed PostgreSQL Database service (PostgreSQL 18.6).
 - **Initialization**: Database schema initialized automatically via Entity Framework Core migrations applied on startup (`context.Database.MigrateAsync()`).
+- **Direct SSL & ALPN**: Fully configured via **Npgsql 9** with `SslNegotiation = SslNegotiation.Direct` and ALPN `postgresql`.
 - **Access Credentials**: Private internal host networking within the Railway project environment.
 
 ### 2.3 React Web Application
-- **Deployment Platform**: Vercel (Global Edge Network static hosting).
-- **Configuration**: Compiled production build configured with environment variable `VITE_API_URL` pointing to the public Railway Web API domain.
-- **Continuous Deployment**: Automated git-push integration on `main` branch with instant cache invalidation.
+- **Deployment Platform**: **Render** (Static Site service).
+- **Live URL**: `https://waypoint-web.onrender.com` (`REQ-DEP-03`).
+- **Configuration**: Root directory `web`, build command `npm install && npm run build`, publish directory `dist`.
+- **Environment Variable**: `VITE_API_URL` set to the Railway Web API domain (`https://<railway-domain>/api/v1`).
+- **SPA Rewrite Rule**: Rewrite `/*` to `/index.html` (configured via root `render.yaml`) ensuring deep links resolve without 404 errors.
+- **Continuous Deployment**: Automated git-push tracking on `main` branch.
 
-### 2.4 Flutter Mobile Application
-- **Deliverable**: Compiled Android Application Package (`.apk`) file.
-- **Build Command**: `flutter build apk --release`.
-- **Distribution**: APK binary delivered alongside the submission package for physical/emulator evaluator installation (`REQ-TECH-05`).
+### 2.4 Flutter Mobile Application (Android APK Release)
+- **Deployment Format**: Runnable Android Application Package (`.apk`) submitted for evaluators (`REQ-DEP-04`).
+- **Build Command**:
+  ```bash
+  cd mobile
+  flutter pub get
+  flutter build apk --release
+  ```
+- **Output Artifact**: `mobile/build/app/outputs/flutter-apk/app-release.apk`
+- **Installation Instructions**:
+  ```bash
+  # Using Android Debug Bridge (ADB) to physical device or emulator
+  adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk
+  ```
+- **Runtime Target**: Android API Level 24+ (Android 7.0 Nougat and above).
+- **Network Configuration**: Configured with live cloud API base URL (`https://waypoint-api.up.railway.app/api/v1`) or configurable via environment/debug settings.
 
-### 2.5 Agentic AI Subsystem
-- **Deployment Platform**: Internal Python container service in `ai/` or orchestrated tool runner connected via private internal HTTP to ASP.NET Core.
+### 2.5 Interactive Swagger & OpenAPI Console
+- **Evaluator Access**: Real-time evaluation of all transit routes, seat matrices, bookings, refunds, and multi-agent AI mitigation is facilitated via the interactive Swagger/OpenAPI 3.0 interface (`/swagger`).
+- **Client Agnostic**: Any HTTP client (Postman, cURL, automated load test scripts) can execute authenticated requests using JWT Bearer headers.
+
+### 2.6 Agentic AI Subsystem
+- **Deployment Platform**: Internal Python container service in `ai/` connected via private internal HTTP to ASP.NET Core (`REQ-DEP-05`).
 - **Startup Sequence**:
   1. Railway Managed PostgreSQL Database instance verified active.
   2. ASP.NET Core Web API instance started, migrations applied, baseline data seeded.
@@ -79,4 +99,5 @@ graph TB
 ## 3. Evaluation Accessibility & Cost Policy
 
 - **No-Cost Policy Compliance**: All cloud hosting uses free-tier or institution-provided cloud resources (`REQ-DEP-06`).
-- **Required Access Period**: All live URLs (API, React app, Swagger, DB) and demonstration video links MUST remain fully functional and accessible to evaluators until at least **Wednesday, 21 October 2026** (`REQ-ASSIGN-06`).
+- **Required Access Period**: All live URLs (API, Swagger UI, DB health, React Web) MUST remain fully functional and accessible to evaluators until at least **Wednesday, 21 October 2026** (`REQ-ASSIGN-06`).
+

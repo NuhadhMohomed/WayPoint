@@ -59,11 +59,5 @@ WayPoint is structured as a modular multi-tier application:
 - Do not introduce major frameworks without an Architectural Decision Record (ADR) in `docs/adr/`.
 - Respect module boundaries and follow formatting rules defined in `.editorconfig`.
 
-## UI/UX & Design System Rules
 
-- **Design System Authority**: All frontend development (Web & Flutter) must strictly adhere to [`docs/design/DESIGN.md`](docs/design/DESIGN.md) synchronized with Google Stitch Design System `assets/0a9e5af03d7d4795a3ce2e1cd7f5d6f9`.
-- **Pre-Designed Screens**: Always reference screen specifications and IDs in [`docs/design/stitch-screens-index.md`](docs/design/stitch-screens-index.md) when developing any new screen.
-- **Brand Tokens**: Use authoritative tokens (`waypoint-blue` / Lanka Blue `#0056D2`, `waypoint-amber` / Sunset Amber `#FEB300`, `waypoint-green` / Jungle Green `#005312`) rather than arbitrary hex values.
-- **Shared UI Primitives**: Use existing shared UI components in `web/src/components/ui/` (`Button`, `Card`, `TransitBadge`) and `mobile/lib/core/widgets/` (`WayPointButton`, `WayPointCard`, `TransitBadge`).
-- **Typography Pairing**: Maintain Plus Jakarta Sans (headings) and Inter (body and transit tables).
 

@@ -10,7 +10,7 @@ export const bookingApi = {
     return res.data
   },
   confirmPayment: async (chargeData) => {
-    const res = await apiClient.post('/payments/sandbox-charge', chargeData)
+    const res = await apiClient.post('/payments/confirm-sandbox-charge', chargeData)
     return res.data
   },
   getBookings: async (params) => {
@@ -21,12 +21,16 @@ export const bookingApi = {
     const res = await apiClient.get(`/bookings/${id}`)
     return res.data
   },
+  checkout: async (checkoutData) => {
+    const res = await apiClient.post('/bookings/checkout', checkoutData)
+    return res.data
+  },
   cancelBooking: async (cancelData) => {
     const res = await apiClient.post('/bookings/cancel', cancelData)
     return res.data
   },
-  verifyTicketQr: async (qrPayload) => {
-    const res = await apiClient.post('/tickets/verify-qr', { qrPayload })
+  verifyTicketQr: async (qrCodePayload) => {
+    const res = await apiClient.post('/tickets/verify', { qrCodePayload })
     return res.data
   },
 }

@@ -5,27 +5,51 @@ using WayPoint.Infrastructure.Data;
 
 namespace WayPoint.API.Controllers;
 
+/// <summary>
+/// Development-only endpoints for seeding, status checks, and diagnostics.
+/// Guarded at runtime: returns 404 in non-Development environments.
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class DevController : ControllerBase
 {
     private readonly WayPointDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<DevController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public DevController(
         WayPointDbContext context,
         IPasswordHasher passwordHasher,
-        ILogger<DevController> logger)
+        ILogger<DevController> logger,
+        IWebHostEnvironment environment)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _environment = environment;
+    }
+
+    /// <summary>
+    /// Runtime environment guard: blocks all DevController actions in non-Development environments.
+    /// </summary>
+    private IActionResult? GuardDevelopmentOnly()
+    {
+        if (!_environment.IsDevelopment())
+        {
+            _logger.LogWarning("DevController endpoint accessed in {Environment} environment — blocked.", _environment.EnvironmentName);
+            return NotFound();
+        }
+        return null;
     }
 
     [HttpPost("seed")]
     public async Task<IActionResult> SeedDatabase()
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         try
         {
             _logger.LogInformation("Applying pending database migrations...");
@@ -60,9 +84,54 @@ public class DevController : ControllerBase
         }
     }
 
+    [HttpPost("mock-trip-for-review")]
+    public async Task<IActionResult> CreateMockTripForReview([FromBody] WayPoint.Application.Features.FleetManagement.DTOs.CreateBusReviewDto request)
+    {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
+        // This is a dev-only mock to satisfy ReviewService business rules
+        var route = await _context.Routes.FirstOrDefaultAsync();
+        if (route == null) return NotFound("No routes available.");
+
+        var service = new WayPoint.Domain.Entities.Journey.Service
+        {
+            ServiceCode = "MOCK-SRV-" + Guid.NewGuid().ToString()[..4],
+            RouteId = route.Id,
+            BusId = request.BusId,
+            DriverId = request.BookingId, // Hack to pass driverId through BookingId field in this mock payload
+            DepartureTime = DateTime.UtcNow.AddHours(-10),
+            ArrivalTime = DateTime.UtcNow.AddHours(-5),
+            BaseFare = 1000,
+            Status = WayPoint.Domain.Enums.ServiceStatus.Completed
+        };
+        await _context.Services.AddAsync(service);
+        await _context.SaveChangesAsync();
+
+        var passengerProfile = await _context.Set<WayPoint.Domain.Entities.Identity.PassengerProfile>().FirstOrDefaultAsync(p => p.UserId == request.PassengerId);
+        if (passengerProfile == null) return NotFound("Passenger profile not found for user.");
+
+        var booking = new WayPoint.Domain.Entities.Booking.Booking
+        {
+            BookingReference = "MOCK-" + Guid.NewGuid().ToString()[..6],
+            PassengerId = passengerProfile.Id,
+            ServiceId = service.Id,
+            Status = WayPoint.Domain.Enums.BookingStatus.Confirmed,
+            TotalFareAmount = 1000,
+            SeatNumbers = "1A"
+        };
+        await _context.Bookings.AddAsync(booking);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { bookingId = booking.Id });
+    }
+
     [HttpGet("status")]
     public async Task<IActionResult> GetDatabaseStatus()
     {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
         var canConnect = await _context.Database.CanConnectAsync();
         if (!canConnect)
         {
@@ -87,4 +156,60 @@ public class DevController : ControllerBase
             }
         });
     }
+
+    [HttpGet("services")]
+    public async Task<IActionResult> GetServices()
+    {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
+        var services = await _context.Services
+            .Include(s => s.Route)
+            .Include(s => s.Bus)
+            .OrderBy(s => s.DepartureTime)
+            .Select(s => new
+            {
+                s.Id,
+                s.ServiceCode,
+                s.RouteId,
+                RouteName = s.Route.OriginCity + " - " + s.Route.DestinationCity + " (" + s.Route.RouteCode + ")",
+                s.BusId,
+                BusPlate = s.Bus != null ? s.Bus.RegistrationNumber : "Unassigned",
+                BusClass = s.Bus != null ? s.Bus.BusClass.ToString() : "Standard",
+                s.DepartureTime,
+                s.ArrivalTime,
+                s.BaseFare,
+                Status = s.Status.ToString()
+            })
+            .ToListAsync();
+
+        return Ok(services);
+    }
+
+    [HttpGet("audit-logs")]
+    public async Task<IActionResult> GetAuditLogs([FromQuery] int limit = 50)
+    {
+        var blocked = GuardDevelopmentOnly();
+        if (blocked != null) return blocked;
+
+        var logs = await _context.AuditLogs
+            .OrderByDescending(a => a.Timestamp)
+            .Take(limit)
+            .Select(a => new
+            {
+                a.Id,
+                a.Timestamp,
+                a.ActorId,
+                a.ActionType,
+                a.EntityName,
+                a.EntityId,
+                a.BeforeStateJson,
+                a.AfterStateJson,
+                a.HashSha256
+            })
+            .ToListAsync();
+
+        return Ok(logs);
+    }
 }
+

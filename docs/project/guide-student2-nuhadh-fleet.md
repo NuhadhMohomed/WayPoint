@@ -2,14 +2,20 @@
 
 - **Assigned Student**: **Nuhadh** (Student 2)
 - **Component**: **Component 2 — Fleet, Seat & Resource Feasibility**
-- **Core Domain Focus**: Bus fleet inventory, custom visual seat layouts, driver assignments, vehicle maintenance, and real-time seat availability calculation.
+- **Core Domain Focus**: Bus fleet inventory, seat map matrix templates, driver scheduling, maintenance status, and replacement resource feasibility.
 - **Assigned Feature Branch**: `feature/fleet-feasibility`
+- **Architecture**: **Integrated Full-Stack Architecture** ([SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 2**, you manage physical transport assets and operational capacity. Your work allows operators to configure bus seat maps, track vehicle availability, assign drivers without schedule conflicts, and compute real-time seat matrices across departures for both the web workspace and the mobile passenger seat picker.
+As the owner of **Component 2**, you manage physical transport assets across the transit network:
+1. **ASP.NET Core Web API**: Fleet inventory, 2D seat matrix generator, driver rostering with rest-hour compliance, and replacement resource feasibility solver.
+2. **PostgreSQL Relational DB**: Schemas and EF Core migrations for `Buses`, `SeatLayouts`, `Seats`, `Drivers`, `DriverAssignments`, `MaintenanceRecords`, and `BusReviews`.
+3. **React Web Application (`web/src/features/fleet/`)**: Operator interfaces for fleet management, 2D visual seat layout designer, driver rostering, and fleet reviews dashboard (`FleetMatrixBuilderPage`, `SeatLayoutDesignerPage`, `DriverRosteringPage`, `FleetReviewsDashboardPage`).
+4. **Flutter Mobile Application (`mobile/lib/features/fleet/` & `booking/`)**: Passenger interactive 2D seat picker with 10-minute hold countdown timer (`SeatPickerScreen`) and post-trip review submission form (`ReviewSubmissionScreen`).
+5. **Agentic AI**: Specialized **Resource Feasibility Agent** (`ai/agents/resource_agent.py`) with allow-listed tools (`CheckSeatAvailability`, `CheckReplacementResources`).
 
 ### Assigned User Stories
 - `US-PASS-003` (Interactive Seat Selection)
@@ -25,43 +31,91 @@ As the owner of **Component 2**, you manage physical transport assets and operat
    cp .env.example .env
    ```
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
-   - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
-   - Web development server connects via `VITE_API_URL=http://localhost:5010/api/v1`.
-   - Mobile app connects via `FLUTTER_API_URL=http://localhost:5010/api/v1`.
-2. **Restore & Seed Database**:
+   - Authoritative API base URL: `http://localhost:5010/api/v1`.
+   - Swagger Documentation: `http://localhost:5010/swagger`.
+2. **Run Backend API**:
    ```bash
    dotnet restore backend/WayPoint.sln
    dotnet run --project backend/WayPoint.API -- --seed
    ```
-3. **Branch Workflow**:
+3. **Run React Web Application**:
    ```bash
-   git checkout -b feature/fleet-feasibility
+   cd web && npm install && npm run dev
+   ```
+4. **Run Flutter Mobile Application**:
+   ```bash
+   cd mobile && flutter pub get && flutter run
    ```
 
 ---
 
-## 3. Design System & UI Contract (`docs/design/DESIGN.md`)
+## 3. Client Presentation Tier Implementations
 
-All UI screens must strictly comply with [`docs/design/DESIGN.md`](docs/design/DESIGN.md):
-- **Brand Tokens**: Lanka Blue (`#0056D2`), Sunset Amber (`#FEB300`), Jungle Green (`#005312`), Surface (`#F8F9FA` / `#FFFFFF`).
-- **Typography Pairing**: **Plus Jakarta Sans** (headings) and **Inter** (body, tabular rosters, and seat grids).
-- **Reusable Primitives**:
-  - Web: Use `Button`, `Card`, and `TransitBadge` in `web/src/components/ui/`.
-  - Mobile: Use `WayPointButton`, `WayPointCard`, and `TransitBadge` in `mobile/lib/core/widgets/`.
+### 3.1 React Web Pages (`web/src/features/fleet/`)
+- **`FleetMatrixBuilderPage.jsx`**: Bus fleet inventory, vehicle registration, luxury/standard class toggle, and maintenance status management.
+- **`SeatLayoutDesignerPage.jsx`**: Interactive 2D drag/grid seat map designer with row/column coordinates, aisle gaps, and accessible seat indicators.
+- **`DriverRosteringPage.jsx`**: Driver directory, license validation, departure assignment with rest-hour compliance enforcement (`BR-DRIVER-001`).
+- **`FleetReviewsDashboardPage.jsx`**: Operational reviews dashboard, bus/driver sentiment scores, and rating distribution charts.
+- State: TanStack Query v5 hooks (`useBuses`, `useSeatLayouts`, `useDrivers`, `useReviews`), Vitest component tests.
+
+### 3.2 Flutter Mobile Screens (`mobile/`)
+- **`SeatPickerScreen.dart`**: Real-time 2D bus seat picker rendering available, held, and booked seats with interactive seat selection and 10-minute hold countdown timer (`BR-HOLD-001`).
+- **`ReviewSubmissionScreen.dart`**: Post-journey 5-star rating, punctuality & cleanliness tags, optional anonymous review mode, and comment submission.
+- State: `SeatPickerBloc` and `ReviewBloc` with Dio HTTP client, unit & widget tests.
 
 ---
 
-## 4. Google Stitch UI Screen Specifications
+## 4. Authoritative Request & Response DTO Specifications
 
-Reference your assigned pre-designed screens in [`docs/design/stitch-screens-index.md`](docs/design/stitch-screens-index.md):
+### 4.1 Seat Layout Definition DTO (`CreateSeatLayoutDto`)
+```json
+{
+  "name": "Standard 2x2 Express",
+  "totalRows": 10,
+  "totalColumns": 4,
+  "seats": [
+    { "seatNumber": "1A", "rowIndex": 1, "columnIndex": 1, "seatClass": "Standard" },
+    { "seatNumber": "1B", "rowIndex": 1, "columnIndex": 2, "seatClass": "Standard" },
+    { "seatNumber": "1C", "rowIndex": 1, "columnIndex": 3, "seatClass": "Standard" },
+    { "seatNumber": "1D", "rowIndex": 1, "columnIndex": 4, "seatClass": "Standard" }
+  ]
+}
+```
 
-| Screen Code | Screen Title | Stitch Screen ID | Platform | Target File |
-| :--- | :--- | :--- | :--- | :--- |
-| **MOB-05** | Interactive Seat Picker & 10m Hold | `f823b1bf16b54795972e08b4d0813d5d` | Mobile | `mobile/lib/features/fleet/screens/seat_picker_screen.dart` |
-| **MOB-10** | Conductor QR Boarding Scanner | `4e6e32a8846441249f406afad5c51eef` | Mobile | `mobile/lib/features/fleet/screens/conductor_scanner_screen.dart` |
-| **MOB-11** | Conductor Passenger Manifest Roster | `c38c34595fa64b978deeb6f2db6c035d` | Mobile | `mobile/lib/features/fleet/screens/conductor_manifest_screen.dart` |
-| **WEB-05** | Bus Fleet & Visual Seat Layout Matrix | `85fdc0e3b77c40e6877f1a994776abdd` | Web | `web/src/features/fleet/FleetMatrixBuilderPage.jsx` |
-| **WEB-06** | Driver Roster & Rest Compliance Gantt | `4110147a3a9a47dfb81c2d710e450b70` | Web | `web/src/features/fleet/DriverRosteringPage.jsx` |
+### 4.2 Real-Time Seat Availability Response DTO (`ServiceSeatAvailabilityDto`)
+```json
+{
+  "serviceId": "e1a90c12-3456-789a-bcde-f0123456789a",
+  "busRegistration": "ND-5421",
+  "busClass": "Luxury",
+  "totalCapacity": 40,
+  "availableCount": 24,
+  "heldCount": 4,
+  "bookedCount": 12,
+  "seatGrid": [
+    {
+      "seatNumber": "1A",
+      "row": 1,
+      "col": 1,
+      "status": "Available",
+      "price": 2400.0
+    },
+    {
+      "seatNumber": "1B",
+      "row": 1,
+      "col": 2,
+      "status": "Held",
+      "heldUntil": "2026-10-15T08:10:00Z"
+    },
+    {
+      "seatNumber": "2A",
+      "row": 2,
+      "col": 1,
+      "status": "Booked"
+    }
+  ]
+}
+```
 
 ---
 
@@ -84,7 +138,7 @@ Your component directly interacts with the following entities in `WayPoint.Domai
 ## 6. Backend Implementation Blueprint (`backend/`)
 
 ### 6.1 Controllers to Implement
-Create these controllers under `backend/WayPoint.API/Controllers/`:
+Controllers reside under `backend/WayPoint.API/Controllers/`:
 1. `BusController.cs` (`/api/v1/buses`):
    - `GET /api/v1/buses` (List bus fleet with maintenance status and layout details)
    - `POST /api/v1/buses` (`[Authorize(Roles = "Admin,TransportManager")]` - Register new bus)
@@ -126,12 +180,25 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`WayPoint.Tests/FleetTests.cs`)**:
-   - Test driver schedule overlap detection algorithm (ensuring no double-assignment within departure/arrival window).
-   - Test seat layout matrix generator and seat coordinate validation.
-2. **Integration Tests**:
-   - Test real-time seat status aggregation against active `SeatHold` and `Booking` records in PostgreSQL.
-   - Test replacement resource feasibility query under simulated fleet shortages.
+1. **Backend Unit & Integration Tests (xUnit + Moq)**:
+   - Driver schedule overlap detection (`DriverOverlapDetectionTests.cs`).
+   - Seat layout matrix and coordinate bounds validation (`SeatLayoutValidationTests.cs`).
+   - Real-time seat availability aggregation (`SeatMatrixGeneratorTests.cs`).
+   - Resource feasibility constraints (`ResourceFeasibilityTests.cs`).
+   - Bus & driver review submission and 7-day window enforcement (`ReviewServiceTests.cs`).
+   ```bash
+   dotnet test backend/WayPoint.sln --filter "FullyQualifiedName~Fleet|FullyQualifiedName~Seat|FullyQualifiedName~Review"
+   ```
+2. **React Web Tests (`web/src/features/fleet/__tests__/`)**:
+   - Vitest component tests for `SeatLayoutDesignerPage` and `FleetMatrixBuilderPage`.
+   ```bash
+   cd web && npm test
+   ```
+3. **Flutter Mobile Tests (`mobile/test/features/fleet/`)**:
+   - Widget tests for `SeatPickerScreen` interactive seat selection and `ReviewSubmissionScreen`.
+   ```bash
+   cd mobile && flutter test test/features/fleet/ test/features/booking/
+   ```
 
 ---
 
@@ -140,4 +207,10 @@ Create these controllers under `backend/WayPoint.API/Controllers/`:
 Be prepared to explain and demonstrate live without AI tools:
 - **Concurrency & Double-Booking Protection**: How the `RowVersion` bytea token on `Seats` prevents race conditions.
 - **Driver Rest-Hour Validation (`BR-RESOURCE-002`)**: Explain how your code verifies that a driver has at least 8 hours off-duty between consecutive service arrivals and departures.
-- **Dynamic Seat Map Construction**: Walk through how your backend takes 1D seat entities and maps them into a 2D matrix for Flutter and React.
+- **Dynamic Seat Map Construction**: Walk through how your backend aggregates 1D seat database records into a structured 2D grid matrix.
+
+## 10. Reviews & Ratings Module Extension
+You are also responsible for the Driver & Bus Reviews/Ratings feature (`FR-REVIEW-001` to `FR-REVIEW-006`):
+- **7-Day Review Window**: The backend blocks updates after 7 days but permits deletion.
+- **Anonymous Reviews**: `PassengerName` is automatically masked as "Anonymous Passenger" when `IsAnonymous` is true.
+- **Profanity Filter**: `SanitizeComment` prevents inappropriate language before persisting to PostgreSQL.

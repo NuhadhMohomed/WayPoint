@@ -15,11 +15,12 @@ This document provides the complete, formal **Business Rules & Governance Specif
                                    │ HTTPS / REST               │ Internal Allow-Listed Tools
                                    │                            │ (Validated Inputs & Outputs)
 +----------------------------------+---+      +-----------------+------------------+
-|           CLIENT APPLICATIONS        |      |       AGENTIC AI SUBSYSTEM         |
-|  - React Web (Operator Workspace)    |      |  - Planner / Coordinator Agent    |
-|  - Flutter Mobile (Passenger App)    |      |  - Journey Analysis Agent          |
-+--------------------------------------+      |  - Resource & Booking Agent        |
-                                              |  - Validation & Safety Agent       |
+|      CLIENT PRESENTATION TIERS       |      |       AGENTIC AI SUBSYSTEM         |
+|  - React 18 Web App (Operators/Mgrs) |      |  - Planner Node (Coordinator)      |
+|  - Flutter Mobile (Passengers/Conds) |      |  - Journey Analysis (Sethum)       |
+|  - Station Scanners / Partner APIs   |      |  - Resource Feasibility (Nuhadh)   |
++--------------------------------------+      |  - Booking & Policy (Mithila)      |
+                                              |  - Validation & Safety (Dineth)    |
                                               +------------------------------------+
 ```
 
@@ -272,3 +273,6 @@ The table below explicitly governs every AI-assisted operation across the 23 dom
 | **AI Tool Access** | Tool selection and argument payloads. | Tool allow-list (10 tools), input DTO schema validation. | Direct SQL, shell access, arbitrary HTTP requests, unlisted tools. | **No** |
 | **AI Validation & Resilience** | Corrected JSON payloads during retry loops. | Schema assertions, rule compliance, max 3 retries before `SafeFailure`. | Overriding validation failures, infinite retry loops. | **No** |
 | **Audit Logging** | N/A | Automatic DB interceptor logging on entity save. | Modifying, suppressing, or deleting audit log rows. | **No** |
+| **Review Submission** | Rating (1-5), optional comment text. | Linked to `Confirmed` booking, submitted within 7 days of arrival, no profanity. | Falsifying booking ownership, submitting multiple reviews for same booking/entity. | **Yes** |
+| **Review Editing** | Rating (1-5), comment text. | Must be within 7 days of trip arrival time. | Editing reviews after the 7-day window. | **Yes** |
+| **Review Deletion** | N/A | Review must belong to the passenger requesting deletion. | Deleting other users' reviews. | **Yes** |

@@ -1,24 +1,43 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import '../constants/api_constants.dart';
 import '../storage/secure_storage_service.dart';
 
-class MobileApiClient {
-  late final Dio dio;
+typedef MobileApiClient = ApiClient;
 
-  MobileApiClient() {
-    dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
+class ApiClient {
+  final Dio dio;
+  final SecureStorageService storageService;
 
+  static String get defaultBaseUrl =>
+      (kIsWeb ||
+              defaultTargetPlatform == TargetPlatform.windows ||
+              defaultTargetPlatform == TargetPlatform.macOS ||
+              defaultTargetPlatform == TargetPlatform.linux)
+          ? 'http://localhost:5010/api/v1'
+          : 'http://10.0.2.2:5010/api/v1';
+
+  ApiClient({
+    Dio? dioClient,
+    SecureStorageService? storage,
+    String? baseUrl,
+  })  : dio = dioClient ?? Dio(BaseOptions(
+          baseUrl: baseUrl ?? defaultBaseUrl,
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        )),
+        storageService = storage ?? SecureStorageService() {
+    _setupInterceptors();
+  }
+
+  void _setupInterceptors() {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await SecureStorageService.getToken();
+          final token = await storageService.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -26,11 +45,65 @@ class MobileApiClient {
         },
         onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401) {
-            await SecureStorageService.clearAuth();
+            await storageService.clearAll();
           }
           return handler.next(error);
         },
       ),
+    );
+  }
+
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> post<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
     );
   }
 }

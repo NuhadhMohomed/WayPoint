@@ -1,0 +1,428 @@
+import React, { useState, useEffect, useCallback } from 'react'
+import { disruptionApi } from './disruptionApi'
+import { useDisruptionStore } from '@/store/disruptionStore'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { TransitBadge } from '@/components/ui/TransitBadge'
+import {
+  Bot, Cpu, Wrench, ShieldCheck, CheckCircle2, XCircle,
+  AlertTriangle, Clock, ArrowRight, ChevronDown, ChevronRight,
+  Code2, Loader2, RefreshCw, Layers, ShieldAlert, Sparkles
+} from 'lucide-react'
+
+export function AiObservabilityPage() {
+  const {
+    aiWorkflows,
+    workflowsLoading,
+    setAiWorkflows,
+    setWorkflowsLoading,
+    activeWorkflow,
+    setActiveWorkflow,
+    activeWorkflowLoading,
+    setActiveWorkflowLoading,
+  } = useDisruptionStore()
+
+  const [expandedTools, setExpandedTools] = useState({})
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  const toggleToolExpanded = (toolId) => {
+    setExpandedTools((prev) => ({
+      ...prev,
+      [toolId]: !prev[toolId],
+    }))
+  }
+
+  const loadWorkflows = useCallback(async () => {
+    setWorkflowsLoading(true)
+    setErrorMessage(null)
+    try {
+      const data = await disruptionApi.getAiWorkflows({ pageNumber: 1, pageSize: 20 })
+      setAiWorkflows(data)
+
+      const items = data.items || data
+      if (items.length > 0 && !selectedWorkflowId) {
+        setSelectedWorkflowId(items[0].id)
+      }
+    } catch (err) {
+      setErrorMessage(err.response?.data?.detail || 'Failed to retrieve AI workflow observability traces.')
+    } finally {
+      setWorkflowsLoading(false)
+    }
+  }, [setAiWorkflows, setWorkflowsLoading, selectedWorkflowId])
+
+  const loadWorkflowDetail = useCallback(async (workflowId) => {
+    if (!workflowId) return
+    setActiveWorkflowLoading(true)
+    try {
+      const detail = await disruptionApi.getAiWorkflowById(workflowId)
+      setActiveWorkflow(detail)
+    } catch (err) {
+      setErrorMessage(err.response?.data?.detail || 'Failed to load workflow execution trace.')
+    } finally {
+      setActiveWorkflowLoading(false)
+    }
+  }, [setActiveWorkflow, setActiveWorkflowLoading])
+
+  useEffect(() => {
+    loadWorkflows()
+  }, [loadWorkflows])
+
+  useEffect(() => {
+    if (selectedWorkflowId) {
+      loadWorkflowDetail(selectedWorkflowId)
+    }
+  }, [selectedWorkflowId, loadWorkflowDetail])
+
+  const formatJson = (jsonString) => {
+    try {
+      const parsed = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString
+      return JSON.stringify(parsed, null, 2)
+    } catch {
+      return jsonString || '{}'
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-sm flex items-center gap-2">
+          <XCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {/* Governance & SafeFailure Header Banner */}
+      <div className="p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 flex-shrink-0">
+            <Sparkles className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900">AI Multi-Agent Observability & Traces</h3>
+              <span className="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Guardrails Active
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              End-to-end execution tracking, tool call sandboxing, deterministic validation gates, and immutable audit persistence.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <Button variant="outline" size="sm" onClick={loadWorkflows} disabled={workflowsLoading}>
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${workflowsLoading ? 'animate-spin' : ''}`} />
+            Refresh Traces
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Workflows Queue */}
+        <div className="lg:col-span-4 space-y-4">
+          <Card>
+            <CardHeader
+              title="Workflow Traces"
+              subtitle="Select an execution session to inspect multi-agent steps."
+            />
+
+            {workflowsLoading && !activeWorkflow ? (
+              <div className="text-center py-12 text-slate-400">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-waypoint-blue" />
+                Loading workflow traces...
+              </div>
+            ) : aiWorkflows.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 text-xs">
+                No AI workflow traces recorded yet. Seed data provides sample traces.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {aiWorkflows.map((wf) => (
+                  <div
+                    key={wf.id}
+                    onClick={() => setSelectedWorkflowId(wf.id)}
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      selectedWorkflowId === wf.id
+                        ? 'bg-indigo-50 border-indigo-500 shadow-xs ring-1 ring-indigo-500/30'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-mono text-[10px] text-indigo-600 font-semibold">WF-{wf.id.substring(0, 8)}</span>
+                      <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                        wf.status === 'Completed'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : wf.status === 'Failed'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        {wf.status}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-semibold text-slate-900 line-clamp-2 leading-relaxed">
+                      {wf.objective}
+                    </h4>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-mono">
+                      <span>{new Date(wf.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>{wf.steps?.length || 3} steps</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* AI Governance Policy Card */}
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl space-y-2.5 text-xs shadow-xs">
+            <div className="flex items-center gap-2 text-slate-900 font-semibold">
+              <ShieldAlert className="w-4 h-4 text-amber-600" />
+              <span>WayPoint AI Safety Directives</span>
+            </div>
+            <ul className="text-slate-600 space-y-1.5 list-disc pl-4 text-[11px] leading-relaxed">
+              <li>AI agents cannot directly confirm passenger payment.</li>
+              <li>AI agents cannot directly modify operational timetable records.</li>
+              <li>High-impact dispatch requires deterministic Transport Manager approval.</li>
+              <li>Deterministic validation rules always override LLM output schema recommendations.</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Right Column: Execution Timeline, Tool Logs & Deterministic Validations */}
+        <div className="lg:col-span-8 space-y-5">
+          {activeWorkflowLoading ? (
+            <Card>
+              <div className="text-center py-16 text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-waypoint-blue" />
+                Loading multi-agent execution timeline...
+              </div>
+            </Card>
+          ) : !activeWorkflow ? (
+            <Card>
+              <div className="text-center py-16 text-slate-400">
+                Select a workflow trace from the left queue to view execution steps.
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-5">
+              {/* Workflow Overview Card */}
+              <Card>
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div>
+                      <span className="text-[10px] font-mono text-indigo-600 font-semibold">Trace Session ID: {activeWorkflow.id}</span>
+                      <h3 className="text-base font-bold text-slate-900 mt-0.5">{activeWorkflow.objective}</h3>
+                    </div>
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border self-start sm:self-auto ${
+                      activeWorkflow.status === 'Completed'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      {activeWorkflow.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block text-[10px]">Execution Started</span>
+                      <span className="font-mono text-slate-900 font-medium">
+                        {new Date(activeWorkflow.startedAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block text-[10px]">Execution Completed</span>
+                      <span className="font-mono text-slate-900 font-medium">
+                        {activeWorkflow.completedAt ? new Date(activeWorkflow.completedAt).toLocaleTimeString() : 'In Progress'}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 col-span-2 sm:col-span-1">
+                      <span className="text-slate-500 block text-[10px]">Multi-Agent Count</span>
+                      <span className="font-medium text-purple-700">
+                        {activeWorkflow.steps?.length || 0} Specialised Agents
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Execution Steps Timeline & Waterfall */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-waypoint-primary" />
+                    Multi-Agent Execution Timeline & Timing Waterfall
+                  </h4>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    Model: Google Gemini 1.5 Pro • Deterministic Guardrails
+                  </span>
+                </div>
+
+                {(!activeWorkflow.steps || activeWorkflow.steps.length === 0) ? (
+                  <Card>
+                    <p className="text-xs text-slate-400 text-center py-6">No steps recorded for this workflow session.</p>
+                  </Card>
+                ) : (
+                  activeWorkflow.steps.map((step, idx) => {
+                    const stepDuration = step.toolCalls?.reduce((acc, tc) => acc + (tc.durationMs || 0), 120) || 120
+                    const maxEstimated = 2500
+                    const barWidth = Math.min(100, Math.max(12, Math.round((stepDuration / maxEstimated) * 100)))
+
+                    return (
+                      <div
+                        key={step.id || idx}
+                        className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-xs hover:border-indigo-200 transition-all"
+                      >
+                        {/* Step Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-mono font-bold text-xs">
+                              #{step.stepOrder || idx + 1}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-sm font-bold text-slate-900">{step.agentName}</h5>
+                                <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  Autonomous Agent Step
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5">{step.stepDescription}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
+                              {new Date(step.executedAt).toLocaleTimeString()}
+                            </span>
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600">
+                              <Clock className="w-3 h-3 text-indigo-600" />
+                              <span>{stepDuration} ms execution latency</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Waterfall Latency Gauge */}
+                        <div className="px-1">
+                          <div className="flex justify-between text-[10px] text-slate-500 font-mono mb-1">
+                            <span>Step Execution Duration</span>
+                            <span>{stepDuration} ms ({barWidth}% of trace budget)</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div
+                              className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500"
+                              style={{ width: `${barWidth}%` }}
+                            />
+                          </div>
+                        </div>
+
+                      {/* Tool Calls inside Step */}
+                      {step.toolCalls && step.toolCalls.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-semibold uppercase text-slate-500 flex items-center gap-1.5">
+                            <Wrench className="w-3.5 h-3.5 text-amber-600" />
+                            Tool Calls ({step.toolCalls.length})
+                          </span>
+
+                          <div className="space-y-2">
+                            {step.toolCalls.map((tc) => {
+                              const isExp = expandedTools[tc.id]
+                              return (
+                                <div
+                                  key={tc.id}
+                                  className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden transition-all"
+                                >
+                                  <div
+                                    onClick={() => toggleToolExpanded(tc.id)}
+                                    className="p-3 flex items-center justify-between cursor-pointer hover:bg-slate-100 text-xs"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Code2 className="w-4 h-4 text-indigo-600" />
+                                      <span className="font-mono font-bold text-slate-900">{tc.toolName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">
+                                        {tc.durationMs}ms
+                                      </span>
+                                      {isExp ? (
+                                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                                      ) : (
+                                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {isExp && (
+                                    <div className="p-3 border-t border-slate-200 bg-white space-y-2.5 text-xs font-mono">
+                                      <div>
+                                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                                          Arguments JSON
+                                        </span>
+                                        <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-emerald-800 text-[11px] overflow-x-auto whitespace-pre-wrap">
+                                          {formatJson(tc.argumentsJson)}
+                                        </pre>
+                                      </div>
+
+                                      <div>
+                                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                                          Result JSON
+                                        </span>
+                                        <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-indigo-900 text-[11px] overflow-x-auto whitespace-pre-wrap">
+                                          {formatJson(tc.resultJson)}
+                                        </pre>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Deterministic Validation Results */}
+                      {step.validationResults && step.validationResults.length > 0 && (
+                        <div className="space-y-2 pt-1 border-t border-slate-100">
+                          <span className="text-[11px] font-semibold uppercase text-slate-500 flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            Deterministic Backend Rules Validation
+                          </span>
+
+                          <div className="space-y-2">
+                            {step.validationResults.map((vr, vIdx) => (
+                              <div
+                                key={vr.id || vIdx}
+                                className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
+                                  vr.passed
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                                }`}
+                              >
+                                {vr.passed ? (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                                ) : (
+                                  <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                                )}
+                                <div className="space-y-0.5">
+                                  <div className="font-semibold text-slate-900">{vr.ruleName}</div>
+                                  <div className="text-[11px] text-slate-600">{vr.validationDetails}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)
+}

@@ -3,8 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using WayPoint.Application.Common.Interfaces;
+using WayPoint.Application.Common.Interfaces.Disruption;
+using WayPoint.Application.Features.JourneyPlanning;
+using WayPoint.Application.Common.Interfaces.Fleet;
 using WayPoint.Infrastructure.Data;
 using WayPoint.Infrastructure.Services;
+using WayPoint.Infrastructure.Services.Disruption;
+using WayPoint.Infrastructure.Services.Fleet;
 
 namespace WayPoint.Infrastructure;
 
@@ -26,6 +31,37 @@ public static class DependencyInjection
         services.AddScoped<IWayPointDbContext>(provider => provider.GetRequiredService<WayPointDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IJourneyPlanningService, JourneyPlanningService>();
+        services.AddScoped<IBookingService, BookingService>();
+
+        // Component 2: Fleet, Seat & Resource Feasibility Services (Nuhadh)
+        services.AddScoped<IBusService, BusService>();
+        services.AddScoped<ISeatLayoutService, SeatLayoutService>();
+        services.AddScoped<IDriverService, DriverService>();
+        services.AddScoped<ISeatAvailabilityService, SeatAvailabilityService>();
+        services.AddScoped<IResourceFeasibilityService, ResourceFeasibilityService>();
+        services.AddScoped<IReviewService, ReviewService>();
+
+        // Component 4: Disruption, Rebooking & Approval Services (Dineth)
+        services.AddScoped<IDisruptionService, DisruptionService>();
+        services.AddScoped<IRebookingService, RebookingService>();
+        services.AddScoped<IApprovalService, ApprovalService>();
+        services.AddScoped<IServiceAlertService, ServiceAlertService>();
+        services.AddScoped<IAiWorkflowQueryService, AiWorkflowQueryService>();
+        // Agentic AI Persistence Services
+        services.AddScoped<IAiWorkflowService, AiWorkflowService>();
+
+        // Passenger Notifications
+        services.AddScoped<INotificationService, NotificationService>();
+
+        // AI Microservice Gateway Client
+        var aiBaseUrl = configuration["AI_SERVICE_URL"] ?? configuration["AiSubsystem:BaseUrl"] ?? "http://localhost:8000";
+        services.AddHttpClient<IAiRecommendationClient, AiRecommendationClient>(client =>
+        {
+            client.BaseAddress = new Uri(aiBaseUrl);
+            var timeoutSeconds = int.TryParse(configuration["AI_TIMEOUT_SECONDS"], out var sec) ? sec : 30;
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        });
 
         return services;
     }
@@ -49,6 +85,7 @@ public static class DependencyInjection
         {
             var uri = new Uri(databaseUrl);
             var userInfo = uri.UserInfo.Split(':');
+            var isLocal = uri.Host == "localhost" || uri.Host == "127.0.0.1";
             var builder = new NpgsqlConnectionStringBuilder
             {
                 Host = uri.Host,
@@ -56,11 +93,14 @@ public static class DependencyInjection
                 Username = userInfo.Length > 0 ? userInfo[0] : "",
                 Password = userInfo.Length > 1 ? userInfo[1] : "",
                 Database = uri.AbsolutePath.TrimStart('/'),
-                SslMode = SslMode.Require,
-                SslNegotiation = SslNegotiation.Direct,
+                SslMode = isLocal ? SslMode.Prefer : SslMode.Require,
                 Timeout = 15,
                 CommandTimeout = 60
             };
+            if (!isLocal)
+            {
+                builder.SslNegotiation = SslNegotiation.Direct;
+            }
             return builder.ToString();
         }
 

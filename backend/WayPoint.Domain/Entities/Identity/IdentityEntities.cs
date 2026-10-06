@@ -11,6 +11,8 @@ public class User : BaseEntity
     public string? PhoneNumber { get; set; }
     public Guid RoleId { get; set; }
     public bool IsActive { get; set; } = true;
+    public int FailedLoginAttempts { get; set; } = 0;
+    public DateTime? LockedUntil { get; set; }
 
     // Navigation properties
     public Role Role { get; set; } = null!;

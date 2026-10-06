@@ -1,62 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
+import 'core/network/api_client.dart';
+import 'core/storage/secure_storage_service.dart';
+import 'features/auth/bloc/auth_cubit.dart';
+import 'features/navigation/screens/auth_gate.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const WayPointApp());
+  final storageService = SecureStorageService();
+  final apiClient = ApiClient(storage: storageService);
+
+  runApp(WayPointApp(
+    storageService: storageService,
+    apiClient: apiClient,
+  ));
 }
 
 class WayPointApp extends StatelessWidget {
-  const WayPointApp({super.key});
+  final SecureStorageService storageService;
+  final ApiClient apiClient;
+
+  const WayPointApp({
+    super.key,
+    required this.storageService,
+    required this.apiClient,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WayPoint',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const MainNavigationScreen(),
-    );
-  }
-}
-
-class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
-
-  @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
-}
-
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = const [
-    Center(child: Text('Component 1: Journey Search (Sethum)', style: TextStyle(fontSize: 16))),
-    Center(child: Text('Component 2: Seat Picker & Fleet (Nuhadh)', style: TextStyle(fontSize: 16))),
-    Center(child: Text('Component 3: E-Ticket Wallet (Mithila)', style: TextStyle(fontSize: 16))),
-    Center(child: Text('Component 4: Disruption Alerts (Dineth)', style: TextStyle(fontSize: 16))),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('WayPoint Transit'),
-      ),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF0F172A),
-        selectedItemColor: const Color(0xFF818CF8),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Journeys'),
-          BottomNavigationBarItem(icon: Icon(Icons.event_seat), label: 'Seats'),
-          BottomNavigationBarItem(icon: Icon(Icons.confirmation_number), label: 'Wallet'),
-          BottomNavigationBarItem(icon: Icon(Icons.warning_amber_rounded), label: 'Alerts'),
-        ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ThemeCubit>(
+          create: (_) => ThemeCubit(),
+        ),
+        BlocProvider<AuthCubit>(
+          create: (_) => AuthCubit(
+            apiClient: apiClient,
+            storageService: storageService,
+          ),
+        ),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp(
+            title: 'WayPoint Transit',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            themeMode: ThemeMode.light,
+            home: AuthGate(storageService: storageService),
+          );
+        },
       ),
     );
   }

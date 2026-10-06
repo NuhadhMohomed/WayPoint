@@ -7,6 +7,7 @@ using WayPoint.Domain.Entities.Disruption;
 using WayPoint.Domain.Entities.Fleet;
 using WayPoint.Domain.Entities.Identity;
 using WayPoint.Domain.Entities.Journey;
+using WayPoint.Domain.Entities.Notification;
 
 namespace WayPoint.Infrastructure.Data;
 
@@ -31,6 +32,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<FareRule> FareRules => Set<FareRule>();
     public DbSet<JourneySearch> JourneySearches => Set<JourneySearch>();
     public DbSet<JourneyCandidate> JourneyCandidates => Set<JourneyCandidate>();
+    public DbSet<JourneyLeg> JourneyLegs => Set<JourneyLeg>();
 
     // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
     public DbSet<Bus> Buses => Set<Bus>();
@@ -41,8 +43,10 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
     public DbSet<Amenity> Amenities => Set<Amenity>();
     public DbSet<ServiceAmenity> ServiceAmenities => Set<ServiceAmenity>();
+    public DbSet<BusReview> BusReviews => Set<BusReview>();
+    public DbSet<DriverReview> DriverReviews => Set<DriverReview>();
 
-    // Component 3: Booking, Ticketing & Passenger Options (Mithila)
+    // Component 3: Booking, Ticketing & Payments (Mithila)
     public DbSet<SeatHold> SeatHolds => Set<SeatHold>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
@@ -61,6 +65,9 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
     public DbSet<AiToolCall> AiToolCalls => Set<AiToolCall>();
     public DbSet<AiValidationResult> AiValidationResults => Set<AiValidationResult>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // Passenger Notifications
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -185,10 +192,24 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
         {
             entity.Property(jc => jc.TotalFare).HasPrecision(10, 2);
             entity.Property(jc => jc.MatchScore).HasPrecision(4, 3);
+            entity.Property(jc => jc.CandidateType).HasConversion<string>().HasMaxLength(20);
             entity.HasOne(jc => jc.JourneySearch)
                   .WithMany(js => js.Candidates)
                   .HasForeignKey(jc => jc.JourneySearchId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<JourneyLeg>(entity =>
+        {
+            entity.Property(jl => jl.LegFare).HasPrecision(10, 2);
+            entity.HasOne(jl => jl.JourneyCandidate)
+                  .WithMany(jc => jc.Legs)
+                  .HasForeignKey(jl => jl.JourneyCandidateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(jl => jl.Service)
+                  .WithMany()
+                  .HasForeignKey(jl => jl.ServiceId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Component 2: Fleet, Seats & Resources (Nuhadh)
@@ -226,6 +247,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
             entity.Property(d => d.FullName).HasMaxLength(100).IsRequired();
             entity.Property(d => d.LicenseNumber).HasMaxLength(50).IsRequired();
             entity.Property(d => d.PhoneNumber).HasMaxLength(20);
+            entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
         });
 
         modelBuilder.Entity<DriverAssignment>(entity =>
@@ -261,6 +283,44 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
                   .WithMany(a => a.ServiceAmenities)
                   .HasForeignKey(sa => sa.AmenityId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BusReview>(entity =>
+        {
+            entity.HasIndex(br => new { br.BusId, br.BookingId }).IsUnique(); // One review per booking per bus
+            entity.Property(br => br.Rating).IsRequired();
+            entity.Property(br => br.Comment).HasMaxLength(1000);
+            entity.HasOne(br => br.Bus)
+                  .WithMany(b => b.Reviews)
+                  .HasForeignKey(br => br.BusId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(br => br.Passenger)
+                  .WithMany()
+                  .HasForeignKey(br => br.PassengerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(br => br.Booking)
+                  .WithMany()
+                  .HasForeignKey(br => br.BookingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DriverReview>(entity =>
+        {
+            entity.HasIndex(dr => new { dr.DriverId, dr.BookingId }).IsUnique();
+            entity.Property(dr => dr.Rating).IsRequired();
+            entity.Property(dr => dr.Comment).HasMaxLength(1000);
+            entity.HasOne(dr => dr.Driver)
+                  .WithMany(d => d.Reviews)
+                  .HasForeignKey(dr => dr.DriverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(dr => dr.Passenger)
+                  .WithMany()
+                  .HasForeignKey(dr => dr.PassengerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(dr => dr.Booking)
+                  .WithMany()
+                  .HasForeignKey(dr => dr.BookingId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Component 3: Booking, Ticketing & Payments (Mithila)
@@ -420,6 +480,39 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
             entity.Property(a => a.ActionType).HasMaxLength(50);
             entity.Property(a => a.EntityName).HasMaxLength(50);
             entity.Property(a => a.EntityId).HasMaxLength(100);
+            entity.Property(a => a.HashSha256).HasMaxLength(64).IsRequired();
+        });
+
+        // Passenger Notifications
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasIndex(n => new { n.UserId, n.CreatedAt });
+            entity.Property(n => n.Title).HasMaxLength(150).IsRequired();
+            entity.Property(n => n.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(n => n.Type).HasMaxLength(50).IsRequired();
+            entity.Property(n => n.ReferenceEntityType).HasMaxLength(50);
         });
     }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // Auto-update UpdatedAt timestamp for modified entities (P3-03)
+        foreach (var entry in ChangeTracker.Entries<WayPoint.Domain.Common.BaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        // Auto-compute SHA-256 hash for newly created audit log records (BR-AUDIT-001)
+        foreach (var entry in ChangeTracker.Entries<AuditLog>()
+            .Where(e => e.State == EntityState.Added))
+        {
+            entry.Entity.ComputeHash();
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }
+

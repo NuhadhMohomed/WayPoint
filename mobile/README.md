@@ -1,88 +1,104 @@
-# WayPoint Mobile (Passenger Flutter Application)
+# WayPoint Mobile Application (Flutter 3.x / Dart 3)
 
-The cross-platform mobile client application for **WayPoint** (**SE3090 Assignment 1**), providing passengers with intercity journey search, preference filtering, interactive seat selection, payment, digital QR ticketing, and real-time disruption alerts.
-
-Built with **Flutter 3.x**, **Dart 3.x**, **flutter_bloc**, **Dio**, and strictly adhering to the **Google Stitch Design System** (`docs/design/DESIGN.md`).
+The authoritative cross-platform mobile client application for **WayPoint** (**SE3090 Assignment 1**). Designed for passengers (booking, seat selection, ticketing, disruption alerts) and bus conductors (QR ticket scanning, passenger manifest management).
 
 ---
 
-## 1. Directory Structure
+## 1. Overview & Technology Stack
+
+The mobile application is engineered following Flutter and Dart enterprise standards:
+- **Framework**: Flutter 3.x / Dart 3
+- **Architecture**: BLoC / Cubit (`flutter_bloc` v8.1) ([ADR-002](../docs/adr/ADR-002-flutter-state-management.md))
+- **Networking**: `dio` (v5.7) with token interceptor and retry policies
+- **Secure Token Storage**: `flutter_secure_storage` (hardware keystore / iOS Keychain)
+- **Offline Cache**: `shared_preferences` & local caching
+- **UI & Iconography**: Google Fonts (`Inter`), `lucide_icons`
+- **Testing**: `flutter_test`, `bloc_test`, `mocktail`
+
+---
+
+## 2. Feature Slices & Student Responsibilities
 
 ```text
-mobile/
-├── lib/
-│   ├── core/
-│   │   ├── network/             # Dio HTTP client with interceptors & auth tokens
-│   │   ├── theme/               # AppTheme, ColorPalette (Lanka Blue, Sunset Amber), Typography
-│   │   └── widgets/             # Authoritative Design Primitives (WayPointButton, WayPointCard, TransitBadge)
-│   ├── features/
-│   │   ├── auth/                # Passenger login, registration & profile
-│   │   ├── journey/             # Corridor search, date picker, preference sheet (Student 1)
-│   │   ├── booking/             # Interactive bus seat selection & checkout (Student 3)
-│   │   ├── tickets/             # Digital ticket wallet with offline QR codes (Student 3)
-│   │   └── disruptions/         # Passenger disruption alerts & rebooking action sheet (Student 4)
-│   └── main.dart                # Application entry point & service providers
-├── pubspec.yaml                 # Dependencies & asset declarations
-└── README.md
+mobile/lib/features/
+├── journey/          # Student 1 (Sethum): Journey Search, Comparison & Filter Sheets
+├── fleet/            # Student 4 (Dineth) / Student 2 (Nuhadh): Conductor Scanner & Manifest
+├── booking/          # Student 2 & 3: Interactive Seat Picker (Nuhadh), Checkout & Wallet (Mithila)
+├── disruption/       # Student 4 (Dineth): Real-Time Passenger Disruption Alerts
+├── settings/         # Student 2 (Nuhadh): Passenger Settings, Fleet Reviews & Preferences
+└── auth/             # Shared / Student 3: Mobile Authentication & Secure Keyring
 ```
 
----
+### Detailed Student Screens & Capabilities
 
-## 2. Design System & Tokens (`docs/design/DESIGN.md`)
-
-The mobile UI implements the design system tokens via `AppTheme` in `lib/core/theme/app_theme.dart`:
-
-- **Primary / Lanka Blue**: `#0056D2` (`AppTheme.primaryColor`)
-- **Accent / Sunset Amber**: `#FEB300` (`AppTheme.accentColor`)
-- **Operational / Jungle Green**: `#005312` (`AppTheme.successColor`)
-- **Surface**: `#F8F9FA` / `#FFFFFF`
-- **Typography Pairing**:
-  - **Plus Jakarta Sans** for screen headers, hero section, and sheet titles.
-  - **Inter** for timetable rows, prices in LKR, and body copy.
-
-### Shared UI Primitives (`lib/core/widgets/`)
-- `WayPointButton`: Primary, secondary, outline, and icon buttons.
-- `WayPointCard`: Surface container with standard rounded corners and elevation.
-- `TransitBadge`: Badges for travel classes, bus categories, and status tags.
-
----
-
-## 3. Pre-Designed Stitch Screens Reference
-
-Reference your assigned screens in [`docs/design/stitch-screens-index.md`](../docs/design/stitch-screens-index.md):
-
-| Screen Code | Screen Name | Assigned Student | Stitch Screen ID |
+| Student Owner | Feature Folder | Screen Implementations | Key Capabilities |
 | :--- | :--- | :--- | :--- |
-| **MOB-01** | Passenger Dashboard & Active Journey Card | Student 1 (Sethum) | `5f03d5fae16d4cfa9760775d71c223c2` |
-| **MOB-02** | Journey Search, Corridors & Dates | Student 1 (Sethum) | `4baf1853d7a14d7abd597916567b5370` |
-| **MOB-03** | Preference Filter Sheet & Sliders | Student 1 (Sethum) | `fb4b74ea904c435b93f05e9dc324e989` |
-| **MOB-04** | Interactive Bus Seat Selection | Student 3 (Mithila) | `ba846b0a72ad41ecbf0a116b47c617b0` |
-| **MOB-05** | Checkout, Fare Breakdown & Payment Sheet | Student 3 (Mithila) | `ff34d193d56f4d2f8cb573752e259e51` |
-| **MOB-06** | Digital Ticket Wallet with Offline QR Code | Student 3 (Mithila) | `9719356d2b4546eeae9eeef94b05531d` |
-| **MOB-07** | Disruption Alert Banner & Rebooking Sheet | Student 4 (Dineth) | `26ba19d84c134aa89617d91d09e86337` |
+| **Sethum** (Student 1) | `features/journey/` | `JourneySearchScreen`<br>`JourneyComparisonScreen`<br>`PreferenceFilterSheet` | Origin/destination picker, route card listing, multi-leg connecting transit comparisons (`BR-TRANSFER-001`), AC/luxury filters |
+| **Nuhadh** (Student 2) | `features/booking/`<br>`features/settings/` | `SeatPickerScreen`<br>`PassengerSettingsScreen` | Interactive visual bus seat grid, seat status color codes (available, held, booked), 10-minute hold initiation, fleet review submission |
+| **Mithila** (Student 3) | `features/booking/` | `PaymentCheckoutScreen`<br>`TicketWalletScreen`<br>`BookingHistoryScreen` | 10-minute hold countdown timer (`BR-HOLD-001`), payment checkout, cryptographic HMAC QR ticket rendering, historical bookings |
+| **Dineth** (Student 4) | `features/disruption/`<br>`features/fleet/` | `DisruptionAlertScreen`<br>`ConductorScannerScreen`<br>`ConductorManifestScreen` | Push disruption notification display, one-tap reroute acceptance, simulated QR camera scanner, conductor boarding checklist |
 
 ---
 
-## 4. Setup & Running Locally
+## 3. Setup & Development
 
-### Step 1: Install Dependencies
+### 3.1 Prerequisites
+- Flutter SDK (v3.24+)
+- Dart 3 SDK
+- Android Studio / Xcode (or VS Code with Flutter extension)
+
+### 3.2 Installation & Startup
 ```bash
+cd mobile
+
+# Fetch pub dependencies
 flutter pub get
-```
 
-### Step 2: Configure API Endpoint
-The mobile app communicates with the backend via HTTP. When running on:
-- **Physical Android Device (via USB/Wi-Fi)**: Set `FLUTTER_API_URL` to your machine's LAN IP, e.g. `http://192.168.1.50:5010/api/v1`.
-- **Android Emulator**: Use `http://10.0.2.2:5010/api/v1`.
-- **Windows / Desktop**: Use `http://localhost:5010/api/v1`.
-
-### Step 3: Run the App
-```bash
+# Launch on connected emulator or physical device
 flutter run
 ```
 
-### Step 4: Build Release APK
+### 3.3 Building Android Release APK
+To compile the standalone production APK:
 ```bash
-flutter build apk --release
+flutter build apk --release --dart-define=API_BASE_URL=https://waypoint-api-production.up.railway.app/api/v1
 ```
-The deliverable APK will be placed in `build/app/outputs/flutter-apk/app-release.apk`.
+
+The APK binary will be created at:
+```text
+mobile/build/app/outputs/flutter-apk/app-release.apk
+```
+
+---
+
+## 4. Automated Testing
+
+The Flutter test suite validates widget rendering, BLoC state transitions, and user interactions:
+
+```bash
+cd mobile
+
+# Run all automated tests
+flutter test
+
+# Run tests with verbose output
+flutter test --reporter expanded
+```
+
+### Key Automated Test Suites
+- `journey_search_test.dart`: Origin/destination query form, route cards rendering.
+- `seat_picker_test.dart`: Visual seat grid, single-seat selection, hold status.
+- `payment_checkout_test.dart`: Fare breakdown calculations, hold timer countdown.
+- `ticket_wallet_test.dart`: QR ticket widget rendering, active/past tabs.
+- `disruption_alert_test.dart`: Real-time incident banner, mitigation acceptance.
+- `conductor_tools_test.dart`: Conductor ticket scanner simulation, boarding manifest.
+- `settings_reviews_test.dart`: Review ratings submission, user preferences.
+- `navigation_shells_test.dart`: Bottom navigation bar state transitions.
+
+---
+
+## 5. Security & Secure Storage Architecture
+
+- **Token Protection**: JWT access and refresh tokens are persisted using `flutter_secure_storage`, encrypting credentials in Android Keystore / iOS Keychain.
+- **Dio Interceptors**: Automatically injects Bearer tokens and handles 401 token refresh cycles.
+- **Offline Mode**: Saved tickets and upcoming journeys remain cached locally for offline inspection.

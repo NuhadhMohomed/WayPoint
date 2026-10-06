@@ -21,10 +21,17 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogInformation("Request was cancelled by client: {Path}", context.Request.Path);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception occurred while processing request: {Path}", context.Request.Path);
-            await HandleExceptionAsync(context, ex);
+            if (!context.Response.HasStarted)
+            {
+                await HandleExceptionAsync(context, ex);
+            }
         }
     }
 
@@ -36,7 +43,13 @@ public class ExceptionHandlingMiddleware
         {
             KeyNotFoundException => HttpStatusCode.NotFound,
             UnauthorizedAccessException => HttpStatusCode.Unauthorized,
-            InvalidOperationException => HttpStatusCode.Conflict,
+            InvalidOperationException ex when ex.Message.Contains("conflict", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already assigned", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already booked", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("already cancelled", StringComparison.OrdinalIgnoreCase)
+                => HttpStatusCode.Conflict,
+            InvalidOperationException => HttpStatusCode.BadRequest,
             ArgumentException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
         };

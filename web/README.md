@@ -1,92 +1,100 @@
-# WayPoint Web (Operator & Manager Workspace)
+# WayPoint Web Application (React 18 / Vite / Tailwind)
 
-The desktop and tablet web application for **WayPoint** (**SE3090 Assignment 1**), serving fleet operators, transit dispatchers, ticketing staff, and transport managers.
-
-Built with **React 18**, **Vite**, **Tailwind CSS**, and synchronized with the **Google Stitch Design System** (`docs/design/DESIGN.md`).
+The authoritative web client interface for **WayPoint** (**SE3090 Assignment 1**). Designed for bus operators, transit dispatchers, transport managers, and system administrators.
 
 ---
 
-## 1. Directory Structure
+## 1. Overview & Technology Stack
+
+The web application is built with modern frontend best practices:
+- **Framework**: React 18.3 (Single Page Application via Vite 5)
+- **Styling**: Tailwind CSS 3.4 with custom transit design tokens
+- **State Management**: Zustand 4.5 ([ADR-001](../docs/adr/ADR-001-react-state-management.md)) for client session/auth state
+- **Server Cache & Async State**: TanStack Query (React Query v5) with optimistic updates
+- **Routing**: React Router v6 with role-based route protection
+- **Icons**: Lucide React
+- **Testing**: Vitest 2.1 & React Testing Library
+
+---
+
+## 2. Feature Modules & Student Responsibilities
+
+The web application is partitioned into feature slices matching the student functional areas:
 
 ```text
-web/
-├── public/                      # Static assets & icons
-├── src/
-│   ├── components/
-│   │   ├── layout/              # Header, Sidebar, Navigation
-│   │   └── ui/                  # Authoritative Design System Primitives (Button, Card, TransitBadge)
-│   ├── features/                # Domain-partitioned feature screens
-│   │   ├── auth/                # Login & operator authentication
-│   │   ├── fleet/               # Bus inventory & seat layout designer (Student 2)
-│   │   ├── routes/              # Route network & timetable editor (Student 1)
-│   │   ├── bookings/            # Passenger booking management (Student 3)
-│   │   └── disruptions/         # Disruption management & AI approvals (Student 4)
-│   ├── services/                # Axios / fetch HTTP API client modules
-│   ├── App.jsx                  # Main route switch & auth guard
-│   ├── index.css                # Tailwind directives & theme definitions
-│   └── main.jsx                 # React root mount
-├── tailwind.config.js           # Authoritative design tokens (Lanka Blue, Sunset Amber, etc.)
-├── package.json                 # Dependencies & scripts
-└── vite.config.js               # Vite build configuration
+web/src/features/
+├── journey/          # Student 1 (Sethum): Route Manager, Service Scheduler, Tourist Corridors
+├── fleet/            # Student 2 (Nuhadh): Fleet Matrix, Dynamic Seat Layout Designer, Driver Rostering
+├── bookings/         # Student 3 (Mithila): Operator Dashboard, Real-Time Manifest Monitor (Hold Countdown)
+├── disruptions/      # Student 4 (Dineth): Disruption Intake, Manager Approval Workbench, AI Observability
+└── admin/            # Shared / Dineth: Admin Console & User Role Management
 ```
 
----
+### Detailed Student Pages & Capabilities
 
-## 2. Design System & Tokens (`docs/design/DESIGN.md`)
-
-The web UI strictly enforces the authoritative color tokens and typography defined in [`docs/design/DESIGN.md`](../docs/design/DESIGN.md):
-
-- **Primary / Lanka Blue**: `#0056D2` (`bg-primary`, `text-primary`)
-- **Accent / Sunset Amber**: `#FEB300` (`bg-accent`, `text-accent`)
-- **Operational / Jungle Green**: `#005312` (`bg-success`, `text-success`)
-- **Critical / Crimson**: `#BA1A1A` (`bg-error`, `text-error`)
-- **Typography Pairing**:
-  - **Plus Jakarta Sans** for page headers, card titles, and modal dialogs (`font-heading`).
-  - **Inter** for tabular operational grids, transit logs, and body text (`font-sans`).
-
-### Shared UI Primitives (`src/components/ui/`)
-All new screens must compose from the shared primitives:
-- `Button`: Primary, secondary, outline, ghost, and danger variants.
-- `Card`: Surface container with standard elevation, padding, and borders.
-- `TransitBadge`: Authoritative badge for operational statuses (`SCHEDULED`, `DELAYED`, `CANCELLED`, `CONFIRMED`).
-
----
-
-## 3. Pre-Designed Stitch Screens Reference
-
-Reference your assigned screens in [`docs/design/stitch-screens-index.md`](../docs/design/stitch-screens-index.md):
-
-| Screen Code | Screen Name | Assigned Student | Stitch Screen ID |
+| Student Owner | Feature Directory | Page Components | Key Capabilities |
 | :--- | :--- | :--- | :--- |
-| **WEB-01** | Fleet Overview & Bus Inventory | Student 2 (Nuhadh) | `bcbb3d59666c42958f293cf72b6a9829` |
-| **WEB-02** | Interactive Seat Layout Designer | Student 2 (Nuhadh) | `eb54f3a7fa4a40879df6aa407238249a` |
-| **WEB-03** | Route Administration & Timetable Grid | Student 1 (Sethum) | `e2a8cbf4a5df48598a44c77cbbda7ebf` |
-| **WEB-04** | Disruption Incident Management & AI Approval | Student 4 (Dineth) | `9356efcf44cf4c7cb17c76899479b1df` |
-| **WEB-05** | Booking Search, Verification & Passenger Manifest | Student 3 (Mithila) | `a84a6fe047f34c5dbbc496a798b3f23a` |
+| **Sethum** (Student 1) | `features/journey/` | `RouteManagerPage`<br>`ServiceSchedulerPage`<br>`TouristCorridorsPage` | Visual route segment builder, intermediate stop sequencing, connecting transfer buffer indicator (`BR-TRANSFER-001`), timetable search |
+| **Nuhadh** (Student 2) | `features/fleet/` | `FleetMatrixBuilderPage`<br>`SeatLayoutDesignerPage`<br>`DriverRosteringPage`<br>`FleetReviewsDashboardPage` | Interactive 2+2 and 1+2 seat layout generator, bus fleet inventory, driver rest constraint verification ($>8$ hrs), passenger review ratings |
+| **Mithila** (Student 3) | `features/bookings/` | `OperatorDashboardPage`<br>`BookingManifestMonitorPage` | Live passenger booking manifest, real-time 10-minute hold countdown timer (`BR-HOLD-001`), ticket status badges, cancellation refunds |
+| **Dineth** (Student 4) | `features/disruptions/` | `DisruptionIntakePage`<br>`ManagerApprovalWorkbenchPage`<br>`AiObservabilityPage`<br>`ServiceAlertBroadcastPage` | Incident blast radius intake, Transport Manager sign-off button gate (`BR-APPROVAL-001`), LangGraph execution step & tool latency viewer |
 
 ---
 
-## 4. Setup & Running Locally
+## 3. Setup & Development
 
-### Step 1: Install Dependencies
+### 3.1 Prerequisites
+- Node.js (v18.0+)
+- npm (v9.0+)
+
+### 3.2 Installation & Startup
 ```bash
+cd web
+
+# Install dependencies
 npm install
-```
 
-### Step 2: Configure Environment
-The web client connects to the ASP.NET Core API at `http://localhost:5010/api/v1`. This is configured in the root `.env`:
-```env
-VITE_API_URL=http://localhost:5010/api/v1
-```
-
-### Step 3: Start Development Server
-```bash
+# Run Vite development server
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
 
-### Step 4: Build for Production
+The application runs locally at `http://localhost:5173`.
+
+### 3.3 Production Build
 ```bash
 npm run build
+npm run preview
 ```
-The compiled SPA bundle will be generated in `web/dist/` ready for Vercel deployment.
+
+The compiled static distribution resides in `web/dist/` ready for cloud hosting (Render static site).
+
+---
+
+## 4. Automated Testing
+
+The web suite utilizes **Vitest** and **React Testing Library**:
+
+```bash
+cd web
+
+# Run Vitest test suite once
+npm test
+
+# Run tests in watch mode
+npx vitest
+```
+
+### Automated Test Coverage
+- `RouteManager.test.jsx`: Route catalog filters, stop creation, timetable interactions.
+- `SeatLayoutDesigner.test.jsx`: Bus seat grid generation, row/column configuration.
+- `BookingManifest.test.jsx`: Passenger manifest rendering, hold status countdown.
+- `DisruptionHub.test.jsx`: Disruption reporting form, manager approval gate.
+- `AuthAndOverview.test.jsx` & `AdminUsersPage.test.jsx`: Login flows, token handling, RBAC route guards.
+
+---
+
+## 5. Security & Authentication Architecture
+
+- **Token Storage**: JWT access tokens are held in-memory via Zustand `authStore` to eliminate XSS token theft risks.
+- **Axios Interceptor**: Automatically attaches `Authorization: Bearer <token>` to all requests to the ASP.NET Core API.
+- **Role Route Protection**: Route guards enforce role permissions (`Admin`, `TransportManager`, `Operator`). Unauthorized attempts redirect gracefully with security alerts.

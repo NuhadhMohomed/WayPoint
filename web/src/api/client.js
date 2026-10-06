@@ -1,60 +1,43 @@
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
+import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'http://localhost:5010/api/v1',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
-})
+  timeout: 15000
+});
 
-// Attach JWT token to all requests
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('waypoint_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+// Request Interceptor: Attach JWT Bearer token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token || localStorage.getItem('waypoint_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Handle 401 Unauthorized globally
+// Response Interceptor: Format errors & handle 401/403
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('waypoint_token')
-      localStorage.removeItem('waypoint_user')
+      useAuthStore.getState().logout();
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+        window.location.href = '/login';
       }
     }
-    return Promise.reject(error)
+
+    const message =
+      error.response?.data?.detail ||
+      error.response?.data?.message ||
+      error.message ||
+      'An unexpected error occurred while communicating with the WayPoint server.';
+
+    return Promise.reject(new Error(message));
   }
-)
-
-export const authApi = {
-  login: async (credentials) => {
-    const res = await apiClient.post('/auth/login', credentials)
-    return res.data
-  },
-  register: async (userData) => {
-    const res = await apiClient.post('/auth/register', userData)
-    return res.data
-  },
-  getCurrentUser: async () => {
-    const res = await apiClient.get('/auth/me')
-    return res.data
-  },
-}
-
-export const devApi = {
-  seedDatabase: async () => {
-    const res = await apiClient.post('/dev/seed')
-    return res.data
-  },
-  getStatus: async () => {
-    const res = await apiClient.get('/dev/status')
-    return res.data
-  },
-}
+);

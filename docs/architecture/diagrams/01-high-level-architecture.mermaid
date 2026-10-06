@@ -1,33 +1,35 @@
 graph TD
-    subgraph Clients["Client Applications"]
-        Flutter["Flutter Mobile App (Passenger Client)"]
-        React["React Web App (Operator & Manager Workspace)"]
+    subgraph Clients["Presentation Tiers (Client Applications)"]
+        WebClient["React Web Application (web/)\nOperator & Manager Workspace\nReact 18 + Vite + Tailwind CSS + TanStack Query + Zustand"]
+        MobileClient["Flutter Mobile Application (mobile/)\nPassenger & Conductor Mobile Client\nFlutter 3.x + Dart 3 + BLoC + Dio"]
     end
 
     subgraph Backend["Authoritative Application Layer"]
-        API["ASP.NET Core Web API (REST / JSON)"]
+        API["ASP.NET Core 8 Web API (backend/)\nREST / JSON / Swagger / JWT / Clean Architecture"]
     end
 
-    subgraph Storage["Relational Data Store"]
-        Postgres[(PostgreSQL Database)]
+    subgraph Storage["Authoritative Relational Data Store"]
+        Postgres[(PostgreSQL 18 Database\nEF Core 9 / Npgsql 9 Direct SSL)]
     end
 
-    subgraph AI["AI Subsystem"]
-        Orchestration["Agentic AI Orchestration (4 Specialized Agents)"]
+    subgraph AI["Agentic AI Subsystem"]
+        Orchestration["Python Multi-Agent Engine (ai/)\nLangGraph / FastAPI (4 Specialized Agents, 10 Allow-Listed Tools)"]
     end
 
-    subgraph External["External Services"]
-        Payment["Payment Sandbox Gateway"]
+    subgraph External["External Integrated Services"]
+        Payment["Payment Sandbox Gateway\n(Mock Gateway + Stripe Proxy)"]
         Maps["Map / Location Service"]
     end
 
-    Flutter -->|HTTPS / REST| API
-    React -->|HTTPS / REST| API
-    API -->|EF Core ORM| Postgres
-    API -->|Internal Service Call & Allow-Listed Tools| Orchestration
-    API -->|Secure Server-to-Server API Calls| External
+    WebClient -->|HTTPS / REST / JWT| API
+    MobileClient -->|HTTPS / REST / JWT| API
+    API -->|EF Core 9 ORM & Migrations| Postgres
+    API -->|Internal HTTP Call & Allow-Listed Tools| Orchestration
+    API -->|Secure Server-to-Server Proxy| External
 
-    %% Boundary Violations (Prohibited Connections)
-    Flutter -. X Direct Access Prohibited X .- Postgres
-    React -. X Direct Access Prohibited X .- Postgres
-    Orchestration -. X Direct Access Prohibited X .- Postgres
+    %% Boundary Violations (Prohibited Connections per REQ-ASSIGN-04)
+    WebClient -. X Direct DB Access Prohibited X .- Postgres
+    MobileClient -. X Direct DB Access Prohibited X .- Postgres
+    Orchestration -. X Direct DB Access Prohibited X .- Postgres
+    WebClient -. X Direct AI Access Prohibited X .- Orchestration
+    MobileClient -. X Direct AI Access Prohibited X .- Orchestration

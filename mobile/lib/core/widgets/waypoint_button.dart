@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 enum WayPointButtonVariant { primary, secondary, outline, danger }
@@ -9,6 +10,8 @@ class WayPointButton extends StatelessWidget {
   final WayPointButtonVariant variant;
   final bool isLoading;
   final IconData? icon;
+  final double? width;
+  final double height;
 
   const WayPointButton({
     super.key,
@@ -17,85 +20,99 @@ class WayPointButton extends StatelessWidget {
     this.variant = WayPointButtonVariant.primary,
     this.isLoading = false,
     this.icon,
+    this.width,
+    this.height = 48,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    Color bg;
+    Color fg;
+    BorderSide side = BorderSide.none;
 
-    if (variant == WayPointButtonVariant.secondary) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.secondaryColor,
-          foregroundColor: const Color(0xFF191C1D),
-          minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        onPressed: isLoading ? null : onPressed,
-        child: _buildChild(const Color(0xFF191C1D)),
-      );
+    switch (variant) {
+      case WayPointButtonVariant.secondary:
+        bg = AppTheme.secondaryColor;
+        fg = const Color(0xFF191C1D);
+        break;
+      case WayPointButtonVariant.outline:
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        bg = Colors.transparent;
+        fg = isDark ? AppTheme.primaryColor : const Color(0xFF0F172A);
+        side = BorderSide(color: isDark ? AppTheme.darkBorderColor : AppTheme.lightBorderColor, width: 1.5);
+        break;
+      case WayPointButtonVariant.danger:
+        bg = AppTheme.errorColor;
+        fg = Colors.white;
+        break;
+      case WayPointButtonVariant.primary:
+        bg = AppTheme.primaryColor;
+        fg = AppTheme.onPrimaryColor;
+        break;
     }
 
-    if (variant == WayPointButtonVariant.outline) {
-      return OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFC3C6D6)),
-          foregroundColor: AppTheme.primaryColor,
-          minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        onPressed: isLoading ? null : onPressed,
-        child: _buildChild(AppTheme.primaryColor),
-      );
-    }
+    final effectiveOnPressed = (isLoading || onPressed == null)
+        ? null
+        : () {
+            HapticFeedback.lightImpact();
+            onPressed!();
+          };
 
-    if (variant == WayPointButtonVariant.danger) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.errorColor,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        onPressed: isLoading ? null : onPressed,
-        child: _buildChild(Colors.white),
-      );
-    }
-
-    return ElevatedButton(
-      style: theme.elevatedButtonTheme.style,
-      onPressed: isLoading ? null : onPressed,
-      child: _buildChild(Colors.white),
-    );
-  }
-
-  Widget _buildChild(Color spinnerColor) {
+    Widget childContent;
     if (isLoading) {
-      return SizedBox(
-        width: 24,
-        height: 24,
+      childContent = SizedBox(
+        width: 22,
+        height: 22,
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(spinnerColor),
+          valueColor: AlwaysStoppedAnimation<Color>(fg),
         ),
       );
-    }
-
-    if (icon != null) {
-      return Row(
+    } else if (icon != null) {
+      childContent = Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20),
+          Icon(icon, size: 20, color: fg),
           const SizedBox(width: 8),
-          Text(text),
+          Text(
+            text,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
         ],
+      );
+    } else {
+      childContent = Text(
+        text,
+        style: TextStyle(
+          color: fg,
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+        ),
       );
     }
 
-    return Text(text);
+    return SizedBox(
+      width: width ?? double.infinity,
+      height: height,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bg,
+          foregroundColor: fg,
+          disabledBackgroundColor: bg.withValues(alpha: 0.5),
+          disabledForegroundColor: fg.withValues(alpha: 0.5),
+          elevation: 0,
+          side: side,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        onPressed: effectiveOnPressed,
+        child: childContent,
+      ),
+    );
   }
 }

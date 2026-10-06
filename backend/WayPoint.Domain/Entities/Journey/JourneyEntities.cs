@@ -103,11 +103,27 @@ public class JourneySearch : BaseEntity
 public class JourneyCandidate : BaseEntity
 {
     public Guid JourneySearchId { get; set; }
-    public string CandidateType { get; set; } = "Direct"; // Direct or Connecting
+    public JourneyCandidateType CandidateType { get; set; } = JourneyCandidateType.Direct;
     public decimal TotalFare { get; set; }
     public int TotalDurationMinutes { get; set; }
     public decimal MatchScore { get; set; }
 
     // Navigation properties
     public JourneySearch JourneySearch { get; set; } = null!;
+    public ICollection<JourneyLeg> Legs { get; set; } = new List<JourneyLeg>();
+}
+
+public class JourneyLeg : BaseEntity
+{
+    public Guid JourneyCandidateId { get; set; }
+    public int LegOrder { get; set; }
+    public Guid ServiceId { get; set; }
+    public Guid BoardingStopId { get; set; }
+    public Guid AlightingStopId { get; set; }
+    public int DurationMinutes { get; set; }
+    public decimal LegFare { get; set; }
+
+    // Navigation properties
+    public JourneyCandidate JourneyCandidate { get; set; } = null!;
+    public Service Service { get; set; } = null!;
 }

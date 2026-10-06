@@ -1,24 +1,24 @@
-import React from 'react'
+import React from 'react';
 
-export function TransitBadge({ status = 'Available', label, className = '' }) {
-  const text = label || status
+export function TransitBadge({ children, variant = 'standard', className = '' }) {
+  const variants = {
+    luxury: 'bg-blue-50 text-blue-700 border-blue-200/80',
+    'semi-luxury': 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+    standard: 'bg-slate-100 text-slate-700 border-slate-200/80',
+    active: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+    held: 'bg-amber-50 text-amber-800 border-amber-200/80',
+    booked: 'bg-slate-100 text-slate-600 border-slate-200/80',
+    critical: 'bg-red-50 text-red-700 border-red-200/80',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200/80'
+  };
 
-  const styles = {
-    Available: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-    Held: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-    Booked: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
-    Disrupted: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
-    Delayed: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
-    Luxury: "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20",
-    Express: "bg-sky-500/10 text-sky-400 border border-sky-500/20",
-  }
+  const selectedVariant = variants[variant] || variants.standard;
 
   return (
-    <span 
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide ${styles[status] || styles.Available} ${className}`}
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border font-mono tracking-wide select-none ${selectedVariant} ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current opacity-80" />
-      {text}
+      {children}
     </span>
-  )
+  );
 }

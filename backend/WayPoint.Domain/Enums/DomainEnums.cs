@@ -112,3 +112,23 @@ public enum AiWorkflowStatus
     Completed,
     SafeFailure
 }
+
+/// <summary>
+/// Operational status of a driver in the fleet (M-04, Database Design Table 7).
+/// </summary>
+public enum DriverStatus
+{
+    Active,
+    OnLeave,
+    Suspended,
+    Retired
+}
+
+/// <summary>
+/// Classification of a journey search candidate result (L-04).
+/// </summary>
+public enum JourneyCandidateType
+{
+    Direct,
+    Connecting
+}

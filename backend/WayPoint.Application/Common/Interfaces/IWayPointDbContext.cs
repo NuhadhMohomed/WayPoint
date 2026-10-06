@@ -26,6 +26,7 @@ public interface IWayPointDbContext
     DbSet<FareRule> FareRules { get; }
     DbSet<JourneySearch> JourneySearches { get; }
     DbSet<JourneyCandidate> JourneyCandidates { get; }
+    DbSet<JourneyLeg> JourneyLegs { get; }
 
     // Component 2: Fleet, Seat & Resource Feasibility (Nuhadh)
     DbSet<Bus> Buses { get; }
@@ -36,6 +37,8 @@ public interface IWayPointDbContext
     DbSet<MaintenanceRecord> MaintenanceRecords { get; }
     DbSet<Amenity> Amenities { get; }
     DbSet<ServiceAmenity> ServiceAmenities { get; }
+    DbSet<BusReview> BusReviews { get; }
+    DbSet<DriverReview> DriverReviews { get; }
 
     // Component 3: Booking, Ticketing & Passenger Options (Mithila)
     DbSet<SeatHold> SeatHolds { get; }
@@ -56,6 +59,9 @@ public interface IWayPointDbContext
     DbSet<AiToolCall> AiToolCalls { get; }
     DbSet<AiValidationResult> AiValidationResults { get; }
     DbSet<AuditLog> AuditLogs { get; }
+
+    // Passenger Notifications
+    DbSet<WayPoint.Domain.Entities.Notification.Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
