@@ -1,6 +1,6 @@
 # WayPoint Use Cases Specification
 
-This document details the major use cases for the **WayPoint** AI-Powered Intercity Journey Planner & Bus Operations Platform operating under a **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md)).
+This document details the major use cases for the **WayPoint** AI-Powered Intercity Journey Planner & Bus Operations Platform operating under an **Integrated Full-Stack Architecture** combining React Web, Flutter Mobile, ASP.NET Core Web API, PostgreSQL, and Agentic AI workflows ([SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md)).
 
 ---
 

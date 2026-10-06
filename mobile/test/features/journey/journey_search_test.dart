@@ -122,5 +122,43 @@ void main() {
     expect(find.text('Fallback Mode'), findsOneWidget);
     expect(find.textContaining('Showing verified direct and connecting routes matching your request corridor'), findsOneWidget);
   });
+
+  testWidgets('JourneyComparisonScreen renders when candidates is empty', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JourneyComparisonScreen(
+          originCity: 'Colombo',
+          destinationCity: 'Ella',
+          travelDate: DateTime.now().add(const Duration(days: 1)),
+          candidates: const [],
+          agentReasoning: 'AI Reasoning',
+          isAiFallback: false,
+        ),
+      ),
+    );
+    expect(find.text('No Transit Options Found'), findsOneWidget);
+  });
+
+  testWidgets('JourneyComparisonScreen renders connecting candidate and multiple candidates', (WidgetTester tester) async {
+    final conn = JourneyCandidateModel.sampleConnectingViaKandy();
+    final kandy = JourneyCandidateModel.sampleColomboToKandyDirect();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JourneyComparisonScreen(
+          originCity: 'Colombo',
+          destinationCity: 'Kandy',
+          travelDate: DateTime.now().add(const Duration(days: 1)),
+          candidates: [kandy, conn],
+          agentReasoning: 'Showing fastest routes to Kandy',
+          isAiFallback: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Showing fastest routes to Kandy'), findsOneWidget);
+    expect(find.text('Pick Seats'), findsNWidgets(2));
+  });
 }
+
 

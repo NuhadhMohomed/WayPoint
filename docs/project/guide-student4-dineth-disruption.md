@@ -4,13 +4,18 @@
 - **Component**: **Component 4 — Disruption, Rebooking & Approval**
 - **Core Domain Focus**: Disruption incident intake, passenger impact analysis, multi-agent AI rebooking, alerts, and Transport Manager approval boundary enforcement.
 - **Assigned Feature Branch**: `feature/disruption-approval`
-- **Architecture**: **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md))
+- **Architecture**: **Integrated Full-Stack Architecture** ([SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 4**, you are responsible for the critical operational resilience of WayPoint. Your work ingests disruption events, triggers multi-agent AI rebooking analysis, calculates passenger impact blast-radii, strictly halts high-impact changes behind the human Transport Manager approval boundary (`BR-APPROVAL-001`), and executes approved remedies transactionally.
+As the owner of **Component 4**, you are responsible for the critical operational resilience of WayPoint:
+1. **ASP.NET Core Web API**: Disruption logging, passenger blast-radius impact calculation, Transport Manager approval gate (`BR-APPROVAL-001`), transactional rebooking execution, and public service alert broadcasting.
+2. **PostgreSQL Relational DB**: Schemas and EF Core migrations for `DisruptionCases`, `RebookingProposals`, `ApprovalDecisions`, `ServiceAlerts`, `AiWorkflows`, `AiWorkflowSteps`, `AiToolCalls`, and `AiValidationResults`.
+3. **React Web Application (`web/src/features/disruptions/`)**: Incident intake workbench, Transport Manager approval workbench with before/after impact comparison, AI observability dashboard, and service alert broadcaster (`DisruptionIntakePage`, `ManagerApprovalWorkbenchPage`, `AiObservabilityPage`, `ServiceAlertBroadcastPage`).
+4. **Flutter Mobile Application (`mobile/lib/features/disruption/` & `fleet/`)**: Passenger in-app disruption alert banner and rebooking response screen (`DisruptionAlertScreen`), and conductor mobile camera QR ticket scanner with live boarding manifest (`ConductorScannerScreen`, `ConductorManifestScreen`).
+5. **Agentic AI**: Specialized **Validation & Safety Agent** (`ai/agents/safety_agent.py`) and LangGraph orchestration graph coordinator (`ai/agents/graph.py`).
 
 ### Assigned User Stories
 - `US-PASS-006` (Disruption Rebooking Response)
@@ -28,26 +33,40 @@ As the owner of **Component 4**, you are responsible for the critical operationa
    cp .env.example .env
    ```
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
-   - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
+   - Authoritative API base URL: `http://localhost:5010/api/v1`.
    - Swagger Documentation: `http://localhost:5010/swagger`.
-2. **Restore & Seed Database**:
+2. **Run Backend API**:
    ```bash
    dotnet restore backend/WayPoint.sln
    dotnet run --project backend/WayPoint.API -- --seed
    ```
-3. **Branch Workflow**:
+3. **Run React Web Application**:
    ```bash
-   git checkout -b feature/disruption-approval
+   cd web && npm install && npm run dev
+   ```
+4. **Run Flutter Mobile Application**:
+   ```bash
+   cd mobile && flutter pub get && flutter run
    ```
 
 ---
 
-## 3. Headless API Contract & OpenAPI Specification
+## 3. Client Presentation Tier Implementations
 
-All endpoints must be thoroughly annotated for OpenAPI/Swagger documentation (`/swagger`):
-- **Approval Gate**: Endpoints enforcing `[Authorize(Roles = "TransportManager,Admin")]` before applying rebooking decisions.
-- **JSONB Observability**: Exposes structured agent traces (`AiWorkflow`, `AiWorkflowStep`, `AiToolCall`) without requiring UI dashboards.
-- **Alert Broadcast**: Structured transit alert dispatch contracts for informing affected passengers and operators.
+### 3.1 React Web Pages (`web/src/features/disruptions/`)
+- **`DisruptionIntakePage.jsx`**: Incident intake form, affected service tagging, candidate remedy review, and blast-radius impact analysis.
+- **`ManagerApprovalWorkbenchPage.jsx`**: Dedicated Transport Manager approval portal with before/after operational comparison, affected passenger metrics, and Approve / Reject / Request-Revision action controls (`BR-APPROVAL-001`).
+- **`AiObservabilityPage.jsx`**: Execution timeline dashboard rendering agent execution logs, tool invocation traces, execution latencies, and validation outcomes.
+- **`ServiceAlertBroadcastPage.jsx`**: Public and in-app service alert broadcaster.
+- State: TanStack Query v5 hooks (`useDisruptions`, `useApprovals`, `useAiWorkflows`), Zustand `disruptionStore`, Vitest component tests.
+
+### 3.2 Flutter Mobile Screens (`mobile/`)
+- **`DisruptionAlertScreen.dart`**: Prominent in-app alert banner and remediation screen alerting affected passengers and offering one-tap rebooking acceptance or instant refund requests.
+- **`ConductorScannerScreen.dart`**: Camera-based QR ticket scanner utilizing `mobile_scanner`, verifying cryptographic HMAC-SHA256 signatures, with haptic feedback on boarding.
+- **`ConductorManifestScreen.dart`**: Mobile passenger manifest with real-time boarding verification checklist.
+- State: `DisruptionBloc` and `ScannerBloc` with Dio HTTP client, unit & widget tests.
+
+---
 
 ---
 
@@ -169,15 +188,32 @@ Controllers reside under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`backend/WayPoint.Tests/DisruptionTests.cs`)**:
+1. **Backend Unit & Integration Tests (`backend/WayPoint.Tests/DisruptionTests.cs`)**:
    - Test disruption impact classification rules (ensuring timetable shift $>15$ min correctly triggers high-impact flag).
    - Test approval state machine transitions (`Proposed` $\rightarrow$ `PendingManagerApproval` $\rightarrow$ `Approved` / `Rejected`).
-2. **Integration Tests**:
    - Test approval boundary: verify unauthorized execution of high-impact proposal returns HTTP 403 Forbidden without manager role.
    - Test transactional rollback during rebooking failure (ensuring original bookings remain intact if replacement service capacity check fails).
    - Test safe-failure fallback execution on simulated AI execution error.
-3. **AI Tests (`ai/tests/`)**:
-   - Run safety agent guardrail and golden test cases: `pytest ai/tests/test_safety_agent.py ai/tests/test_golden_safety.py -v`
+   ```bash
+   dotnet test backend/WayPoint.sln --filter "FullyQualifiedName~Disruption|FullyQualifiedName~Approval"
+   ```
+2. **React Web Tests (`web/src/features/disruptions/__tests__/`)**:
+   - Vitest component tests for `ManagerApprovalWorkbenchPage` and `DisruptionIntakePage`.
+   ```bash
+   cd web && npm test
+   ```
+3. **Flutter Mobile Tests (`mobile/test/features/disruption/`)**:
+   - Widget tests for `DisruptionAlertScreen` and `ConductorScannerScreen`.
+   ```bash
+   cd mobile && flutter test test/features/disruption/
+   ```
+4. **AI Tests (`ai/tests/`)**:
+   - Run safety agent guardrail and golden test cases:
+   ```bash
+   cd ai && pytest tests/test_safety_agent.py tests/test_golden_safety.py -v
+   ```
+5. **Cross-Platform End-to-End Workflow Test (`REQ-TEST-05`)**:
+   - Closed-loop verification across Flutter mobile booking, LangGraph AI triage, React manager approval, and transactional notification update.
 
 ---
 

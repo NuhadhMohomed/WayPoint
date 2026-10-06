@@ -4,13 +4,18 @@
 - **Component**: **Component 1 — Journey Planning & Route Catalogue**
 - **Core Domain Focus**: Intercity route networks, intermediate stops, timetables, tourist destinations, and journey candidate generation.
 - **Assigned Feature Branch**: `feature/journey-planning`
-- **Architecture**: **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md))
+- **Architecture**: **Integrated Full-Stack Architecture** ([SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 1**, you are responsible for the foundational transit infrastructure of WayPoint. Your work enables transit operators to administer routes, stops, and scheduled departures via authoritative RESTful endpoints, and enables external client applications (mobile apps, booking platforms) to query, search, and rank feasible direct and connecting travel options across Sri Lankan transit corridors (e.g., Colombo–Ella, Colombo–Kandy, Colombo–Galle).
+As the owner of **Component 1**, you are responsible for the foundational transit infrastructure of WayPoint. Your work spans:
+1. **ASP.NET Core Web API**: Authoritative route directory, stop sequencing, timetable scheduling, and candidate journey generator.
+2. **PostgreSQL Relational DB**: Schemas and EF Core migrations for `Routes`, `RouteStops`, `BoardingPoints`, `TouristDestinations`, `Services`, and `FareRules`.
+3. **React Web Application (`web/src/features/journey/`)**: Operator interfaces for route network mapping, service scheduling, and tourist corridor tagging (`RouteManagerPage`, `ServiceSchedulerPage`, `TouristCorridorsPage`).
+4. **Flutter Mobile Application (`mobile/lib/features/journey/`)**: Passenger journey search, preference filtering bottom sheet, and candidate comparison cards (`JourneySearchScreen`, `JourneyComparisonScreen`).
+5. **Agentic AI**: Specialized **Journey Analysis Agent** with allow-listed tools (`SearchRoutes`, `GetBoardingPoints`, `CheckTransferFeasibility`).
 
 ### Assigned User Stories
 - `US-PASS-002` (Intercity Journey Search & Preferences)
@@ -27,24 +32,38 @@ As the owner of **Component 1**, you are responsible for the foundational transi
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
    - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
    - Swagger Documentation: `http://localhost:5010/swagger`.
-2. **Restore & Seed Database**:
+2. **Run Backend API**:
    ```bash
    dotnet restore backend/WayPoint.sln
    dotnet run --project backend/WayPoint.API -- --seed
    ```
-3. **Branch Workflow**:
+3. **Run React Web Application**:
    ```bash
-   git checkout -b feature/journey-planning
+   cd web
+   npm install
+   npm run dev
+   ```
+4. **Run Flutter Mobile Application**:
+   ```bash
+   cd mobile
+   flutter pub get
+   flutter run
    ```
 
 ---
 
-## 3. Headless API Contract & OpenAPI Specification
+## 3. Client Presentation Tier Implementations
 
-All endpoints must be thoroughly annotated for OpenAPI/Swagger documentation (`/swagger`):
-- **Response Format**: Standard JSON with PascalCase/camelCase serialization compliance.
-- **Status Codes**: `200 OK` for lookups, `201 Created` for route definitions, `400 Bad Request` for invalid coordinates/stop sequences, `404 Not Found` for nonexistent route codes, `409 Conflict` for overlapping timetable slots.
-- **Currency Format**: All fares rendered in Sri Lankan Rupees (LKR / Rs.).
+### 3.1 React Web Pages (`web/src/features/journey/`)
+- **`RouteManagerPage.jsx`**: Interactive route catalogue with stop sequence management, distance/time offsets, and validation.
+- **`ServiceSchedulerPage.jsx`**: Timetable scheduler linking routes to buses and drivers for scheduled departures.
+- **`TouristCorridorsPage.jsx`**: Showcase of scenic Sri Lankan tourist corridors (e.g., Colombo–Ella, Colombo–Sigiriya).
+- State: TanStack Query v5 queries with optimistic caching.
+
+### 3.2 Flutter Mobile Screens (`mobile/lib/features/journey/`)
+- **`JourneySearchScreen.dart`**: Multi-criteria journey search with origin/destination autocomplete, date selection, and preference filter sheet (AC, Wi-Fi, direct only).
+- **`JourneyComparisonScreen.dart`**: Candidate comparison cards comparing duration, transfer buffer (`BR-TRANSFER-001`), total fare, and seat availability.
+- State: `JourneySearchBloc` handling async search state streams.
 
 ---
 
@@ -134,23 +153,36 @@ Controllers reside under `backend/WayPoint.API/Controllers/`:
 
 ## 7. Agentic AI Responsibilities (Student 1)
 
-- **Assigned Agent**: **Journey Planner / Journey Analysis Agent** (`ADR-003`).
+- **Assigned Agent**: **Journey Analysis Agent** (`ai/agents/journey_agent.py`, `ADR-003`).
 - **Domain Purpose**: Decomposes complex travel inquiries (e.g., "fastest route to Ella with AC") into viable route combinations.
 - **Allow-Listed Tools**:
   - `SearchRoutes` / `SearchServices`
   - `GetBoardingPoints` / `GetTimetable`
-- **Safety Rule**: AI cannot alter scheduled service timetables; output must be structured JSON validated against backend candidate rules.
+  - `CheckTransferFeasibility`
+- **Safety Rule**: AI cannot alter scheduled service timetables; output must be structured JSON validated against deterministic candidate rules (`BR-TRANSFER-001`).
 
 ---
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`backend/WayPoint.Tests/JourneyTests.cs`)**:
+1. **Unit & Integration Tests (`backend/WayPoint.Tests/JourneyTests.cs`)**:
    - Test segment fare calculation formula (`BaseFare + (Distance * RatePerKm) * ClassMultiplier`).
    - Test candidate journey ranking algorithm under various passenger preference weightings.
-2. **Integration Tests**:
    - Query test verifying connecting services with $<20$ min transfer buffer are rejected with proper status (`BR-TRANSFER-001`).
    - Database test validating ordered stop sequence retrieval (`OriginSeq < DestinationSeq`).
+   ```bash
+   dotnet test backend/WayPoint.sln --filter "FullyQualifiedName~Journey"
+   ```
+2. **React Web Tests (`web/src/features/journey/__tests__/`)**:
+   - Vitest component tests for `RouteManagerPage` form validation and stop sequencing.
+   ```bash
+   cd web && npm test
+   ```
+3. **Flutter Mobile Tests (`mobile/test/features/journey/`)**:
+   - Widget tests for `journey_search_test.dart` and candidate comparison views.
+   ```bash
+   cd mobile && flutter test test/features/journey/
+   ```
 
 ---
 

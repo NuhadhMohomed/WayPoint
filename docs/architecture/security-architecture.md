@@ -8,9 +8,9 @@ This document defines the authentication, authorization, secret protection, data
 
 - **Mechanism**: JSON Web Token (JWT) Bearer Authentication.
 - **Signing Algorithm**: HMAC-SHA256 (`HS256`).
-- **Token Transmission & Security**:
   - Standard HTTP `Authorization: Bearer <token>` header on all protected API requests.
-  - Headless API consumers (mobile apps, operator clients, IoT scanners) store JWT tokens securely using native platform secure stores (e.g., encrypted platform keystore/keychain or secure environment variables).
+  - **Flutter Mobile Client**: Stores access and refresh tokens using `flutter_secure_storage` (encrypted hardware KeyStore on Android and Keychain on iOS).
+  - **React Web Client**: Stores JWT session in memory within Zustand `authStore` with secure HTTP transport over TLS/HTTPS, preventing persistent XSS exposure.
 
 ### JWT Payload Claim Structure
 ```json

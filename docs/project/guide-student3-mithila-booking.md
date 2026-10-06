@@ -4,13 +4,18 @@
 - **Component**: **Component 3 — Booking, Ticketing & Passenger Options**
 - **Core Domain Focus**: Temporary seat holds, payment sandbox checkout, QR e-tickets, cancellations, and tiered refund processing.
 - **Assigned Feature Branch**: `feature/booking-ticketing`
-- **Architecture**: **Headless API-First Architecture** ([ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md))
+- **Architecture**: **Integrated Full-Stack Architecture** ([SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md))
 
 ---
 
 ## 1. Executive Component Overview
 
-As the owner of **Component 3**, you build the core revenue and transactional engine of WayPoint. Your work protects seat inventory under high-concurrency conditions using temporary 10-minute holds, integrates with the payment sandbox gateway, signs tamper-proof HMAC-SHA256 digital QR ticket passes, and executes deterministic cancellation refund calculations.
+As the owner of **Component 3**, you build the core revenue and transactional engine of WayPoint:
+1. **ASP.NET Core Web API**: 10-minute temporary seat hold concurrency locks (`IDbContextTransaction`), payment sandbox checkout integration, HMAC-SHA256 digital QR ticket signing, and tiered refund calculations (`BR-REFUND-001`).
+2. **PostgreSQL Relational DB**: Schemas and EF Core migrations for `SeatHolds`, `Bookings`, `Tickets`, `PaymentAttempts`, and `Refunds`.
+3. **React Web Application (`web/src/features/bookings/`)**: Operator departure boards, live occupancy KPIs, and passenger manifest monitor with real-time boarding status (`OperatorDashboardPage`, `BookingManifestMonitorPage`).
+4. **Flutter Mobile Application (`mobile/lib/features/booking/`)**: Passenger payment checkout screen, offline-capable digital QR ticket wallet, and booking cancellation history (`PaymentCheckoutScreen`, `TicketWalletScreen`, `BookingHistoryScreen`).
+5. **Agentic AI**: Specialized **Booking & Policy Agent** (`ai/agents/booking_agent.py`) with allow-listed tools (`CalculateFareDifference`, `SendPassengerNotification`).
 
 ### Assigned User Stories
 - `US-PASS-003` (Temporary Seat Hold)
@@ -26,26 +31,36 @@ As the owner of **Component 3**, you build the core revenue and transactional en
    cp .env.example .env
    ```
    - Ensure `DATABASE_URL` points to your active PostgreSQL instance.
-   - Authoritative API base URL: `http://localhost:5010/api/v1` (`ASPNETCORE_URLS=http://localhost:5010`).
+   - Authoritative API base URL: `http://localhost:5010/api/v1`.
    - Swagger Documentation: `http://localhost:5010/swagger`.
-2. **Restore & Seed Database**:
+2. **Run Backend API**:
    ```bash
    dotnet restore backend/WayPoint.sln
    dotnet run --project backend/WayPoint.API -- --seed
    ```
-3. **Branch Workflow**:
+3. **Run React Web Application**:
    ```bash
-   git checkout -b feature/booking-ticketing
+   cd web && npm install && npm run dev
+   ```
+4. **Run Flutter Mobile Application**:
+   ```bash
+   cd mobile && flutter pub get && flutter run
    ```
 
 ---
 
-## 3. Headless API Contract & OpenAPI Specification
+## 3. Client Presentation Tier Implementations
 
-All endpoints must be thoroughly annotated for OpenAPI/Swagger documentation (`/swagger`):
-- **Concurrency Protection**: Database transaction boundaries (`IDbContextTransaction`) locking seats during checkout.
-- **Temporary Seat Hold Expiry**: Server-side countdown enforcement (`HeldUntil = DateTime.UtcNow.AddMinutes(10)`).
-- **HMAC QR Signing**: Cryptographic verification endpoint validating boarding passes without requiring UI clients.
+### 3.1 React Web Pages (`web/src/features/bookings/`)
+- **`OperatorDashboardPage.jsx`**: Departure summary boards, service occupancy KPIs, revenue analytics, and quick operational action links.
+- **`BookingManifestMonitorPage.jsx`**: Real-time passenger manifest table, boarding verification statuses, passenger name search, and CSV export.
+- State: TanStack Query v5 hooks (`useBookings`, `useManifest`), Zustand `manifestStore`, Vitest component tests.
+
+### 3.2 Flutter Mobile Screens (`mobile/lib/features/booking/`)
+- **`PaymentCheckoutScreen.dart`**: Payment sandbox checkout integration, card input validation, total fare breakdown, and instant booking confirmation.
+- **`TicketWalletScreen.dart`**: Digital ticket wallet rendering active e-tickets with HMAC-SHA256 cryptographically signed QR codes and offline access.
+- **`BookingHistoryScreen.dart`**: Passenger booking records, tiered cancellation refund calculation preview (`BR-REFUND-001`), and cancellation execution.
+- State: `TicketWalletBloc` and `CheckoutBloc` with Dio HTTP client, unit & widget tests.
 
 ---
 
@@ -133,7 +148,7 @@ Controllers reside under `backend/WayPoint.API/Controllers/`:
 
 ## 7. Agentic AI Responsibilities (Student 3)
 
-- **Assigned Agent**: **Booking Options Agent** (`ADR-003`).
+- **Assigned Agent**: **Booking & Policy Agent** (`ai/agents/booking_agent.py`, `ADR-003`).
 - **Domain Purpose**: Evaluates bookable journey alternatives, fare difference calculations, seat availability rules, and booking cancellation/refund policy outcomes.
 - **Allow-Listed Tools**:
   - `CalculateFareDifference` / `CheckCancellationPolicy`
@@ -144,12 +159,24 @@ Controllers reside under `backend/WayPoint.API/Controllers/`:
 
 ## 8. Testing Requirements
 
-1. **Unit Tests (`backend/WayPoint.Tests/BookingTests.cs`)**:
+1. **Backend Unit & Integration Tests (`backend/WayPoint.Tests/BookingTests.cs`)**:
    - Test tiered cancellation refund percentage calculations across various departure offset timestamps (>24h, 12-24h, <12h).
    - Test HMAC-SHA256 signature generation and tampering detection on QR code payload.
-2. **Integration Tests**:
    - Concurrency test: Fire two simultaneous hold requests for the same seat; assert exactly 1 returns `200 OK` and 1 returns `409 Conflict`.
    - Transaction rollback test: Simulate payment failure and verify no booking or ticket records are inserted in PostgreSQL.
+   ```bash
+   dotnet test backend/WayPoint.sln --filter "FullyQualifiedName~Booking|FullyQualifiedName~Payment|FullyQualifiedName~Ticket"
+   ```
+2. **React Web Tests (`web/src/features/bookings/__tests__/`)**:
+   - Vitest component tests for `OperatorDashboardPage` and `BookingManifestMonitorPage`.
+   ```bash
+   cd web && npm test
+   ```
+3. **Flutter Mobile Tests (`mobile/test/features/booking/`)**:
+   - Widget tests for `PaymentCheckoutScreen` and `TicketWalletScreen`.
+   ```bash
+   cd mobile && flutter test test/features/booking/
+   ```
 
 ---
 

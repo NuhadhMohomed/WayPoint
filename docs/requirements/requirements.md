@@ -370,23 +370,27 @@ This document defines the functional and non-functional requirements for the **W
 
 ---
 
-### 1.11 Frontend Requirements (`FR-FE`)
+### 1.11 Frontend Presentation Tier Requirements (`FR-FE`)
 
-> The following frontend requirement IDs (`FR-FE-01` through `FR-FE-13`) are defined in the SE3090 Assignment Specification and extracted in [`project-analysis.md`](../project/project-analysis.md) Sections 4–5 (`REQ-FE-01` through `REQ-FE-13`). Per [ADR-006](../adr/ADR-006-headless-architecture.md), these requirements are fulfilled authoritatively as a headless REST API with OpenAPI contracts:
+> The following frontend requirements (`FR-FE-01` through `FR-FE-13`) are defined in the SE3090 Assignment Specification and mapped to the **React Web Application** (`web/`) for operators and managers, and the **Flutter Mobile Application** (`mobile/`) for passengers and conductors. Both client tiers consume the authoritative ASP.NET Core REST API:
 
-- `FR-FE-01` (**Role-Based Dashboard**): API endpoints aggregating route/service occupancy, revenue, upcoming departures, and journey planning analytics. *(Source: `REQ-FE-01`)*
-- `FR-FE-02` (**Business Data Management**): Full CRUD endpoints with validation, search, filtering, sorting, and pagination for routes, stops, services, buses, seat layouts, drivers, and fare rules. *(Source: `REQ-FE-02`)*
-- `FR-FE-03` (**Disruption Workbench**): Disruption endpoints exposing candidate alternatives, resource feasibility evidence, and passenger impact analysis. *(Source: `REQ-FE-03`)*
-- `FR-FE-04` (**Manager Approval Workbench**): Dedicated approval API endpoints for Transport Managers to inspect before/after operational impacts and execute approve/reject/revision actions. *(Source: `REQ-FE-04`)*
-- `FR-FE-05` (**AI Workflow Observability Dashboard**): Observability API endpoints returning agent execution summaries, tool call histories, step timings, and deterministic validation outputs. *(Source: `REQ-FE-05`)*
-- `FR-FE-06` (**Journey Search & Booking**): Passenger API endpoints for search, seat selection, booking hold, and payment sandbox processing. *(Source: `REQ-FE-06`)*
-- `FR-FE-07` (**Interactive Seat Map**): Real-time seat inventory endpoint with hold/available/booked status indicators. *(Source: `REQ-FE-07`)*
-- `FR-FE-08` (**Digital E-Ticket Wallet**): E-ticket endpoints serving active and historical tickets with cryptographically signed QR code payloads. *(Source: `REQ-FE-08`)*
-- `FR-FE-09` (**Booking History & Cancellation**): Passenger booking history endpoints with cancellation and refund calculation. *(Source: `REQ-FE-09`)*
-- `FR-FE-10` (**Disruption Alert Notifications**): Disruption notification webhook/API payload delivering alerts highlighting affected bookings and required passenger actions. *(Source: `REQ-FE-10`)*
-- `FR-FE-11` (**Rebooking Response**): Passenger API endpoints for accepting alternative journey proposals or requesting full refunds. *(Source: `REQ-FE-11`)*
-- `FR-FE-12` (**QR Ticket Boarding Scanner**): Boarding verification API endpoint for validating passenger QR tickets at boarding. *(Source: `REQ-FE-12`)*
-- `FR-FE-13` (**Passenger Manifest**): Departure manifest endpoint with real-time boarding verification status. *(Source: `REQ-FE-13`)*
+#### 1.11.1 Operator & Management Web Application (React 18 / Vite / Tailwind CSS)
+- `FR-FE-01` (**Role-Based Operator Dashboard**): Interactive web dashboard (`OperatorDashboardPage.jsx`) displaying route/service occupancy KPIs, revenue summaries, upcoming departures, and journey planning metrics. *(Source: `REQ-FE-01`)*
+- `FR-FE-02` (**Business Data Management**): Responsive CRUD workspaces with validation, search, filtering, and pagination for routes (`RouteManagerPage.jsx`), services (`ServiceSchedulerPage.jsx`), fleet matrix (`FleetMatrixBuilderPage.jsx`), 2D seat layout designer (`SeatLayoutDesignerPage.jsx`), and driver rostering (`DriverRosteringPage.jsx`). *(Source: `REQ-FE-02`)*
+- `FR-FE-03` (**Disruption Workbench**): Interactive workspace (`DisruptionIntakePage.jsx`) displaying incident intake, candidate alternatives, resource feasibility evidence, and passenger impact blast radius. *(Source: `REQ-FE-03`)*
+- `FR-FE-04` (**Manager Approval Workbench**): Dedicated UI (`ManagerApprovalWorkbenchPage.jsx`) for Transport Managers to inspect before/after operational impacts, affected passenger metrics, deterministic validation summaries, and execute approve/reject/request-revision actions. *(Source: `REQ-FE-04`)*
+- `FR-FE-05` (**AI Workflow Observability Dashboard**): Real-time observability dashboard (`AiObservabilityPage.jsx`) returning agent execution states, tool invocation traces, step timings, and deterministic validation outputs. *(Source: `REQ-FE-05`)*
+- `FR-FE-13` (**Passenger Manifest Monitor**): Real-time departure manifest table (`BookingManifestMonitorPage.jsx`) with live boarding verification counters and CSV/PDF export capability. *(Source: `REQ-FE-13`)*
+
+#### 1.11.2 Passenger & Conductor Mobile Application (Flutter 3.x / Dart 3 / BLoC)
+- `FR-FE-06` (**Journey Search & Filtering**): Mobile discovery screen (`JourneySearchScreen.dart`) supporting origin, destination, travel date/time, and preference filters (AC, Wi-Fi, direct service). *(Source: `REQ-FE-06`, `REQ-FE-08`)*
+- `FR-FE-07` (**Journey Comparison View**): Candidate card screen (`JourneyComparisonScreen.dart`) comparing departure/arrival times, duration, fares, connecting transfer windows, and available seats. *(Source: `REQ-FE-09`)*
+- `FR-FE-08` (**Interactive 2D Bus Seat Picker**): Real-time interactive seat layout screen (`SeatPickerScreen.dart`) rendering available, held, and booked seats with an atomic 10-minute hold countdown timer (`BR-HOLD-001`). *(Source: `REQ-FE-10`)*
+- `FR-FE-09` (**Payment Sandbox Checkout**): Checkout screen (`PaymentCheckoutScreen.dart`) integrating with backend payment gateway proxy to finalize bookings. *(Source: `REQ-FE-11`)*
+- `FR-FE-10` (**Digital E-Ticket Wallet**): Mobile ticket wallet (`TicketWalletScreen.dart`) serving active and historical passes with cryptographically signed HMAC-SHA256 QR codes. *(Source: `REQ-FE-11`)*
+- `FR-FE-11` (**Disruption Alert & Rebooking Screen**): In-app banner and screen (`DisruptionAlertScreen.dart`) alerting passengers of disrupted bookings and enabling one-tap rebooking acceptance or refund requests. *(Source: `REQ-FE-12`)*
+- `FR-FE-12` (**Conductor Camera QR Boarding Scanner**): Hardware camera scanner (`ConductorScannerScreen.dart`) and passenger manifest (`ConductorManifestScreen.dart`) for on-bus cryptographic boarding validation. *(Source: `REQ-FE-13`)*
+- `FR-FE-14` (**Review & Rating Submission**): 5-star rating and sentiment feedback form (`ReviewSubmissionScreen.dart`) with profanity filtering and 7-day post-trip submission rules. *(Source: `FR-REVIEW-001`)*
 
 ---
 

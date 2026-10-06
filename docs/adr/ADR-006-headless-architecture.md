@@ -1,50 +1,45 @@
-# ADR-006: Transition to Headless API-First Architecture
+# ADR-006: Superseded — Historical Transition to Headless Architecture
 
 ## Title
-ADR-006: Decommissioning of Frontend UI Layers and Adoption of Headless API-First Architecture
+ADR-006: Historical Exploration of Headless Architecture (Superseded & Deprecated)
 
 ## Status
-`Accepted` (Supersedes [ADR-001](ADR-001-react-state-management.md) and [ADR-002](ADR-002-flutter-state-management.md))
+`Superseded / Deprecated` (Superseded by [SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md) and SE3090 Assignment 1 Full-Stack Requirements; [ADR-001](ADR-001-react-state-management.md) and [ADR-002](ADR-002-flutter-state-management.md) are **Active & Accepted**)
 
 ---
 
 ## Context
-WayPoint was originally envisioned with three client tiers:
-1. A React Single Page Application (`web/`) for operators and transport managers.
-2. A Flutter cross-platform mobile application (`mobile/`) for passengers and conductors.
-3. An ASP.NET Core Web API with PostgreSQL and Python AI Multi-Agent subsystems.
+During interim sprint planning, the engineering team investigated a headless API-first operational model where the ASP.NET Core Web API served as the authoritative application layer and client interfaces were initially decoupled.
 
-As part of the system architectural refinement:
-- The system core value proposition resides in the robust ASP.NET Core business domain, high-concurrency seat reservation locking, multi-agent AI disruption triage, and strict transactional consistency.
-- Maintaining separate React web and Flutter mobile visual rendering layers created superficial coupling, UI asset drift, and redundant display logic without adding domain value.
-- Transitioning to a pure **Headless API-First Architecture** consolidates all business invariants, permission checks, scheduling algorithms, and AI agent execution into authoritative, testable, and contract-governed REST API endpoints.
+However, the **SE3090 Assignment 1 Specification and Marking Scheme** strictly mandates an **Integrated Full-Stack System** with direct individual and group evaluation across client tiers:
+1. **React Web Application (`REQ-TECH-04`)**: 10 individual marks per student for responsive functional components, state management, protected routing, and operator dashboards.
+2. **Flutter Mobile Application (`REQ-TECH-05`)**: 10 individual marks per student for cross-platform mobile widgets, BLoC/Cubit state management, secure storage, QR scanner device features, and passenger workflows.
+3. **Integrated-System Rule (`REQ-ASSIGN-04`)**: Disconnected prototypes are strictly prohibited; React and Flutter applications MUST directly consume the shared ASP.NET Core Web API, PostgreSQL database, JWT identity, and business rules.
 
 ---
 
 ## Decision
-We decommission all frontend presentation layers (`web/` and `mobile/`) and establish WayPoint strictly as a **Headless REST API & Agentic AI Platform**:
-1. **Decommission Frontends**: Remove `web/` and `mobile/` source trees, Google Stitch UI design files (`docs/design/`), and browser screenshot automation tools.
-2. **Authoritative Application Layer**: ASP.NET Core Web API serves as the sole, authoritative interface for all business operations, passenger workflows, and administrative management.
-3. **Contract-Driven Integration**: All consumer capabilities are governed by OpenAPI 3.0 / Swagger specifications and strongly typed Data Transfer Objects (DTOs).
-4. **Decoupled Client Ecosystem**: Any future external consumers (third-party transit aggregators, mobile apps, web dashboards, IoT validators) interface exclusively through authenticated HTTP/HTTPS JSON endpoints.
+We formally **supersede and deprecate** ADR-006. The full multi-tier presentation layer is active and integrated:
+1. **Reactivate ADR-001**: React Web Application using React 18, Vite, Tailwind CSS v3 (Sovereign UI design tokens), TanStack Query v5, and Zustand.
+2. **Reactivate ADR-002**: Flutter Mobile Application using Flutter 3.x, Dart 3, Velora Transit design tokens, Flutter BLoC/Cubit, and Dio HTTP client.
+3. **Full-Stack Parity**: All 4 student components own vertical slices spanning ASP.NET Core Web API, PostgreSQL, React Web pages, Flutter Mobile screens, Agentic AI agents, and automated test suites.
 
 ---
 
 ## Consequences
 
 ### Positive
-- **Single Source of Truth**: Business rules, validation logic, and authorization policies exist solely on the server tier, preventing client-side drift or security bypasses.
-- **Maximized Engineering Focus**: 100% of testing and implementation effort is concentrated on high-reliability backend systems, EF Core transactional concurrency, and multi-agent AI orchestration.
-- **Contract Clarity**: Interactive OpenAPI/Swagger UI (`/swagger`) and machine-readable JSON contracts (`/swagger/v1/swagger.json`) serve as executable specifications.
-- **Lower Deployment & Maintenance Overhead**: Eliminates separate node/vite and mobile build chains, reducing CI/CD execution time and cloud attack surface.
+- Fully satisfies the SE3090 Assignment 1 evaluation rubric, protecting the 20 marks allocated to React and Flutter individual contributions.
+- Delivers an end-to-end user experience for transport operators (React) and passengers/conductors (Flutter).
+- Enables live demonstration of the end-to-end cross-platform workflow (`REQ-TEST-05`): Disruption detected → Multi-Agent AI Triage → Transport Manager review and approval in React Web App → Transactional reassignment in ASP.NET Core & PostgreSQL → In-app notification and QR ticket update in Flutter Mobile App.
 
 ### Negative / Trade-Offs
-- Visual demonstration relies on API client tooling (Swagger UI, Postman, curl) rather than graphical browser/mobile displays.
-- Requirements previously targeting visual layout (`FR-FE-xx`) are mapped to their corresponding API endpoint contracts, response schemas, and telemetry streams.
+- Requires maintaining client-side build pipelines, testing suites (Vitest for React, Flutter test for mobile), and cloud hosting configurations.
 
 ---
 
 ## Compliance & Traceability
-- **Superseded Decisions**: [ADR-001](ADR-001-react-state-management.md), [ADR-002](ADR-002-flutter-state-management.md).
+- **Reinstated Decisions**: [ADR-001](ADR-001-react-state-management.md) (React State Management), [ADR-002](ADR-002-flutter-state-management.md) (Flutter State Management).
 - **Related Decisions**: [ADR-003](ADR-003-ai-orchestration.md) (Multi-Agent Subsystem), [ADR-004](ADR-004-ai-workflow-persistence.md) (Workflow Persistence), [ADR-005](ADR-005-cloud-deployment.md) (Cloud Infrastructure).
-- **API Documentation**: Interactive Swagger interface at `/swagger`.
+- **Design Specification**: [SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md).
+

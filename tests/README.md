@@ -22,13 +22,15 @@ Component-level test suites reside inside their respective application directori
   cd mobile
   flutter test
   ```
-- **Web Frontend (Playwright E2E)**: `web/e2e/` (Browser-based automated tests for operator dashboard, dispatcher scheduler, and admin consoles).
+- **Web Frontend (Vitest & RTL)**: `web/src/**/__tests__/` (Component and integration tests for route manager, seat layout designer, booking manifest, and disruption workbench).
   ```bash
   cd web
-  npx playwright test
+  npm test
   ```
 - **AI Multi-Agent Subsystem (Pytest)**: `ai/tests/` (Unit tests for LangGraph workflows, deterministic guardrails, and tool execution).
   ```bash
   cd ai
   pytest tests/ -v
   ```
+
+For the complete testing pyramid, closed-loop E2E workflow specifications, and requirement traceability (`REQ-TEST-01` to `REQ-TEST-08`), refer to [docs/testing/test-strategy.md](../docs/testing/test-strategy.md).

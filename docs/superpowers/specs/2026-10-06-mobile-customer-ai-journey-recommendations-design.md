@@ -4,7 +4,7 @@
 > **Date**: 2026-10-06  
 > **Status**: Approved  
 > **Component Owner**: Student 1 (Sethum - Journey Planning) & Student 2 (Nuhadh - Mobile Integration)  
-> **Architecture Decisions**: [ADR-003 — AI Orchestration](../../adr/ADR-003-ai-orchestration.md) | [ADR-006 — Headless Architecture](../../adr/ADR-006-headless-architecture.md)
+> **Architecture Decisions**: [ADR-002 — Flutter State Management](../../adr/ADR-002-flutter-state-management.md) | [ADR-003 — AI Orchestration](../../adr/ADR-003-ai-orchestration.md)
 
 ---
 

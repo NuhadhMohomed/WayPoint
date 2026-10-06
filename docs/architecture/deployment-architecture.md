@@ -1,19 +1,18 @@
 # WayPoint Deployment Architecture Specification
 
-This document defines the deployment topology, cloud infrastructure strategy, containerization, and headless evaluation availability specs for **WayPoint** (**SE3090 Assignment 1**).
+This document defines the deployment topology, cloud infrastructure strategy, containerization, and evaluation availability specs for **WayPoint** (**SE3090 Assignment 1**).
 
 ---
 
 ## 1. Deployment Topology
 
-WayPoint uses an enterprise cloud-hosted headless infrastructure topology on **Railway**. All client requests and integration workflows flow directly into the authoritative ASP.NET Core Web API.
+WayPoint uses an integrated cloud-hosted infrastructure topology combining **Railway** (ASP.NET Core Web API & Managed PostgreSQL 18 DB), **Render** (React Web Application static site), and compiled **Android APK** artifacts (Flutter Mobile Application). All client requests and integration workflows flow directly into the authoritative ASP.NET Core Web API.
 
 ```mermaid
 graph TB
     subgraph ClientDevices["Client Applications & Terminals"]
-        MobileDevice["Android Mobile Device (Flutter APK)"]
-        Browser["Web Browser (React Web App on Render)"]
-        Operators["Operator Terminals & Station Scanners"]
+        MobileDevice["Android Mobile Device (Flutter APK)\nPassenger Discovery & Conductor Scanner"]
+        Browser["Web Browser (React Web App on Render)\nOperator & Manager Console"]
     end
 
     subgraph StaticHosting["Frontend Cloud Host (Render)"]
@@ -22,7 +21,7 @@ graph TB
 
     subgraph CloudInfra["Backend Cloud Infrastructure (Railway)"]
         subgraph ContainerHosting["Container Host (Railway)"]
-            APIApp["ASP.NET Core Web API (.NET 8 Docker Container)"]
+            APIApp["ASP.NET Core Web API (.NET 8 Docker Container)\nhttps://waypoint-api.up.railway.app"]
             AIModule["Agentic AI Service (FastAPI / LangGraph in ai/)"]
         end
 
@@ -34,14 +33,12 @@ graph TB
     Browser -->|HTTP GET Static Assets| RenderStatic
     RenderStatic -->|HTTPS / REST / JWT| APIApp
     MobileDevice -->|HTTPS / REST / JWT| APIApp
-    Operators -->|HTTPS / REST / JWT| APIApp
     APIApp -->|Npgsql 9 Direct SSL / EF Core 9| PostgresCloud
     APIApp -->|Internal HTTP Tool Wrappers| AIModule
 
-    %% No direct access
+    %% Prohibited connections
     RenderStatic -. X Prohibited X .- PostgresCloud
     MobileDevice -. X Prohibited X .- PostgresCloud
-    Operators -. X Prohibited X .- PostgresCloud
     AIModule -. X Prohibited X .- PostgresCloud
 ```
 
@@ -63,17 +60,35 @@ graph TB
 
 ### 2.3 React Web Application
 - **Deployment Platform**: **Render** (Static Site service).
+- **Live URL**: `https://waypoint-web.onrender.com` (`REQ-DEP-03`).
 - **Configuration**: Root directory `web`, build command `npm install && npm run build`, publish directory `dist`.
 - **Environment Variable**: `VITE_API_URL` set to the Railway Web API domain (`https://<railway-domain>/api/v1`).
 - **SPA Rewrite Rule**: Rewrite `/*` to `/index.html` (configured via root `render.yaml`) ensuring deep links resolve without 404 errors.
 - **Continuous Deployment**: Automated git-push tracking on `main` branch.
 
-### 2.4 Headless API Consumption & Interactive Swagger Console
-- **Evaluator Access**: Real-time evaluation of all transit routes, seat matrices, bookings, refunds, and multi-agent AI mitigation is facilitated via the interactive Swagger/OpenAPI 3.0 interface (`/swagger`).
-- **Client Agnostic**: Any HTTP client (Postman, cURL, third-party mobile clients, automated load test scripts) can execute authenticated requests using JWT Bearer headers.
+### 2.4 Flutter Mobile Application (Android APK Release)
+- **Deployment Format**: Runnable Android Application Package (`.apk`) submitted for evaluators (`REQ-DEP-04`).
+- **Build Command**:
+  ```bash
+  cd mobile
+  flutter pub get
+  flutter build apk --release
+  ```
+- **Output Artifact**: `mobile/build/app/outputs/flutter-apk/app-release.apk`
+- **Installation Instructions**:
+  ```bash
+  # Using Android Debug Bridge (ADB) to physical device or emulator
+  adb install -r mobile/build/app/outputs/flutter-apk/app-release.apk
+  ```
+- **Runtime Target**: Android API Level 24+ (Android 7.0 Nougat and above).
+- **Network Configuration**: Configured with live cloud API base URL (`https://waypoint-api.up.railway.app/api/v1`) or configurable via environment/debug settings.
 
-### 2.5 Agentic AI Subsystem
-- **Deployment Platform**: Internal Python container service in `ai/` connected via private internal HTTP to ASP.NET Core.
+### 2.5 Interactive Swagger & OpenAPI Console
+- **Evaluator Access**: Real-time evaluation of all transit routes, seat matrices, bookings, refunds, and multi-agent AI mitigation is facilitated via the interactive Swagger/OpenAPI 3.0 interface (`/swagger`).
+- **Client Agnostic**: Any HTTP client (Postman, cURL, automated load test scripts) can execute authenticated requests using JWT Bearer headers.
+
+### 2.6 Agentic AI Subsystem
+- **Deployment Platform**: Internal Python container service in `ai/` connected via private internal HTTP to ASP.NET Core (`REQ-DEP-05`).
 - **Startup Sequence**:
   1. Railway Managed PostgreSQL Database instance verified active.
   2. ASP.NET Core Web API instance started, migrations applied, baseline data seeded.
@@ -84,4 +99,5 @@ graph TB
 ## 3. Evaluation Accessibility & Cost Policy
 
 - **No-Cost Policy Compliance**: All cloud hosting uses free-tier or institution-provided cloud resources (`REQ-DEP-06`).
-- **Required Access Period**: All live URLs (API, Swagger UI, DB health) MUST remain fully functional and accessible to evaluators until at least **Wednesday, 21 October 2026** (`REQ-ASSIGN-06`).
+- **Required Access Period**: All live URLs (API, Swagger UI, DB health, React Web) MUST remain fully functional and accessible to evaluators until at least **Wednesday, 21 October 2026** (`REQ-ASSIGN-06`).
+

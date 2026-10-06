@@ -41,10 +41,10 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 
 ---
 
-## 4. Mandatory API Contract & Functional Requirements (`REQ-FE-xx`)
+## 4. Mandatory Client Tier & Functional Requirements (`REQ-FE-xx`)
 
 > [!NOTE]
-> Per [ADR-006: Headless API-First Architecture](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md), all frontend UI rendering layers (`web/` and `mobile/`) have been decommissioned. The functional requirements below (`REQ-FE-xx`) are authoritatively served via ASP.NET Core REST API endpoints and OpenAPI 3.0 contracts.
+> Per [SPEC-2026-10-05-FRONTEND-RECONSTRUCTION](../superpowers/specs/2026-10-05-frontend-full-stack-reconstruction-design.md), the full multi-tier UI architecture is active. The functional requirements below (`REQ-FE-xx`) are implemented across the **React Web Application** (`web/`) for operators and managers, and the **Flutter Mobile Application** (`mobile/`) for passengers and conductors, consuming the authoritative ASP.NET Core REST API.
 
 ### 4.1 Operator & Management API Endpoints
 - `REQ-FE-01` (**Role-Based Dashboard**): Summary widgets covering route/service occupancy, revenue, upcoming departures, failed payments, disruptions, and journey planning analytics.
@@ -282,13 +282,13 @@ This document provides a complete, authoritative analysis of the **WayPoint Proj
 The team MUST resolve and document the following items in project documentation BEFORE writing production application code:
 
 - [ ] **Gate 1 — Component Ownership Assignment**: Assign Students 1 through 4 to the 4 business components (Journey Planning, Fleet/Resource, Booking/Ticketing, Disruption/Approval).
-- [ ] **Gate 2 — Architectural Decision Records (ADRs)**: Draft and approve preliminary ADRs in `docs/adr/`:
-  - `ADR-001`: React State Management (Superseded by ADR-006).
-  - `ADR-002`: Flutter State Management (Superseded by ADR-006).
-  - `ADR-003`: Agentic AI Framework & LLM Orchestration.
-  - `ADR-004`: AI Workflow State Schema & Persistence in PostgreSQL.
-  - `ADR-005`: Cloud Hosting Platform (Railway Managed PostgreSQL 18 & Container API).
-  - `ADR-006`: Headless Architecture Transition (Decommissioning UI frontends).
+- [x] **Gate 2 — Architectural Decision Records (ADRs)**: Draft and approve preliminary ADRs in `docs/adr/`:
+  - `ADR-001`: React State Management (Zustand + TanStack Query) — Accepted & Active.
+  - `ADR-002`: Flutter State Management (BLoC / Cubit) — Accepted & Active.
+  - `ADR-003`: Agentic AI Framework & LLM Orchestration — Accepted.
+  - `ADR-004`: AI Workflow State Schema & Persistence in PostgreSQL — Accepted.
+  - `ADR-005`: Cloud Hosting Platform (Railway API/DB, Render React Web, Android APK) — Accepted.
+  - `ADR-006`: Historical Exploration of Headless Architecture (Superseded & Deprecated).
 - [ ] **Gate 3 — Database Schema & ERD Approval**: Finalize relational schema for Routes, Stops, Buses, SeatLayouts, Services, Bookings, DisruptionCases, and `AiWorkflow` tables in `docs/architecture/`.
 - [ ] **Gate 4 — API Contract Specification**: Define Swagger/OpenAPI endpoints and DTO schemas for all 16+ API endpoints.
 - [ ] **Gate 5 — Allow-Listed Tool Contracts**: Define exact JSON schemas for the 10 allow-listed Agentic AI tools.

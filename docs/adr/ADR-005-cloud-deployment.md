@@ -15,25 +15,27 @@ SE3090 Assignment 1 requires deploying the authoritative WayPoint platform to a 
 - **Agentic AI Subsystem**: Deployed alongside backend services or connected via private internal HTTP.
 - **Access Window**: All live URLs must remain accessible to evaluators until at least **Wednesday, 21 October 2026** (`REQ-ASSIGN-06`).
 - **Cost Policy**: Must strictly use no-cost or free-tier cloud services (`REQ-DEP-06`).
-- **Headless Architecture Transition**: Per [ADR-006](file:///c:/Users/Nuhad/Documents/GitHub/WayPoint/docs/adr/ADR-006-headless-architecture.md), all frontend UI rendering layers have been decommissioned, eliminating static web CDN and mobile app compilation from cloud infrastructure requirements.
+- **Full-Stack Presentation Tier Deployment**: In addition to backend services, the React Single Page Application is deployed on **Render** (`https://waypoint-web.onrender.com`), and a runnable Android APK is built and distributed for the Flutter mobile application (`REQ-DEP-03`, `REQ-DEP-04`).
 
 ---
 
 ## Decision
-We select **Railway** for hosting the containerized ASP.NET Core Web API and Managed PostgreSQL Database with high-speed private networking and direct SSL encryption.
+We select **Railway** for hosting the containerized ASP.NET Core Web API and Managed PostgreSQL Database, **Render** for hosting the React Web Application static site, and compiled **Android APK** distribution for the Flutter Mobile Application.
 
 ---
 
 ## Decision Options Evaluated
 
-### Option A: Railway (API + PostgreSQL) [ACCEPTED]
+### Option A: Railway (API + PostgreSQL) & Render (React Web) [ACCEPTED]
 - *Web API & DB*: ASP.NET Core API deployed as a Railway service using standard Docker containerization, connected to a Railway Managed PostgreSQL Database instance with high-speed private networking.
-- *Pros*: Eliminates Render's 15-minute inactivity spin-down delays; native Dockerfile support; private internal network connectivity between API and PostgreSQL; Npgsql 9 Direct SSL and ALPN support; predictable evaluation availability through the 21 October 2026 deadline.
-- *Cons*: Requires initial setup of Railway project and environment variables.
+- *Web Frontend*: React 18 + Vite SPA deployed as a Render Static Site (`render.yaml`) with automated SPA routing rewrites.
+- *Mobile*: Runnable Android APK compiled via Flutter SDK and hosted in release artifacts.
+- *Pros*: Eliminates spin-down delays on critical database transactions; private internal network connectivity between API and PostgreSQL; Npgsql 9 Direct SSL and ALPN support; predictable evaluation availability through the 21 October 2026 deadline.
+- *Cons*: Requires coordinating two zero-cost cloud dashboards (Railway and Render).
 
 ### Option B: Render (API + PostgreSQL)
 - *Web API & DB*: ASP.NET Core API deployed as a Render Web Service connected to Render PostgreSQL.
-- *Pros*: Simple GitHub auto-deploy.
+- *Pros*: Simple single-dashboard GitHub auto-deploy.
 - *Cons*: Render free web services spin down after 15 minutes of inactivity (~30s cold start), which could disrupt rapid evaluator testing during viva.
 
 ### Option C: Microsoft Azure for Students (App Service + Azure PostgreSQL)
@@ -46,7 +48,7 @@ We select **Railway** for hosting the containerized ASP.NET Core Web API and Man
 
 ## Evaluation Comparison
 
-| Evaluation Metric | Option A: Railway [ACCEPTED] | Option B: Render | Option C: Azure for Students |
+| Evaluation Metric | Option A: Railway + Render [ACCEPTED] | Option B: Render All | Option C: Azure for Students |
 | :--- | :--- | :--- | :--- |
 | **Hosting Cost** | **Free / Starter Tier** | Free Tier | Finite Student Credit ($100 cap) |
 | **Cold Start Latency** | **Zero / Low (Always Active)** | ~30s delay after 15m idle | Zero (Always Active) |
@@ -57,6 +59,7 @@ We select **Railway** for hosting the containerized ASP.NET Core Web API and Man
 ---
 
 ## Consequences
-- Single cloud platform (Railway) manages both database and API services under a unified project namespace.
-- High-performance Direct SSL connection pooling configured in `Program.cs` and `appsettings.json`.
-- Evaluators can inspect, test, and execute all endpoints directly through the interactive Swagger UI (`https://<railway-host>/swagger`).
+- Unified backend and database deployment on Railway with high-performance Direct SSL connection pooling configured in `Program.cs` and `appsettings.json`.
+- React Web App deployed with automated SPA redirect rules on Render, communicating via HTTPS with Railway API.
+- Android APK compiled and available for evaluator testing on Android devices or emulators.
+- Evaluators can inspect, test, and execute all endpoints directly through the interactive Swagger UI (`https://<railway-host>/swagger`) or via live web and mobile client interfaces.

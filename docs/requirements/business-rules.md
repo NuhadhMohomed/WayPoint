@@ -15,11 +15,12 @@ This document provides the complete, formal **Business Rules & Governance Specif
                                    │ HTTPS / REST               │ Internal Allow-Listed Tools
                                    │                            │ (Validated Inputs & Outputs)
 +----------------------------------+---+      +-----------------+------------------+
-|        EXTERNAL API CONSUMERS        |      |       AGENTIC AI SUBSYSTEM         |
-|  - External Mobile / Web Clients     |      |  - Planner / Coordinator Agent    |
-|  - Station Scanners / Partner APIs   |      |  - Journey Analysis Agent          |
-+--------------------------------------+      |  - Resource & Booking Agent        |
-                                              |  - Validation & Safety Agent       |
+|      CLIENT PRESENTATION TIERS       |      |       AGENTIC AI SUBSYSTEM         |
+|  - React 18 Web App (Operators/Mgrs) |      |  - Planner Node (Coordinator)      |
+|  - Flutter Mobile (Passengers/Conds) |      |  - Journey Analysis (Sethum)       |
+|  - Station Scanners / Partner APIs   |      |  - Resource Feasibility (Nuhadh)   |
++--------------------------------------+      |  - Booking & Policy (Mithila)      |
+                                              |  - Validation & Safety (Dineth)    |
                                               +------------------------------------+
 ```
 
