@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -51,6 +52,18 @@ void main() {
 
     // Verify storage write was invoked to remember onboarding completion
     verify(() => mockStorage.write(key: 'waypoint_has_completed_onboarding', value: 'true')).called(1);
+
+    // Verify user is immediately asked to sign in or register
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Register'), findsOneWidget);
+
+    // User chooses Continue as Guest to explore routes
+    final guestButton = find.byKey(const Key('continue_as_guest_button'));
+    expect(guestButton, findsOneWidget);
+    await tester.ensureVisible(guestButton);
+    await tester.pumpAndSettle();
+    await tester.tap(guestButton);
+    await tester.pumpAndSettle();
 
     // Verify user reaches Explore screen with FirstRunWelcomeCard
     expect(find.byType(FirstRunWelcomeCard), findsOneWidget);

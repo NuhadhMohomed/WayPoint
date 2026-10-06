@@ -7,7 +7,9 @@ import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 
 class PassengerAuthScreen extends StatefulWidget {
-  const PassengerAuthScreen({super.key});
+  final VoidCallback? onContinueAsGuest;
+
+  const PassengerAuthScreen({super.key, this.onContinueAsGuest});
 
   @override
   State<PassengerAuthScreen> createState() => _PassengerAuthScreenState();
@@ -68,6 +70,9 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               );
+            }
+            if (state is Authenticated && Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
             }
           },
           builder: (context, state) {
@@ -134,6 +139,23 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
                       ],
                     ),
                   ),
+                  if (widget.onContinueAsGuest != null) ...[
+                    const SizedBox(height: 12),
+                    Center(
+                      child: TextButton.icon(
+                        key: const Key('continue_as_guest_button'),
+                        onPressed: widget.onContinueAsGuest,
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                        label: const Text(
+                          'Continue as Guest',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

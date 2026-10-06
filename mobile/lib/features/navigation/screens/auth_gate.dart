@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/bloc/auth_state.dart';
+import '../../auth/screens/passenger_auth_screen.dart';
 import '../../onboarding/screens/onboarding_screen.dart';
 import 'branded_splash_screen.dart';
 import 'passenger_navigation_shell.dart';
@@ -21,6 +22,7 @@ class _AuthGateState extends State<AuthGate> {
   late final SecureStorageService _storage;
   bool _isCheckingOnboarding = true;
   bool _hasCompletedOnboarding = false;
+  bool _isGuestMode = false;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _AuthGateState extends State<AuthGate> {
     if (mounted) {
       setState(() {
         _hasCompletedOnboarding = true;
+        _isGuestMode = false;
       });
     }
   }
@@ -74,8 +77,19 @@ class _AuthGateState extends State<AuthGate> {
           return PassengerNavigationShell(user: state.user);
         }
 
-        // Guest Explorer mode for unauthenticated users
-        return const PassengerNavigationShell(user: null);
+        // If user explicitly chose to explore as guest
+        if (_isGuestMode) {
+          return const PassengerNavigationShell(user: null);
+        }
+
+        // Prompt unauthenticated user to Sign In or Register right after onboarding
+        return PassengerAuthScreen(
+          onContinueAsGuest: () {
+            setState(() {
+              _isGuestMode = true;
+            });
+          },
+        );
       },
     );
   }

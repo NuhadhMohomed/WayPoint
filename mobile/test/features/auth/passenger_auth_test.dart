@@ -167,5 +167,106 @@ void main() {
       expect(find.text('Quick Test Accounts:'), findsNothing);
       expect(find.byType(ActionChip), findsNothing);
     });
+    testWidgets('renders continue as guest button when onContinueAsGuest callback is provided and invokes it on tap', (tester) async {
+      bool guestTapped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<AuthCubit>.value(
+            value: authCubit,
+            child: PassengerAuthScreen(
+              onContinueAsGuest: () {
+                guestTapped = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      final guestButton = find.byKey(const Key('continue_as_guest_button'));
+      expect(guestButton, findsOneWidget);
+      expect(find.text('Continue as Guest'), findsOneWidget);
+
+      await tester.ensureVisible(guestButton);
+      await tester.pumpAndSettle();
+      await tester.tap(guestButton);
+      await tester.pump();
+      expect(guestTapped, isTrue);
+    });
+
+    testWidgets('does not render continue as guest button when onContinueAsGuest is null', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<AuthCubit>.value(
+            value: authCubit,
+            child: const PassengerAuthScreen(),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('continue_as_guest_button')), findsNothing);
+    });
+
+    testWidgets('automatically pops route when authenticated if Navigator canPop', (tester) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigatorKey,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider<AuthCubit>.value(
+                        value: authCubit,
+                        child: const PassengerAuthScreen(),
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Open Auth'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Auth'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PassengerAuthScreen), findsOneWidget);
+
+      // Trigger successful login
+      when(() => mockApiClient.post(
+            any(),
+            data: any(named: 'data'),
+            queryParameters: any(named: 'queryParameters'),
+            options: any(named: 'options'),
+          )).thenAnswer((_) async => Response(
+            requestOptions: RequestOptions(path: '/auth/login'),
+            statusCode: 200,
+            data: {
+              'token': 'mock-jwt-token',
+              'refreshToken': 'mock-refresh-token',
+              'user': const UserModel(
+                id: 'usr-1',
+                fullName: 'Kasun Passenger',
+                email: 'kasun@waypoint.lk',
+                role: 'Passenger',
+              ).toJson(),
+            },
+          ));
+      when(() => mockStorage.saveToken(any())).thenAnswer((_) async {});
+      when(() => mockStorage.saveRefreshToken(any())).thenAnswer((_) async {});
+      when(() => mockStorage.saveUser(any())).thenAnswer((_) async {});
+
+      await tester.enterText(find.byKey(const Key('login_email_field')), 'kasun@waypoint.lk');
+      await tester.enterText(find.byKey(const Key('login_password_field')), 'password123');
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await tester.pumpAndSettle();
+
+      // Screen should have popped back to home scaffold
+      expect(find.byType(PassengerAuthScreen), findsNothing);
+      expect(find.text('Open Auth'), findsOneWidget);
+    });
   });
 }
