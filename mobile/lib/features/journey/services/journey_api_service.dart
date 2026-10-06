@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/network/api_client.dart';
 import '../models/journey_models.dart';
 
@@ -118,8 +119,8 @@ class JourneyApiService {
         return AiJourneyRecommendationModel.fromJson(
             response.data as Map<String, dynamic>);
       }
-    } catch (_) {
-      // Safe fallback handled below
+    } catch (e) {
+      debugPrint('[JourneyApiService] AI recommendation failed: $e');
     }
 
     return AiJourneyRecommendationModel.sampleFallback(

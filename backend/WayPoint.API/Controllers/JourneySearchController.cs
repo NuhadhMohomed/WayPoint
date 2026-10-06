@@ -33,7 +33,7 @@ public sealed class JourneySearchController : ControllerBase
         return Ok(await journeyPlanningService.SearchAsync(request, passengerId, cancellationToken));
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("ai-recommendation")]
     [ProducesResponseType(typeof(AiJourneyRecommendationResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
