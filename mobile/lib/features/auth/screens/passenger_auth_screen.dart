@@ -50,11 +50,6 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
     super.dispose();
   }
 
-  void _fillDemoLogin(String email, String password) {
-    _loginEmailController.text = email;
-    _loginPasswordController.text = password;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -133,9 +128,9 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
                       controller: _tabController,
                       children: [
                         // 1. Sign In View
-                        _buildSignInView(context, isLoading, isDark),
+                        _buildSignInView(context, isLoading),
                         // 2. Register View
-                        _buildRegisterView(context, isLoading, isDark),
+                        _buildRegisterView(context, isLoading),
                       ],
                     ),
                   ),
@@ -148,7 +143,7 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
     );
   }
 
-  Widget _buildSignInView(BuildContext context, bool isLoading, bool isDark) {
+  Widget _buildSignInView(BuildContext context, bool isLoading) {
     return Form(
       key: _loginFormKey,
       child: Column(
@@ -205,44 +200,12 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
               }
             },
           ),
-          const SizedBox(height: 20),
-          const Divider(),
-          const SizedBox(height: 8),
-          Text(
-            'Quick Test Accounts:',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.grey[400] : Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              ActionChip(
-                label: const Text('Passenger', style: TextStyle(fontSize: 11)),
-                avatar: const Icon(Icons.person, size: 14),
-                onPressed: () => _fillDemoLogin('passenger@waypoint.lk', 'Password123!'),
-              ),
-              ActionChip(
-                label: const Text('Conductor', style: TextStyle(fontSize: 11)),
-                avatar: const Icon(Icons.qr_code_scanner, size: 14),
-                onPressed: () => _fillDemoLogin('conductor@waypoint.lk', 'Password123!'),
-              ),
-              ActionChip(
-                label: const Text('Admin', style: TextStyle(fontSize: 11)),
-                avatar: const Icon(Icons.shield, size: 14),
-                onPressed: () => _fillDemoLogin('admin@waypoint.lk', 'Password123!'),
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildRegisterView(BuildContext context, bool isLoading, bool isDark) {
+  Widget _buildRegisterView(BuildContext context, bool isLoading) {
     return Form(
       key: _regFormKey,
       child: SingleChildScrollView(

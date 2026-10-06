@@ -147,5 +147,25 @@ void main() {
       expect(find.byKey(const Key('reg_password_field')), findsOneWidget);
       expect(find.byKey(const Key('reg_submit_button')), findsOneWidget);
     });
+
+    testWidgets('does not display quick test role change or demo account chips', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<AuthCubit>.value(
+            value: authCubit,
+            child: const PassengerAuthScreen(),
+          ),
+        ),
+      );
+
+      expect(find.text('Quick Test Accounts:'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
+
+      await tester.tap(find.text('Register'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quick Test Accounts:'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
+    });
   });
 }
