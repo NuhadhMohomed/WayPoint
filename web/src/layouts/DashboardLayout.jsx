@@ -81,7 +81,12 @@ export function DashboardLayout() {
     {
       title: 'System Administration',
       items: [
-        { label: 'User Governance', to: '/admin/users', icon: ShieldAlert },
+        {
+          label: 'User Governance',
+          to: '/admin/users',
+          icon: ShieldAlert,
+          badge: user?.role === 'Admin' ? null : 'Admin Only',
+        },
       ]
     }
   ]
@@ -131,6 +136,11 @@ export function DashboardLayout() {
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                      {item.badge}
+                    </span>
+                  )}
                 </NavLink>
               )
             })}

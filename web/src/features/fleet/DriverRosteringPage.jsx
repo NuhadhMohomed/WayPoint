@@ -55,15 +55,17 @@ export function DriverRosteringPage() {
   }
 
   const handleExportCsv = () => {
-    const exportData = drivers.map((d) => ({
+    const exportData = (drivers || []).map((d) => ({
       FullName: d.fullName,
       LicenseNumber: d.licenseNumber,
-      ContactNumber: d.contactNumber,
+      PhoneNumber: d.phoneNumber || d.contactNumber || '',
       Status: d.status,
-      AssignmentsCount: d.assignmentCount,
+      AssignmentsCount: d.assignmentCount || 0,
     }))
     downloadCsv(exportData, 'waypoint_driver_roster.csv')
   }
+
+  const driverList = Array.isArray(drivers) ? drivers : []
 
   return (
     <div className="space-y-5">
@@ -85,9 +87,9 @@ export function DriverRosteringPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Licensed Drivers', value: driverPagination.totalCount, color: 'text-waypoint-primary' },
-          { label: 'Active on Shifts', value: drivers.filter(d => d.status === 'Active').length, color: 'text-emerald-600' },
-          { label: 'Total Scheduled Runs', value: drivers.reduce((sum, d) => sum + d.assignmentCount, 0), color: 'text-sky-600' },
+          { label: 'Total Licensed Drivers', value: driverPagination?.totalCount ?? driverList.length, color: 'text-waypoint-primary' },
+          { label: 'Active on Shifts', value: driverList.filter(d => d.status === 'Active').length, color: 'text-emerald-600' },
+          { label: 'Total Scheduled Runs', value: driverList.reduce((sum, d) => sum + (d.assignmentCount || 0), 0), color: 'text-sky-600' },
         ].map((stat) => (
           <div key={stat.label} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
             <div className={`text-2xl font-black font-mono ${stat.color}`}>{stat.value}</div>
@@ -185,7 +187,7 @@ export function DriverRosteringPage() {
                       <span className="font-bold text-slate-900 font-sans text-xs">{driver.fullName}</span>
                     </td>
                     <td className="py-3 px-3 text-slate-700 font-mono">{driver.licenseNumber}</td>
-                    <td className="py-3 px-3 text-slate-500">{driver.contactNumber || '—'}</td>
+                    <td className="py-3 px-3 text-slate-500">{driver.phoneNumber || driver.contactNumber || '—'}</td>
                     <td className="py-3 px-3 text-center font-sans">
                       <span className={`inline-flex px-2 py-0.5 text-[11px] font-bold rounded-full border ${
                         driver.status === 'Active'
@@ -197,7 +199,7 @@ export function DriverRosteringPage() {
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-800 border border-slate-200">
-                        {driver.assignmentCount} Runs
+                        {driver.assignmentCount ?? 0} Runs
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right">
@@ -383,7 +385,7 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
   const [form, setForm] = useState({
     fullName: '',
     licenseNumber: '',
-    contactNumber: '',
+    phoneNumber: '',
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -391,10 +393,14 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await fleetApi.createDriver(form)
+      await fleetApi.createDriver({
+        fullName: form.fullName.trim(),
+        licenseNumber: form.licenseNumber.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+      })
       onSuccess()
     } catch (err) {
-      onError(err.response?.data?.detail || 'Failed to create driver')
+      onError(err.response?.data?.detail || err.message || 'Failed to create driver')
     } finally {
       setSubmitting(false)
     }
@@ -438,8 +444,8 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
             <input
               type="tel"
               placeholder="+94 77 987 6543"
-              value={form.contactNumber}
-              onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+              value={form.phoneNumber}
+              onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
             />
           </div>
@@ -457,22 +463,52 @@ function AddDriverModal({ onClose, onSuccess, onError }) {
 }
 
 function AssignDriverModal({ drivers, onClose, onSuccess, onError }) {
+  const [services, setServices] = useState([])
+  const [loadingServices, setLoadingServices] = useState(true)
   const [form, setForm] = useState({
     driverId: '',
-    serviceCode: '',
-    departureTime: '',
-    arrivalTime: '',
+    serviceId: '',
   })
   const [submitting, setSubmitting] = useState(false)
 
+  useEffect(() => {
+    let mounted = true
+    fleetApi.getServices()
+      .then((data) => {
+        if (mounted) {
+          setServices(Array.isArray(data) ? data : (data?.items || []))
+        }
+      })
+      .catch(() => {
+        if (mounted) setServices([])
+      })
+      .finally(() => {
+        if (mounted) setLoadingServices(false)
+      })
+    return () => { mounted = false }
+  }, [])
+
+  const selectedService = services.find(s => s.id === form.serviceId)
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!form.driverId) {
+      onError('Please select a licensed driver')
+      return
+    }
+    if (!form.serviceId) {
+      onError('Please select a scheduled corridor departure service')
+      return
+    }
     setSubmitting(true)
     try {
-      await fleetApi.assignDriver(form)
+      await fleetApi.assignDriver({
+        driverId: form.driverId,
+        serviceId: form.serviceId,
+      })
       onSuccess()
     } catch (err) {
-      onError(err.response?.data?.detail || 'Failed to assign driver')
+      onError(err.response?.data?.detail || err.message || 'Failed to assign driver')
     } finally {
       setSubmitting(false)
     }
@@ -488,7 +524,7 @@ function AssignDriverModal({ drivers, onClose, onSuccess, onError }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Select Driver</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Select Licensed Driver</label>
             <select
               required
               value={form.driverId}
@@ -503,43 +539,52 @@ function AssignDriverModal({ drivers, onClose, onSuccess, onError }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Service Code</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. SRV-COL-ELLA-0630"
-              value={form.serviceCode}
-              onChange={(e) => setForm({ ...form, serviceCode: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
-            />
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Scheduled Departure Service</label>
+            {loadingServices ? (
+              <div className="flex items-center gap-2 py-2 text-xs text-slate-500 font-mono">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-waypoint-primary" /> Loading departures...
+              </div>
+            ) : services.length === 0 ? (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                No active corridor services found. Please initialize services first.
+              </div>
+            ) : (
+              <select
+                required
+                value={form.serviceId}
+                onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              >
+                <option value="">— Select scheduled departure —</option>
+                {services.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.serviceCode} — {s.routeName || 'Corridor'} ({new Date(s.departureTime).toLocaleDateString([], { month: 'short', day: 'numeric' })} {new Date(s.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Departure Time</label>
-              <input
-                type="datetime-local"
-                required
-                value={form.departureTime}
-                onChange={(e) => setForm({ ...form, departureTime: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
-              />
+          {selectedService && (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5 font-mono">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Route & Bus:</span>
+                <span className="font-semibold text-slate-800">{selectedService.routeName || 'Corridor'} • {selectedService.busReg || 'Fleet'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Departure:</span>
+                <span className="text-slate-700">{new Date(selectedService.departureTime).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Arrival:</span>
+                <span className="text-slate-700">{new Date(selectedService.arrivalTime).toLocaleString()}</span>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Arrival Time</label>
-              <input
-                type="datetime-local"
-                required
-                value={form.arrivalTime}
-                onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
-              />
-            </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>Cancel</Button>
-            <Button variant="primary" size="sm" type="submit" isLoading={submitting} className="font-bold">
+            <Button variant="primary" size="sm" type="submit" isLoading={submitting} disabled={loadingServices || services.length === 0} className="font-bold">
               Confirm Assignment
             </Button>
           </div>

@@ -36,16 +36,33 @@ export function SeatLayoutDesignerPage() {
 
   // Preview state
   const [previewLayout, setPreviewLayout] = useState(null)
+  const [blueprintLoading, setBlueprintLoading] = useState(false)
 
   const fetchLayouts = async () => {
     setLoading(true)
     try {
       const data = await fleetApi.getSeatLayouts()
-      setLayouts(data || [])
+      setLayouts(Array.isArray(data) ? data : (data?.items || []))
     } catch {
       setMessage({ type: 'error', text: 'Failed to load seat layouts' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleViewBlueprint = async (layout) => {
+    if (layout.seats && layout.seats.length > 0) {
+      setPreviewLayout(layout)
+      return
+    }
+    setBlueprintLoading(true)
+    try {
+      const fullLayout = await fleetApi.getSeatLayoutById(layout.id)
+      setPreviewLayout(fullLayout || layout)
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to load blueprint details' })
+    } finally {
+      setBlueprintLoading(false)
     }
   }
 
@@ -374,7 +391,7 @@ export function SeatLayoutDesignerPage() {
                         {layout.totalRows} × {layout.totalColumns} Grid
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-700">
-                        {layout.seats?.length || 0} Seats
+                        {layout.totalSeats ?? layout.seats?.length ?? 0} Seats
                       </span>
                     </div>
 
@@ -387,7 +404,8 @@ export function SeatLayoutDesignerPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPreviewLayout(layout)}
+                      onClick={() => handleViewBlueprint(layout)}
+                      disabled={blueprintLoading}
                       className="gap-1.5 text-xs"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -403,58 +421,107 @@ export function SeatLayoutDesignerPage() {
 
       {/* Blueprint Preview Modal */}
       {previewLayout && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-          onClick={() => setPreviewLayout(null)}
-        >
-          <div
-            className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+        <BlueprintPreviewModal
+          layout={previewLayout}
+          onClose={() => setPreviewLayout(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function BlueprintPreviewModal({ layout, onClose }) {
+  const seatColorMap = {
+    Standard: 'bg-white border-slate-300 text-slate-700',
+    Window: 'bg-sky-50 border-sky-300 text-sky-800',
+    Aisle: 'bg-slate-100 border-slate-200 text-slate-500',
+    VIP: 'bg-amber-100 border-amber-300 text-amber-900 font-bold',
+  }
+
+  const seats = layout?.seats || []
+  const totalRows = layout?.totalRows || 1
+  const totalColumns = layout?.totalColumns || 1
+
+  const minRow = seats.length > 0 ? Math.min(...seats.map(s => s.rowIndex)) : 0
+  const minCol = seats.length > 0 ? Math.min(...seats.map(s => s.columnIndex)) : 0
+  const rowOffset = minRow === 1 ? 1 : 0
+  const colOffset = minCol === 1 ? 1 : 0
+
+  const grid = Array.from({ length: totalRows }, () =>
+    Array.from({ length: totalColumns }, () => null)
+  )
+
+  seats.forEach((seat) => {
+    const r = seat.rowIndex - rowOffset
+    const c = seat.columnIndex - colOffset
+    if (r >= 0 && r < totalRows && c >= 0 && c < totalColumns) {
+      grid[r][c] = seat
+    }
+  })
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 font-display">
+              {layout.name}
+            </h3>
+            <span className="text-xs text-slate-500 font-mono">
+              {totalRows} Rows × {totalColumns} Cols • {seats.length || layout.totalSeats || 0} Total Seats
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 font-display">
-                  {previewLayout.name}
-                </h3>
-                <span className="text-xs text-slate-500 font-mono">
-                  {previewLayout.totalRows} Rows × {previewLayout.totalColumns} Cols • {previewLayout.seats?.length || 0} Total Seats
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewLayout(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center max-h-96 overflow-y-auto">
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: `repeat(${previewLayout.totalColumns}, minmax(40px, 48px))`,
-                }}
-              >
-                {previewLayout.seats?.map((seat) => (
-                  <div
-                    key={seat.seatNumber}
-                    className="h-10 w-10 rounded-lg bg-white border border-slate-300 text-slate-800 text-xs font-mono font-bold flex items-center justify-center shadow-sm"
-                  >
-                    {seat.seatNumber}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4">
-              <Button variant="outline" size="sm" onClick={() => setPreviewLayout(null)}>
-                Close Blueprint
-              </Button>
-            </div>
+        <div className="text-center mb-3">
+          <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-[10px] text-slate-700 uppercase tracking-wider font-semibold font-mono border border-slate-200">
+            🚍 Front Driver Cabin
           </div>
         </div>
-      )}
+
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center gap-1.5 max-h-96 overflow-y-auto">
+          {grid.map((row, rowIdx) => (
+            <div key={rowIdx} className="flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-400 w-5 text-right font-mono font-bold">{rowIdx + 1}</span>
+              {row.map((seat, colIdx) => (
+                <React.Fragment key={colIdx}>
+                  {seat ? (
+                    <div
+                      className={`h-10 w-10 rounded-lg border text-xs font-mono font-bold flex items-center justify-center shadow-xs ${
+                        seatColorMap[seat.seatClass] || seatColorMap.Standard
+                      }`}
+                      title={`${seat.seatNumber} (${seat.seatClass || 'Standard'})`}
+                    >
+                      {seat.seatNumber}
+                    </div>
+                  ) : (
+                    <div className="h-10 w-10 rounded-lg border border-dashed border-slate-200 bg-slate-100/50" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-slate-100 mt-4">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Close Blueprint
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
