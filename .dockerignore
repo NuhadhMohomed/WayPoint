@@ -1,0 +1,16 @@
+**/.git
+**/.github
+**/.vscode
+**/.agents
+**/.superpowers
+**/bin/
+**/obj/
+ai/
+database/
+docs/
+load-tests/
+mobile/
+tests/
+videos/
+web/
+*.md
