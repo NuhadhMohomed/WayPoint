@@ -5,11 +5,13 @@ import '../../../core/theme/app_theme.dart';
 class AiJourneyPromptCard extends StatefulWidget {
   final bool isSearching;
   final ValueChanged<String> onSubmit;
+  final String? defaultPrompt;
 
   const AiJourneyPromptCard({
     super.key,
     required this.isSearching,
     required this.onSubmit,
+    this.defaultPrompt,
   });
 
   @override
@@ -52,10 +54,12 @@ class _AiJourneyPromptCardState extends State<AiJourneyPromptCard> {
   }
 
   void _submit() {
-    final text = _controller.text.trim();
-    if (text.isNotEmpty && !widget.isSearching) {
-      widget.onSubmit(text);
+    if (widget.isSearching) return;
+    var text = _controller.text.trim();
+    if (text.isEmpty) {
+      text = widget.defaultPrompt ?? 'Scenic route to Ella with AC';
     }
+    widget.onSubmit(text);
   }
 
   @override

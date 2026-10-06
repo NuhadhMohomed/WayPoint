@@ -79,5 +79,64 @@ void main() {
     expect(result.isAiFallback, isTrue);
     expect(result.status, equals('SafeFailure'));
     expect(result.candidates, isNotEmpty);
+    expect(result.resolvedDestination, equals('Ella'));
+    expect(result.candidates.first.destination, contains('Ella'));
+  });
+
+  test('getAiRecommendations resolves Kandy corridor on fallback', () async {
+    when(() => mockDio.post(
+          '/journeys/ai-recommendation',
+          data: any(named: 'data'),
+        )).thenThrow(DioException(
+      requestOptions: RequestOptions(path: '/journeys/ai-recommendation'),
+      type: DioExceptionType.connectionError,
+    ));
+
+    final result = await service.getAiRecommendations(
+      objective: 'Fastest to Kandy before noon',
+    );
+
+    expect(result.isAiFallback, isTrue);
+    expect(result.resolvedDestination, equals('Kandy'));
+    expect(result.candidates.first.destination, contains('Kandy'));
+    expect(result.agentReasoning, contains('Kandy'));
+  });
+
+  test('getAiRecommendations resolves Galle corridor on fallback', () async {
+    when(() => mockDio.post(
+          '/journeys/ai-recommendation',
+          data: any(named: 'data'),
+        )).thenThrow(DioException(
+      requestOptions: RequestOptions(path: '/journeys/ai-recommendation'),
+      type: DioExceptionType.connectionError,
+    ));
+
+    final result = await service.getAiRecommendations(
+      objective: 'Luxury to Galle',
+    );
+
+    expect(result.isAiFallback, isTrue);
+    expect(result.resolvedDestination, equals('Galle'));
+    expect(result.candidates.first.destination, contains('Galle'));
+    expect(result.agentReasoning, contains('Galle'));
+  });
+
+  test('getAiRecommendations resolves Jaffna corridor on fallback', () async {
+    when(() => mockDio.post(
+          '/journeys/ai-recommendation',
+          data: any(named: 'data'),
+        )).thenThrow(DioException(
+      requestOptions: RequestOptions(path: '/journeys/ai-recommendation'),
+      type: DioExceptionType.connectionError,
+    ));
+
+    final result = await service.getAiRecommendations(
+      objective: 'Bus to Jaffna',
+    );
+
+    expect(result.isAiFallback, isTrue);
+    expect(result.resolvedDestination, equals('Jaffna'));
+    expect(result.candidates.first.destination, contains('Jaffna'));
+    expect(result.agentReasoning, contains('Jaffna'));
   });
 }

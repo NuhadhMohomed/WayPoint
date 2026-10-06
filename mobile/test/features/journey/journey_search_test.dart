@@ -159,6 +159,27 @@ void main() {
     expect(find.text('Showing fastest routes to Kandy'), findsOneWidget);
     expect(find.text('Pick Seats'), findsNWidgets(2));
   });
+
+  testWidgets('JourneyComparisonScreen renders AI curated corridor title and candidates for Galle', (WidgetTester tester) async {
+    final galleDirect = JourneyCandidateModel.sampleColomboToGalleDirect();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JourneyComparisonScreen(
+          originCity: 'Colombo',
+          destinationCity: 'Galle',
+          travelDate: DateTime.now().add(const Duration(days: 1)),
+          candidates: [galleDirect],
+          agentReasoning: 'Prioritized EX-01 Super Line via E01 Highway with 2h 10m transit time.',
+          isAiFallback: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Colombo → Galle'), findsOneWidget);
+    expect(find.textContaining('AI Curated Itinerary'), findsOneWidget);
+    expect(find.text('EX-01'), findsOneWidget);
+  });
 }
 
 

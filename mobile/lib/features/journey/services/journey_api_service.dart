@@ -57,10 +57,28 @@ class JourneyApiService {
       return candidates;
     }
 
-    return [
-      JourneyCandidateModel.sampleColomboToKandyDirect(),
-      JourneyCandidateModel.sampleColomboToEllaDirect(),
-    ];
+    if (destinationCity.toLowerCase().contains('kandy')) {
+      return [
+        JourneyCandidateModel.sampleColomboToKandyExpress(),
+        JourneyCandidateModel.sampleColomboToKandyDirect(),
+      ];
+    }
+
+    if (destinationCity.toLowerCase().contains('galle')) {
+      return [
+        JourneyCandidateModel.sampleColomboToGalleDirect(),
+        JourneyCandidateModel.sampleColomboToGalleLuxury(),
+      ];
+    }
+
+    if (destinationCity.toLowerCase().contains('jaffna')) {
+      return [
+        JourneyCandidateModel.sampleColomboToJaffnaDirect(),
+        JourneyCandidateModel.sampleColomboToJaffnaDay(),
+      ];
+    }
+
+    return JourneyCandidateModel.candidatesForCorridor(originCity, destinationCity, '');
   }
 
   /// Retrieve list of all available transit routes
@@ -81,6 +99,8 @@ class JourneyApiService {
     required String objective,
     int passengerCount = 1,
     DateTime? travelDate,
+    String? defaultOrigin,
+    String? defaultDestination,
   }) async {
     try {
       final response = await _client.dio.post(
@@ -103,7 +123,10 @@ class JourneyApiService {
     }
 
     return AiJourneyRecommendationModel.sampleFallback(
+      objective: objective,
       destination: objective,
+      defaultOrigin: defaultOrigin,
+      defaultDestination: defaultDestination,
     );
   }
 }
