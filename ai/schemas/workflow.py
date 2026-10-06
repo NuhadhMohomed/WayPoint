@@ -39,6 +39,7 @@ class WorkflowResult(BaseModel):
     fare_analysis: dict | None = None
     impact_assessment: dict | None = None
     approval_status: str | None = None
+    agent_reasoning: str = ""
     error: str | None = None
 
 

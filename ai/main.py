@@ -23,6 +23,7 @@ from config import AI_EXECUTION_TIMEOUT_SECONDS
 from agents.state import create_initial_state
 from agents.graph import workflow_graph
 from schemas.workflow import WorkflowResult
+from persistence.workflow_logger import WorkflowLogger
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -121,6 +122,17 @@ async def disruption_rebooking(request: WorkflowRequest) -> dict:
 
         final_state = await workflow_graph.ainvoke(initial_state)
 
+        # Fire-and-forget persistence (ADR-004)
+        try:
+            wf_logger = WorkflowLogger()
+            await wf_logger.log_full_workflow(
+                objective=objective,
+                steps=final_state.get("steps", []),
+                final_status=final_state.get("workflow_status", "Completed"),
+            )
+        except Exception:
+            logger.warning("Workflow persistence failed (non-fatal)", exc_info=True)
+
         result = WorkflowResult(
             workflow_id=workflow_id,
             workflow_type="disruption_rebooking",
@@ -131,6 +143,7 @@ async def disruption_rebooking(request: WorkflowRequest) -> dict:
             fare_analysis=final_state.get("fare_analysis"),
             impact_assessment=final_state.get("impact_assessment"),
             approval_status=final_state.get("approval_status"),
+            agent_reasoning=f"Disruption rebooking workflow completed with {final_state.get('step_order', 0)} steps.",
         )
 
         logger.info(
@@ -177,6 +190,17 @@ async def journey_recommendation(request: WorkflowRequest) -> dict:
 
         final_state = await workflow_graph.ainvoke(initial_state)
 
+        # Fire-and-forget persistence (ADR-004)
+        try:
+            wf_logger = WorkflowLogger()
+            await wf_logger.log_full_workflow(
+                objective=objective,
+                steps=final_state.get("steps", []),
+                final_status=final_state.get("workflow_status", "Completed"),
+            )
+        except Exception:
+            logger.warning("Workflow persistence failed (non-fatal)", exc_info=True)
+
         result = WorkflowResult(
             workflow_id=workflow_id,
             workflow_type="journey_recommendation",
@@ -185,6 +209,7 @@ async def journey_recommendation(request: WorkflowRequest) -> dict:
             candidate_routes=final_state.get("candidate_routes", []),
             feasibility_result=final_state.get("feasibility_result"),
             fare_analysis=final_state.get("fare_analysis"),
+            agent_reasoning=f"Journey recommendation completed with {final_state.get('step_order', 0)} steps.",
         )
 
         logger.info(
