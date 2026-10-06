@@ -8,16 +8,12 @@ import {
   Bus,
   CheckCircle2,
   AlertTriangle,
-  Users,
   Calendar,
-  Clock,
   RefreshCw,
-  GitBranch,
   ArrowRight,
   TrendingUp,
   FileSpreadsheet,
-  Activity,
-  Layers
+  Activity
 } from 'lucide-react'
 
 export function OverviewPage() {
@@ -97,66 +93,62 @@ export function OverviewPage() {
     },
   ]
 
-  const components = [
+  const operationsModules = [
     {
-      id: 'Component 1',
+      id: 'routes',
+      category: 'Network & Scheduling',
       title: 'Journey Planning & Route Catalogue',
-      owner: 'Sethum',
-      branch: 'feature/journey-planning',
       description: 'Interactive route stops, corridor highlights, departure schedules, and multi-criteria journey candidate generation.',
       path: '/routes/catalog',
       tag: 'Route Manager',
       icon: Calendar,
     },
     {
-      id: 'Component 2',
-      title: 'Fleet, Seat & Resource Feasibility',
-      owner: 'Nuhadh',
-      branch: 'feature/fleet-feasibility',
-      description: 'Bus fleet matrix, visual 2D seat layout designer, driver rostering with rest-hour compliance, and customer feedback.',
+      id: 'fleet',
+      category: 'Fleet & Assets',
+      title: 'Fleet, Seat & Resource Management',
+      description: 'Bus fleet matrix, visual 2D seat layout designer, driver rostering with rest-hour compliance, and passenger sentiment.',
       path: '/fleet/buses',
       tag: 'Fleet Hub',
       icon: Bus,
     },
     {
-      id: 'Component 3',
+      id: 'bookings',
+      category: 'Passenger & Revenue',
       title: 'Booking, Ticketing & Passenger Manifest',
-      owner: 'Mithila',
-      branch: 'feature/booking-ticketing',
-      description: 'Temporary 10m seat hold reservations, simulated payment sandbox, live passenger manifest monitor, and CSV/PDF export.',
+      description: 'Real-time seat holds, automated payment processing, live passenger manifest monitor, and dispatch exports.',
       path: '/bookings',
-      tag: 'Booking Monitor',
+      tag: 'Manifest Monitor',
       icon: FileSpreadsheet,
     },
     {
-      id: 'Component 4',
-      title: 'Disruption, Rebooking & AI Ops',
-      owner: 'Dineth',
-      branch: 'feature/disruption-management',
-      description: 'Disruption intake, Manager Approval Workbench, AI multi-agent execution telemetry, and network alert broadcasts.',
+      id: 'disruptions',
+      category: 'Operations & Alerts',
+      title: 'Disruption Handling & Incident Response',
+      description: 'Disruption intake, Transport Manager approval workflows, public service alert broadcasts, and automated passenger rebooking.',
       path: '/disruptions/intake',
-      tag: 'Disruption Desk',
+      tag: 'Incident Desk',
       icon: AlertTriangle,
     },
   ]
 
   return (
-    <div className="space-y-6 text-slate-100">
+    <div className="space-y-6 text-slate-800">
       {/* 1. Header Banner */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-sm">
+      <div className="rounded-2xl bg-white border border-slate-200/80 p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-mono">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">
                 LIVE TELEMATICS
               </span>
-              <span className="text-xs text-slate-400 font-mono">NOC Node: LK-CMB-01</span>
+              <span className="text-xs text-slate-500 font-mono">NOC Node: LK-CMB-01</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white font-display">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-display">
               Transit Operations Cockpit
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
-              National high-demand transit dispatch, live corridor occupancy, and multi-agent coordination.
+            <p className="text-xs text-slate-500 mt-1">
+              National high-demand transit dispatch, live corridor occupancy, and fleet coordination.
             </p>
           </div>
 
@@ -171,11 +163,11 @@ export function OverviewPage() {
               Refresh Telemetry
             </Button>
             <div className="hidden sm:block text-right">
-              <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 justify-end">
+              <div className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 justify-end">
                 <CheckCircle2 className="w-4 h-4" />
                 Backend Synced
               </div>
-              <div className="text-[11px] text-slate-500 font-mono">All 4 Components Online</div>
+              <div className="text-[11px] text-slate-400 font-mono">All Systems Operational</div>
             </div>
           </div>
         </div>
@@ -186,26 +178,26 @@ export function OverviewPage() {
         {telemetryKpis.map((kpi, idx) => {
           const Icon = kpi.icon
           return (
-            <Card key={idx} className="p-4 flex flex-col justify-between bg-slate-900 border-slate-800">
+            <Card key={idx} className="p-4 flex flex-col justify-between bg-white border-slate-200/80 shadow-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400">{kpi.title}</span>
+                <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
                 <div className={`p-2 rounded-lg ${
-                  kpi.status === 'warning' ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-800 text-indigo-400'
+                  kpi.status === 'warning' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'
                 }`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
 
               <div>
-                <div className="text-2xl font-bold font-mono tracking-tight text-white">
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900">
                   {kpi.value}
                 </div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
-                  <span className={kpi.status === 'warning' ? 'text-amber-400 font-semibold' : 'text-emerald-400 font-semibold'}>
+                  <span className={kpi.status === 'warning' ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>
                     {kpi.change}
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1 truncate">
+                <div className="text-[10px] text-slate-400 mt-1 truncate">
                   {kpi.subtext}
                 </div>
               </div>
@@ -215,19 +207,19 @@ export function OverviewPage() {
       </div>
 
       {/* 3. Live Corridor Telemetry Table */}
-      <Card className="overflow-hidden bg-slate-900 border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/60 p-4">
+      <Card className="overflow-hidden bg-white border-slate-200/80 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 bg-white p-4">
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Compass className="w-4 h-4 text-indigo-400" />
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Compass className="w-4 h-4 text-indigo-600" />
               Live Corridor Operations Status
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               National high-demand corridors and active coach assignments
             </p>
           </div>
           <Link to="/routes/catalog">
-            <Button variant="ghost" size="sm" className="text-xs text-indigo-400">
+            <Button variant="ghost" size="sm" className="text-xs text-indigo-600 hover:text-indigo-700">
               Open Route Catalog <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </Link>
@@ -235,7 +227,7 @@ export function OverviewPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-800 bg-slate-950/80 font-semibold text-slate-400">
+            <thead className="border-b border-slate-200 bg-slate-50/80 font-semibold text-slate-600">
               <tr>
                 <th className="py-3 px-4">Corridor</th>
                 <th className="py-3 px-4">Route Path</th>
@@ -245,23 +237,23 @@ export function OverviewPage() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80 font-mono">
+            <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
               {corridorTelemetry.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3.5 px-4 font-bold text-slate-200">
-                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 border border-slate-700 text-[11px] mr-2">
+                <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3.5 px-4 font-bold text-slate-900">
+                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] mr-2">
                       {row.code}
                     </span>
-                    <span className="font-sans font-medium text-slate-300">{row.name}</span>
+                    <span className="font-sans font-medium text-slate-800">{row.name}</span>
                   </td>
-                  <td className="py-3.5 px-4 font-sans text-slate-400">
-                    {row.from} <span className="text-slate-600">→</span> {row.to}
+                  <td className="py-3.5 px-4 font-sans text-slate-600">
+                    {row.from} <span className="text-slate-400">→</span> {row.to}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-bold text-slate-300">
+                  <td className="py-3.5 px-4 text-center font-bold text-slate-800">
                     {row.activeBuses}
                   </td>
                   <td className="py-3.5 px-4 text-center font-bold">
-                    <span className={parseInt(row.occupancy) > 90 ? 'text-amber-400' : 'text-emerald-400'}>
+                    <span className={parseInt(row.occupancy) > 90 ? 'text-amber-600' : 'text-emerald-600'}>
                       {row.occupancy}
                     </span>
                   </td>
@@ -272,7 +264,7 @@ export function OverviewPage() {
                     <button
                       type="button"
                       onClick={() => navigate('/routes/catalog')}
-                      className="text-xs font-sans text-indigo-400 hover:underline font-semibold"
+                      className="text-xs font-sans text-indigo-600 hover:text-indigo-800 hover:underline font-semibold"
                     >
                       Timetable →
                     </button>
@@ -284,46 +276,42 @@ export function OverviewPage() {
         </div>
       </Card>
 
-      {/* 4. Component Workspaces Grid */}
+      {/* 4. Operational Command Hubs Grid */}
       <div>
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-white tracking-tight font-display">
-            Modular Component Workspaces
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight font-display">
+            Operational Hubs
           </h2>
-          <p className="text-xs text-slate-400">Assigned business modules for SE3090 Assignment 1</p>
+          <p className="text-xs text-slate-500">Core operational modules for transit dispatch, fleet management, ticketing, and incident response.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {components.map((comp) => {
-            const Icon = comp.icon
+          {operationsModules.map((module) => {
+            const Icon = module.icon
             return (
               <div
-                key={comp.id}
-                className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between shadow-lg"
+                key={module.id}
+                className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between shadow-xs"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-700/80 text-indigo-400">
+                    <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                      <GitBranch className="w-3 h-3 text-indigo-400" />
-                      {comp.branch}
-                    </div>
+                    <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50/80 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                      {module.category}
+                    </span>
                   </div>
 
-                  <div className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-1">
-                    {comp.id} • Lead: <span className="text-white">{comp.owner}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-2">{comp.title}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">{comp.description}</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1.5">{module.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">{module.description}</p>
                 </div>
 
                 <Link
-                  to={comp.path}
-                  className="inline-flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-indigo-600/10 text-xs font-semibold text-slate-200 hover:text-indigo-400 border border-slate-800 hover:border-indigo-500/40 transition-all"
+                  to={module.path}
+                  className="inline-flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-xs font-semibold text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 transition-all"
                 >
-                  <span>Launch {comp.tag}</span>
+                  <span>Launch {module.tag}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

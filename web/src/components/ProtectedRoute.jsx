@@ -11,14 +11,19 @@ export function ProtectedRoute({ allowedRoles }) {
 
   if (allowedRoles && (!user?.role || !allowedRoles.includes(user.role))) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-slate-900 text-slate-100">
-        <h2 className="text-2xl font-bold text-red-500 mb-2">Access Denied</h2>
-        <p className="text-slate-400 mb-4">
-          Your role (<span className="font-semibold text-slate-200">{user?.role || 'Unknown'}</span>) does not have permission to view this section.
-        </p>
-        <a href="/" className="text-indigo-400 hover:underline text-sm font-medium">
-          Return to Dashboard
-        </a>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-slate-50">
+        <div className="bg-white border border-slate-200 p-8 rounded-2xl shadow-xs max-w-md w-full">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Access Restricted</h2>
+          <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+            Your assigned role (<span className="font-semibold text-slate-800">{user?.role || 'Unknown'}</span>) does not have authorization to access this operational module.
+          </p>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-xl bg-waypoint-primary text-white hover:bg-waypoint-primary-hover transition-colors shadow-xs"
+          >
+            Return to Dashboard
+          </a>
+        </div>
       </div>
     )
   }

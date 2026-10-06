@@ -1,0 +1,90 @@
+# ==============================================================================
+# WayPoint Repository Code Ownership Specification
+# Aligned with docs/project/team-responsibilities.md and SE3090 Assignment 1
+# ==============================================================================
+
+# Default fallback owner for global infrastructure, shared layouts, CI/CD, and administration:
+*                                                           @NuhadhMohomed
+
+# ==============================================================================
+# Component 1: Journey Planning & Route Catalogue (Student 1: Sethum)
+# ==============================================================================
+/web/src/features/journey/                                  @IT24100374
+/mobile/lib/features/journey/                               @IT24100374
+/backend/WayPoint.API/Controllers/RouteController.cs        @IT24100374
+/backend/WayPoint.API/Controllers/StopController.cs         @IT24100374
+/backend/WayPoint.API/Controllers/ServiceController.cs      @IT24100374
+/backend/WayPoint.API/Controllers/JourneySearchController.cs @IT24100374
+/backend/WayPoint.Application/Features/Routes/              @IT24100374
+/backend/WayPoint.Application/Features/Stops/               @IT24100374
+/backend/WayPoint.Application/Features/Services/            @IT24100374
+/backend/WayPoint.Application/Features/Journeys/            @IT24100374
+/ai/agents/journey_agent.py                                 @IT24100374
+/ai/tools/journey_tools.py                                  @IT24100374
+/ai/schemas/journey_schemas.py                              @IT24100374
+/docs/project/guide-student1-sethum-journey.md              @IT24100374
+
+# ==============================================================================
+# Component 2: Fleet, Seat & Resource Feasibility (Student 2: Nuhadh)
+# ==============================================================================
+/web/src/features/fleet/                                    @NuhadhMohomed
+/backend/WayPoint.API/Controllers/BusController.cs          @NuhadhMohomed
+/backend/WayPoint.API/Controllers/SeatLayoutController.cs   @NuhadhMohomed
+/backend/WayPoint.API/Controllers/DriverController.cs       @NuhadhMohomed
+/backend/WayPoint.API/Controllers/ResourceFeasibilityController.cs @NuhadhMohomed
+/backend/WayPoint.Application/Features/Buses/               @NuhadhMohomed
+/backend/WayPoint.Application/Features/Drivers/             @NuhadhMohomed
+/backend/WayPoint.Application/Features/SeatLayouts/         @NuhadhMohomed
+/ai/agents/resource_agent.py                                @NuhadhMohomed
+/ai/tools/fleet_tools.py                                    @NuhadhMohomed
+/docs/project/guide-student2-nuhadh-fleet.md                @NuhadhMohomed
+
+# ==============================================================================
+# Component 3: Booking, Ticketing & Passenger Options (Student 3: Mithila)
+# ==============================================================================
+/web/src/features/bookings/                                 @Mithila-Dissanayaka
+/mobile/lib/features/booking/                               @Mithila-Dissanayaka
+/mobile/lib/features/tickets/                               @Mithila-Dissanayaka
+/backend/WayPoint.API/Controllers/BookingController.cs      @Mithila-Dissanayaka
+/backend/WayPoint.API/Controllers/SeatHoldController.cs     @Mithila-Dissanayaka
+/backend/WayPoint.API/Controllers/PaymentController.cs      @Mithila-Dissanayaka
+/backend/WayPoint.API/Controllers/TicketController.cs       @Mithila-Dissanayaka
+/backend/WayPoint.API/Controllers/CancellationController.cs @Mithila-Dissanayaka
+/backend/WayPoint.Application/Features/Bookings/            @Mithila-Dissanayaka
+/backend/WayPoint.Application/Features/Payments/            @Mithila-Dissanayaka
+/backend/WayPoint.Application/Features/Tickets/             @Mithila-Dissanayaka
+/ai/agents/booking_agent.py                                 @Mithila-Dissanayaka
+/ai/tools/booking_tools.py                                  @Mithila-Dissanayaka
+/ai/schemas/booking_schemas.py                              @Mithila-Dissanayaka
+/docs/project/guide-student3-mithila-booking.md             @Mithila-Dissanayaka
+
+# ==============================================================================
+# Component 4: Disruption, Rebooking & Approvals (Student 4: Dineth)
+# ==============================================================================
+/web/src/features/disruptions/                              @dsasmitha4588
+/mobile/lib/features/disruptions/                           @dsasmitha4588
+/backend/WayPoint.API/Controllers/DisruptionController.cs   @dsasmitha4588
+/backend/WayPoint.API/Controllers/RebookingController.cs    @dsasmitha4588
+/backend/WayPoint.API/Controllers/ApprovalController.cs     @dsasmitha4588
+/backend/WayPoint.API/Controllers/AiWorkflowController.cs   @dsasmitha4588
+/backend/WayPoint.Application/Features/Disruptions/         @dsasmitha4588
+/backend/WayPoint.Application/Features/Approvals/           @dsasmitha4588
+/backend/WayPoint.Application/Features/Rebooking/           @dsasmitha4588
+/ai/agents/safety_agent.py                                  @dsasmitha4588
+/ai/tools/safety_tools.py                                   @dsasmitha4588
+/ai/schemas/safety_schemas.py                               @dsasmitha4588
+/docs/project/guide-student4-dineth-disruption.md           @dsasmitha4588
+
+# ==============================================================================
+# Shared Infrastructure, Administration & Core Governance (Nuhadh)
+# ==============================================================================
+/web/src/features/admin/                                    @NuhadhMohomed
+/web/src/layouts/                                           @NuhadhMohomed
+/web/src/pages/                                             @NuhadhMohomed
+/web/src/components/                                        @NuhadhMohomed
+/web/src/store/                                             @NuhadhMohomed
+/backend/WayPoint.API/Controllers/Admin*.cs                 @NuhadhMohomed
+/backend/WayPoint.API/Controllers/Auth*.cs                  @NuhadhMohomed
+/backend/WayPoint.Infrastructure/                           @NuhadhMohomed
+/backend/WayPoint.Domain/                                   @NuhadhMohomed
+/.github/                                                   @NuhadhMohomed

@@ -101,36 +101,36 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
         {/* User Card */}
-        <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
+        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
           <div>
-            <div className="text-sm font-bold text-white">{targetUser.fullName}</div>
-            <div className="text-xs text-slate-400">{targetUser.email}</div>
+            <div className="text-sm font-bold text-slate-900">{targetUser.fullName}</div>
+            <div className="text-xs text-slate-500">{targetUser.email}</div>
           </div>
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
+          <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 shadow-2xs">
             Current: {targetUser.role}
           </span>
         </div>
 
         {/* Self-Demotion Alert */}
         {isSelf && targetUser.role === 'Admin' && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2.5 text-xs text-amber-300">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
             <div>
-              <strong>Self-Demotion Lockout Guard (BR-ADMIN-002):</strong> You cannot demote your own administrator account. Another active administrator must make this change.
+              <strong>Self-Demotion Guard:</strong> You cannot demote your own administrator account. Another active administrator must make this change.
             </div>
           </div>
         )}
 
         {/* Error message */}
         {errorMessage && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
             {errorMessage}
           </div>
         )}
 
         {/* Role Radios */}
         <div className="space-y-2.5">
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
             Select New Authority Tier
           </label>
           <div className="grid grid-cols-1 gap-2">
@@ -144,10 +144,10 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
                   key={opt.role}
                   className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                     disabled
-                      ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-900'
+                      ? 'opacity-40 cursor-not-allowed bg-slate-100 border-slate-200'
                       : isSelected
-                      ? 'bg-waypoint-primary/10 border-waypoint-primary text-white shadow-sm'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                      ? 'bg-sky-50/80 border-waypoint-primary text-slate-900 shadow-xs ring-1 ring-waypoint-primary/30'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs'
                   }`}
                 >
                   <input
@@ -160,11 +160,11 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
                     className="mt-1 text-waypoint-primary focus:ring-waypoint-primary"
                   />
                   <div className="flex-1">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
                       <Icon className="w-3.5 h-3.5 text-waypoint-primary" />
                       {opt.title}
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
                       {opt.desc}
                     </p>
                   </div>
@@ -176,29 +176,29 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
 
         {/* Operator Profile Inputs (if transitioning to Operator) */}
         {selectedRole === 'Operator' && targetUser.role !== 'Operator' && (
-          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
-            <span className="text-xs font-bold text-slate-200 block">
-              Operator Depot Profile Configuration (BR-ADMIN-003)
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <span className="text-xs font-bold text-slate-800 block">
+              Operator Depot Profile Configuration
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Operator Code</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Operator Code</label>
                 <input
                   type="text"
                   placeholder="e.g. OP-COLOMBO-01"
                   value={operatorCode}
                   onChange={(e) => setOperatorCode(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-waypoint-primary"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-waypoint-blue/20 focus:border-waypoint-primary shadow-2xs"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Company / Consortium</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Company / Consortium</label>
                 <input
                   type="text"
                   placeholder="e.g. SLTB Western Region"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-waypoint-primary"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-waypoint-blue/20 focus:border-waypoint-primary shadow-2xs"
                 />
               </div>
             </div>
@@ -207,8 +207,8 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
 
         {/* Reason for Audit */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-1">
-            Reason for Administrative Change <span className="text-red-400">*</span>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Reason for Administrative Change <span className="text-red-500">*</span>
           </label>
           <textarea
             rows={2}
@@ -216,12 +216,12 @@ export function ChangeRoleModal({ isOpen, onClose, targetUser, currentUser, onRo
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Document regulatory or organizational reason (recorded in immutable audit ledger)..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-waypoint-primary"
+            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-waypoint-blue/20 focus:border-waypoint-primary shadow-2xs"
           />
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200">
           <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>

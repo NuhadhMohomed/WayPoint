@@ -9,10 +9,10 @@ import {
 } from 'lucide-react'
 
 const SEAT_TYPES = [
-  { key: 'empty', label: 'Aisle / Empty', color: 'border-dashed border-slate-800 bg-transparent text-transparent' },
-  { key: 'Standard', label: 'Standard', color: 'bg-slate-800/90 border-slate-700 text-slate-200' },
-  { key: 'Window', label: 'Window Seat', color: 'bg-sky-600/80 border-sky-400 text-white' },
-  { key: 'VIP', label: 'VIP / Luxury', color: 'bg-waypoint-amber/90 border-amber-400 text-slate-950 font-bold' },
+  { key: 'empty', label: 'Aisle / Empty', color: 'border-dashed border-slate-300 bg-slate-50 text-transparent' },
+  { key: 'Standard', label: 'Standard', color: 'bg-slate-100 border-slate-300 text-slate-800' },
+  { key: 'Window', label: 'Window Seat', color: 'bg-sky-50 border-sky-300 text-sky-800' },
+  { key: 'VIP', label: 'VIP / Luxury', color: 'bg-amber-100 border-amber-300 text-amber-900 font-bold' },
 ]
 
 function generateSeatNumber(rowIdx, colIdx) {
@@ -144,24 +144,24 @@ export function SeatLayoutDesignerPage() {
           role="status"
           className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold border ${
             message.type === 'success'
-              ? 'bg-emerald-950/70 border-emerald-800 text-emerald-200'
-              : 'bg-red-950/70 border-red-800 text-red-200'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-800'
           }`}
         >
-          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />}
+          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}
           <span>{message.text}</span>
         </div>
       )}
 
       {/* Main Designer Screen */}
       {showDesigner ? (
-        <Card className="p-6 border-slate-800 bg-slate-900/90 shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4 mb-6">
+        <Card className="p-6 border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6">
             <div>
-              <h2 className="text-xl font-black text-white tracking-tight font-display">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">
                 Visual Seat Layout Designer
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Configure bus dimensions and click seats to cycle types (Standard → Window → VIP → Aisle).
               </p>
             </div>
@@ -191,7 +191,7 @@ export function SeatLayoutDesignerPage() {
             {/* Left Controls Column */}
             <div className="space-y-5 lg:col-span-1">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Layout Template Name
                 </label>
                 <input
@@ -199,13 +199,13 @@ export function SeatLayoutDesignerPage() {
                   placeholder="e.g. Standard 2×2 (40 seats)"
                   value={layoutName}
                   onChange={(e) => setLayoutName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Rows
                   </label>
                   <input
@@ -214,11 +214,11 @@ export function SeatLayoutDesignerPage() {
                     max="15"
                     value={rows}
                     onChange={(e) => setRows(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-waypoint-primary text-center"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-waypoint-primary text-center"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Columns
                   </label>
                   <input
@@ -227,14 +227,14 @@ export function SeatLayoutDesignerPage() {
                     max="6"
                     value={cols}
                     onChange={(e) => setCols(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-waypoint-primary text-center"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-waypoint-primary text-center"
                   />
                 </div>
               </div>
 
               {/* Total Seats Counter */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-inner">
-                <span className="text-xs text-slate-400 font-medium">Total Seats</span>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-sm">
+                <span className="text-xs text-slate-500 font-medium">Total Seats</span>
                 <div className="text-3xl font-black font-mono text-waypoint-primary mt-1">
                   {totalSeats}
                 </div>
@@ -245,7 +245,7 @@ export function SeatLayoutDesignerPage() {
 
               {/* Highlight Filters */}
               <div>
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Highlight Filter:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -257,7 +257,7 @@ export function SeatLayoutDesignerPage() {
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                         highlightFilter === h
                           ? 'bg-waypoint-primary text-waypoint-onPrimary'
-                          : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-900'
                       }`}
                     >
                       {h}
@@ -267,8 +267,8 @@ export function SeatLayoutDesignerPage() {
               </div>
 
               {/* Seat Legend */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
                   Seat Tier Legend:
                 </span>
                 {SEAT_TYPES.map((type) => (
@@ -276,24 +276,24 @@ export function SeatLayoutDesignerPage() {
                     <span className={`w-4 h-4 rounded border text-center text-[10px] flex items-center justify-center ${type.color}`}>
                       {type.key === 'empty' ? '' : '•'}
                     </span>
-                    <span className="text-slate-300">{type.label}</span>
+                    <span className="text-slate-700">{type.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Right Bus Grid Canvas */}
-            <div className="lg:col-span-3 flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-950 border border-slate-800/80 shadow-inner min-h-[420px]">
+            <div className="lg:col-span-3 flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-inner min-h-[420px]">
               {/* Bus Front Windshield / Driver Indicator */}
-              <div className="w-full max-w-sm mb-4 pb-3 border-b-2 border-dashed border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-                <span className="flex items-center gap-1.5 font-bold text-slate-400">
+              <div className="w-full max-w-sm mb-4 pb-3 border-b-2 border-dashed border-slate-300 flex items-center justify-between text-xs text-slate-500 font-mono">
+                <span className="flex items-center gap-1.5 font-bold text-slate-700">
                   <Compass className="w-4 h-4 text-waypoint-primary" /> FRONT / DRIVER CABIN
                 </span>
                 <span>ENTRY DOOR ➔</span>
               </div>
 
               <div
-                className="grid gap-2 p-4 bg-slate-900/60 rounded-2xl border border-slate-800 shadow-2xl overflow-x-auto max-w-full"
+                className="grid gap-2 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto max-w-full"
                 style={{
                   gridTemplateColumns: `repeat(${cols}, minmax(44px, 54px))`,
                 }}
@@ -310,7 +310,7 @@ export function SeatLayoutDesignerPage() {
                         onClick={() => toggleCell(r, c)}
                         title={`Row ${r + 1}, Col ${c + 1} — ${cell.type} (click to change)`}
                         className={`h-11 w-11 sm:h-12 sm:w-12 rounded-xl text-xs font-mono font-bold flex items-center justify-center transition-all cursor-pointer border ${typeConfig.color} ${
-                          isHighlighted ? 'opacity-100 ring-2 ring-waypoint-primary/40' : 'opacity-30'
+                          isHighlighted ? 'opacity-100 ring-2 ring-waypoint-primary/40' : 'opacity-40'
                         } hover:scale-105 active:scale-95`}
                       >
                         {cell.seatNumber}
@@ -320,7 +320,7 @@ export function SeatLayoutDesignerPage() {
                 )}
               </div>
 
-              <div className="w-full max-w-sm mt-4 pt-3 border-t-2 border-dashed border-slate-800 text-center text-xs text-slate-600 font-mono">
+              <div className="w-full max-w-sm mt-4 pt-3 border-t-2 border-dashed border-slate-300 text-center text-xs text-slate-500 font-mono">
                 REAR ENGINE / BACK ROW
               </div>
             </div>
@@ -331,10 +331,10 @@ export function SeatLayoutDesignerPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight font-display">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">
                 Seat Layout Templates
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Pre-configured seating matrices mapped to luxury, semi-luxury, and highway express buses.
               </p>
             </div>
@@ -343,7 +343,7 @@ export function SeatLayoutDesignerPage() {
               variant="primary"
               size="sm"
               onClick={handleStartDesigner}
-              className="gap-1.5 font-bold shadow-lg shadow-waypoint-primary/20"
+              className="gap-1.5 font-bold shadow-md shadow-waypoint-primary/10"
             >
               <Plus className="w-4 h-4" />
               New Layout
@@ -351,14 +351,14 @@ export function SeatLayoutDesignerPage() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center p-12 text-slate-400 gap-2">
+            <div className="flex items-center justify-center p-12 text-slate-500 gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-waypoint-primary" />
               <span>Loading seat layouts...</span>
             </div>
           ) : layouts.length === 0 ? (
-            <Card className="p-8 text-center text-slate-400 border border-slate-800 bg-slate-900/60 rounded-2xl">
-              <LayoutGrid className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-300">No seat layouts defined yet</p>
+            <Card className="p-8 text-center text-slate-500 border border-slate-200 bg-white rounded-2xl">
+              <LayoutGrid className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-slate-700">No seat layouts defined yet</p>
               <p className="text-xs text-slate-500 mt-1">Click "New Layout" above to design your first bus seating configuration.</p>
             </Card>
           ) : (
@@ -366,24 +366,24 @@ export function SeatLayoutDesignerPage() {
               {layouts.map((layout) => (
                 <Card
                   key={layout.id}
-                  className="p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-md group"
+                  className="p-5 flex flex-col justify-between hover:border-slate-300 transition-all shadow-sm group bg-white"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <span className="px-2 py-0.5 rounded-md bg-waypoint-primary/10 text-waypoint-primary border border-waypoint-primary/30 font-mono font-bold text-xs">
                         {layout.totalRows} × {layout.totalColumns} Grid
                       </span>
-                      <span className="text-xs font-mono font-bold text-slate-200">
+                      <span className="text-xs font-mono font-bold text-slate-700">
                         {layout.seats?.length || 0} Seats
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-white mb-1 group-hover:text-waypoint-primary transition-colors">
+                    <h3 className="text-base font-bold text-slate-900 mb-1 group-hover:text-waypoint-primary transition-colors">
                       {layout.name}
                     </h3>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -404,32 +404,32 @@ export function SeatLayoutDesignerPage() {
       {/* Blueprint Preview Modal */}
       {previewLayout && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
           onClick={() => setPreviewLayout(null)}
         >
           <div
-            className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl"
+            className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div>
-                <h3 className="text-base font-bold text-white font-display">
+                <h3 className="text-base font-bold text-slate-900 font-display">
                   {previewLayout.name}
                 </h3>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="text-xs text-slate-500 font-mono">
                   {previewLayout.totalRows} Rows × {previewLayout.totalColumns} Cols • {previewLayout.seats?.length || 0} Total Seats
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewLayout(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col items-center max-h-96 overflow-y-auto">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center max-h-96 overflow-y-auto">
               <div
                 className="grid gap-2"
                 style={{
@@ -439,7 +439,7 @@ export function SeatLayoutDesignerPage() {
                 {previewLayout.seats?.map((seat) => (
                   <div
                     key={seat.seatNumber}
-                    className="h-10 w-10 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-xs font-mono font-bold flex items-center justify-center"
+                    className="h-10 w-10 rounded-lg bg-white border border-slate-300 text-slate-800 text-xs font-mono font-bold flex items-center justify-center shadow-sm"
                   >
                     {seat.seatNumber}
                   </div>

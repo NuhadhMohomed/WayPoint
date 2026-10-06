@@ -47,7 +47,7 @@ export function DashboardLayout() {
       ]
     },
     {
-      title: 'Component 1: Routes & Network',
+      title: 'Routes & Network',
       items: [
         { label: 'Route Catalogue', to: '/routes/catalog', icon: MapPin },
         { label: 'Service Scheduler', to: '/routes/scheduler', icon: Calendar },
@@ -55,7 +55,7 @@ export function DashboardLayout() {
       ]
     },
     {
-      title: 'Component 2: Fleet & Feasibility',
+      title: 'Fleet Management',
       items: [
         { label: 'Fleet Matrix', to: '/fleet/buses', icon: Bus },
         { label: 'Seat Layout Designer', to: '/fleet/layouts', icon: Grid3X3 },
@@ -64,13 +64,13 @@ export function DashboardLayout() {
       ]
     },
     {
-      title: 'Component 3: Manifest & Ticketing',
+      title: 'Ticketing & Manifest',
       items: [
         { label: 'Passenger Manifest', to: '/bookings', icon: FileSpreadsheet },
       ]
     },
     {
-      title: 'Component 4: Disruption & AI Ops',
+      title: 'Incident Operations',
       items: [
         { label: 'Disruption Intake', to: '/disruptions/intake', icon: AlertTriangle },
         { label: 'Manager Approvals', to: '/disruptions/approvals', icon: CheckSquare },
@@ -79,7 +79,7 @@ export function DashboardLayout() {
       ]
     },
     {
-      title: 'Platform Governance',
+      title: 'System Administration',
       items: [
         { label: 'User Governance', to: '/admin/users', icon: ShieldAlert },
       ]
@@ -87,21 +87,21 @@ export function DashboardLayout() {
   ]
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-300 border-r border-slate-800">
+    <div className="flex flex-col h-full bg-white text-slate-700 border-r border-slate-200">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30">
             <Compass className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
               WayPoint
-              <span className="text-[10px] px-1.5 py-0.2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded font-mono">
+              <span className="text-[10px] px-1.5 py-0.2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded font-mono font-semibold">
                 NOC
               </span>
             </h1>
-            <p className="text-[10px] text-slate-500">Transit Operations</p>
+            <p className="text-[10px] text-slate-500">Transit Operations Hub</p>
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@ export function DashboardLayout() {
       <div className="flex-1 overflow-y-auto p-3 space-y-5 text-xs">
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
-            <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {group.title}
             </div>
             {group.items.map((item, iIdx) => {
@@ -124,8 +124,8 @@ export function DashboardLayout() {
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-2.5 py-2 rounded-lg font-medium transition-all ${
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }`
                   }
                 >
@@ -139,16 +139,16 @@ export function DashboardLayout() {
       </div>
 
       {/* Footer Profile & Logout */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/80">
+      <div className="p-3 border-t border-slate-200 bg-slate-50/80">
         <div className="flex items-center justify-between">
           <div className="truncate">
-            <div className="text-xs font-semibold text-white truncate">{user?.fullName || 'Operator'}</div>
-            <div className="text-[10px] text-slate-500 font-mono truncate">{user?.email || 'NOC Session'}</div>
+            <div className="text-xs font-semibold text-slate-900 truncate">{user?.fullName || 'Operator'}</div>
+            <div className="text-[10px] text-slate-500 font-mono truncate">{user?.email || 'Active Session'}</div>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
             title="Log out"
           >
             <LogOut className="w-4 h-4" />
@@ -159,7 +159,7 @@ export function DashboardLayout() {
   )
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-100 antialiased overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-800 antialiased overflow-hidden">
       <OfflineBanner />
 
       <div className="flex flex-1 overflow-hidden">
@@ -171,11 +171,11 @@ export function DashboardLayout() {
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div
-            className="fixed inset-0 z-50 md:hidden bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 md:hidden bg-slate-900/40 backdrop-blur-xs"
             onClick={() => setMobileMenuOpen(false)}
           >
             <div
-              className="fixed inset-y-0 left-0 w-72 bg-slate-950 shadow-2xl flex flex-col justify-between"
+              className="fixed inset-y-0 left-0 w-72 bg-white shadow-2xl flex flex-col justify-between"
               onClick={(e) => e.stopPropagation()}
             >
               {sidebarContent}
@@ -184,14 +184,14 @@ export function DashboardLayout() {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-900">
+        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
           {/* Top Header */}
-          <header className="h-14 bg-slate-950/90 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4 z-10">
+          <header className="h-14 bg-white/95 backdrop-blur-sm border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4 z-10 shadow-xs">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-1.5 rounded-lg text-slate-300 hover:bg-slate-800 border border-slate-700/60"
+                className="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -199,11 +199,11 @@ export function DashboardLayout() {
               <button
                 type="button"
                 onClick={() => setIsCommandPaletteOpen(true)}
-                className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-1.5 text-xs text-slate-400 hover:border-slate-700 hover:text-slate-200 transition-all shadow-sm w-44 sm:w-64"
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-slate-100 transition-all shadow-xs w-44 sm:w-64"
               >
-                <Search className="w-3.5 h-3.5 text-slate-500" />
+                <Search className="w-3.5 h-3.5 text-slate-400" />
                 <span className="truncate text-left flex-1">Jump to corridor (Ctrl+K)...</span>
-                <kbd className="hidden sm:inline-block rounded bg-slate-800 px-1 font-mono text-[10px] text-slate-400 border border-slate-700">
+                <kbd className="hidden sm:inline-block rounded bg-white px-1 font-mono text-[10px] text-slate-500 border border-slate-200">
                   Ctrl+K
                 </kbd>
               </button>
@@ -213,7 +213,7 @@ export function DashboardLayout() {
               <button
                 type="button"
                 onClick={() => setIsShortcutsOpen(true)}
-                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                 title="Keyboard Shortcuts"
               >
                 <HelpCircle className="w-4 h-4" />
@@ -222,7 +222,7 @@ export function DashboardLayout() {
           </header>
 
           {/* Main Viewport */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 text-slate-800">
             <Outlet />
           </main>
         </div>

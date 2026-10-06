@@ -45,16 +45,16 @@ export function JsonDiffViewer({
 
   return (
     <div
-      className={`rounded-xl border border-slate-800 bg-slate-950 font-mono text-xs overflow-hidden shadow-2xl ${className}`}
+      className={`rounded-xl border border-slate-200 bg-white font-mono text-xs overflow-hidden shadow-xs ${className}`}
       data-testid="json-diff-viewer"
     >
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 py-2 text-slate-300">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2 text-slate-700">
         <span className="font-semibold">{title}</span>
         <div className="flex items-center gap-3 text-[11px]">
-          <span className="flex items-center gap-1 text-emerald-400">
+          <span className="flex items-center gap-1 text-emerald-700 font-medium">
             <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" /> Added
           </span>
-          <span className="flex items-center gap-1 text-red-400">
+          <span className="flex items-center gap-1 text-red-700 font-medium">
             <span className="h-2 w-2 rounded-full bg-red-500 inline-block" /> Removed
           </span>
         </div>
@@ -62,18 +62,18 @@ export function JsonDiffViewer({
 
       <div className="max-h-80 overflow-y-auto p-3 space-y-0.5 leading-5 font-mono select-text">
         {diffLines.map((line, idx) => {
-          let bgClass = 'text-slate-400 hover:bg-slate-900/40'
+          let bgClass = 'text-slate-600 hover:bg-slate-50'
           let sign = ' '
-          let signColor = 'text-slate-600'
+          let signColor = 'text-slate-400'
 
           if (line.type === 'added') {
-            bgClass = 'bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 pl-1'
+            bgClass = 'bg-emerald-50 text-emerald-800 border-l-2 border-emerald-600 pl-1'
             sign = '+'
-            signColor = 'text-emerald-400 font-bold'
+            signColor = 'text-emerald-700 font-bold'
           } else if (line.type === 'removed') {
-            bgClass = 'bg-red-950/40 text-red-300 border-l-2 border-red-500 pl-1'
+            bgClass = 'bg-red-50 text-red-800 border-l-2 border-red-600 pl-1'
             sign = '-'
-            signColor = 'text-red-400 font-bold'
+            signColor = 'text-red-700 font-bold'
           }
 
           return (

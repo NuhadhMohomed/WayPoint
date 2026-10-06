@@ -114,24 +114,24 @@ export function FleetMatrixBuilderPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total Fleet', value: busPagination.totalCount, color: 'text-waypoint-primary' },
-          { label: 'Active in Service', value: buses.filter(b => !b.isUnderMaintenance).length, color: 'text-emerald-400' },
-          { label: 'Depot Maintenance', value: buses.filter(b => b.isUnderMaintenance).length, color: 'text-amber-400' },
-          { label: 'Layout Blueprints', value: seatLayouts.length, color: 'text-sky-400' },
+          { label: 'Total Fleet', value: busPagination.totalCount, color: 'text-indigo-600' },
+          { label: 'Active in Service', value: buses.filter(b => !b.isUnderMaintenance).length, color: 'text-emerald-600' },
+          { label: 'Depot Maintenance', value: buses.filter(b => b.isUnderMaintenance).length, color: 'text-amber-600' },
+          { label: 'Layout Blueprints', value: seatLayouts.length, color: 'text-sky-600' },
         ].map((stat) => (
-          <div key={stat.label} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-inner">
+          <div key={stat.label} className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
             <div className={`text-2xl font-black font-mono ${stat.color}`}>{stat.value}</div>
-            <div className="text-xs text-slate-400 mt-1 font-medium">{stat.label}</div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Fleet Table Card */}
-      <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-slate-800 pb-4">
+      <Card className="p-5 border-slate-200/80 bg-white shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-slate-100 pb-4">
           <div>
-            <h3 className="text-lg font-bold font-display text-white">Bus Fleet Inventory</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Manage fleet vehicles, luxury classes, and maintenance schedules</p>
+            <h3 className="text-lg font-bold font-display text-slate-900">Bus Fleet Inventory</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Manage fleet vehicles, luxury classes, and maintenance schedules</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -148,7 +148,7 @@ export function FleetMatrixBuilderPage() {
               variant="primary"
               size="sm"
               onClick={() => setShowAddModal(true)}
-              className="gap-1.5 font-bold shadow-lg shadow-waypoint-primary/20"
+              className="gap-1.5 font-bold shadow-md shadow-indigo-600/20"
             >
               <Plus className="w-4 h-4" /> Add Bus
             </Button>
@@ -158,19 +158,19 @@ export function FleetMatrixBuilderPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by registration (e.g. WP-KA)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="">All Classes</option>
             {BUS_CLASS_OPTIONS.map(c => (
@@ -180,7 +180,7 @@ export function FleetMatrixBuilderPage() {
           <select
             value={maintenanceFilter}
             onChange={(e) => setMaintenanceFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="">All Status</option>
             <option value="false">Active Only</option>
@@ -192,7 +192,7 @@ export function FleetMatrixBuilderPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800 bg-slate-950/60 font-semibold">
+              <tr className="text-[11px] text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50/80 font-semibold">
                 <th className="py-3 px-3">Registration</th>
                 <th className="py-3 px-3">Class</th>
                 <th className="text-center py-3 px-3">Capacity</th>
@@ -201,48 +201,48 @@ export function FleetMatrixBuilderPage() {
                 <th className="text-right py-3 px-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-slate-100 font-mono">
               {busesLoading ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16">
-                    <Loader2 className="w-6 h-6 animate-spin text-waypoint-primary mx-auto" />
-                    <p className="text-xs text-slate-400 mt-2 font-sans">Loading fleet telemetry...</p>
+                    <Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto" />
+                    <p className="text-xs text-slate-500 mt-2 font-sans">Loading fleet telemetry...</p>
                   </td>
                 </tr>
               ) : buses.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16">
-                    <Bus className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-slate-300 font-sans">No buses registered in directory</p>
+                    <Bus className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-slate-700 font-sans">No buses registered in directory</p>
                     <p className="text-xs text-slate-500 mt-1 font-sans">Add a bus or adjust filter criteria</p>
                   </td>
                 </tr>
               ) : (
                 buses.map((bus) => (
-                  <tr key={bus.id} className="hover:bg-slate-950/60 transition-colors">
+                  <tr key={bus.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-3">
-                      <span className="font-bold text-white tracking-wide">{bus.registrationNumber}</span>
+                      <span className="font-bold text-slate-900 tracking-wide">{bus.registrationNumber}</span>
                     </td>
                     <td className="py-3 px-3">
                       <span className={`inline-flex px-2 py-0.5 text-[11px] font-bold rounded-md border ${BUS_CLASS_COLORS[bus.busClass] || BUS_CLASS_COLORS.Standard}`}>
                         {bus.busClass}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-center text-slate-300 font-bold">{bus.totalSeatCapacity}</td>
-                    <td className="py-3 px-3 text-slate-400 font-sans">
+                    <td className="py-3 px-3 text-center text-slate-700 font-bold">{bus.totalSeatCapacity}</td>
+                    <td className="py-3 px-3 text-slate-600 font-sans">
                       {bus.seatLayoutName ? (
-                        <span className="text-slate-200">{bus.seatLayoutName}</span>
+                        <span className="text-slate-800">{bus.seatLayoutName}</span>
                       ) : (
-                        <span className="text-slate-600 italic">No layout mapped</span>
+                        <span className="text-slate-400 italic">No layout mapped</span>
                       )}
                     </td>
                     <td className="py-3 px-3 text-center font-sans">
                       {bus.isUnderMaintenance ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                           <Wrench className="w-3 h-3" /> Maintenance
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3 h-3" /> In Service
                         </span>
                       )}
@@ -252,7 +252,7 @@ export function FleetMatrixBuilderPage() {
                         {bus.seatLayoutId && (
                           <button
                             onClick={() => handleViewLayout(bus)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-waypoint-primary hover:bg-slate-800 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors"
                             title="View seat layout blueprint"
                           >
                             <Eye className="w-4 h-4" />
@@ -356,35 +356,35 @@ function AddBusModal({ seatLayouts, onClose, onSuccess, onError }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-5 border-b border-slate-800 pb-3">
-          <h3 className="text-base font-bold font-display text-white">Register New Bus</h3>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-md p-6 text-slate-800">
+        <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+          <h3 className="text-base font-bold font-display text-slate-900">Register New Bus</h3>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Registration Number</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Registration Number</label>
             <input
               type="text"
               required
               placeholder="e.g. WP-KA-1234"
               value={form.registrationNumber}
               onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Bus Class</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bus Class</label>
               <select
                 value={form.busClass}
                 onChange={(e) => setForm({ ...form, busClass: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
                 {BUS_CLASS_OPTIONS.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -392,24 +392,24 @@ function AddBusModal({ seatLayouts, onClose, onSuccess, onError }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Seat Capacity</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Seat Capacity</label>
               <input
                 type="number"
                 min={1}
                 required
                 value={form.totalSeatCapacity}
                 onChange={(e) => setForm({ ...form, totalSeatCapacity: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Seat Layout Template</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Seat Layout Template</label>
             <select
               value={form.seatLayoutId}
               onChange={(e) => setForm({ ...form, seatLayoutId: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-waypoint-primary"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">— No layout mapped —</option>
               {seatLayouts.map(l => (
@@ -418,7 +418,7 @@ function AddBusModal({ seatLayouts, onClose, onSuccess, onError }) {
             </select>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>Cancel</Button>
             <Button variant="primary" size="sm" type="submit" isLoading={submitting} className="font-bold">
               Commit Bus to Fleet
@@ -432,11 +432,11 @@ function AddBusModal({ seatLayouts, onClose, onSuccess, onError }) {
 
 function SeatLayoutPreviewModal({ layout, onClose }) {
   const seatColorMap = {
-    Standard: 'bg-slate-800 border-slate-700 text-slate-200',
-    Window: 'bg-sky-600/80 border-sky-400 text-white',
-    Aisle: 'bg-slate-700/80 border-slate-600 text-slate-300',
-    FrontRow: 'bg-amber-600/80 border-amber-400 text-white',
-    VIP: 'bg-waypoint-amber border-amber-400 text-slate-950 font-bold',
+    Standard: 'bg-white border-slate-300 text-slate-700',
+    Window: 'bg-indigo-50 border-indigo-300 text-indigo-700',
+    Aisle: 'bg-slate-100 border-slate-200 text-slate-500',
+    FrontRow: 'bg-amber-50 border-amber-300 text-amber-700',
+    VIP: 'bg-amber-100 border-amber-400 text-amber-900 font-bold',
   }
 
   const grid = Array.from({ length: layout.totalRows }, () =>
@@ -450,28 +450,28 @@ function SeatLayoutPreviewModal({ layout, onClose }) {
   })
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4" onClick={onClose}>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg p-6 text-slate-800" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-base font-bold font-display text-white">{layout.name}</h3>
-            <p className="text-xs text-slate-400 font-mono">{layout.totalRows} rows × {layout.totalColumns} cols • {layout.seats.length} total seats</p>
+            <h3 className="text-base font-bold font-display text-slate-900">{layout.name}</h3>
+            <p className="text-xs text-slate-500 font-mono">{layout.totalRows} rows × {layout.totalColumns} cols • {layout.seats.length} total seats</p>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="text-center mb-3">
-          <div className="inline-block px-3 py-1 rounded-full bg-slate-800 text-[10px] text-slate-300 uppercase tracking-wider font-semibold font-mono">
+          <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-[10px] text-slate-700 uppercase tracking-wider font-semibold font-mono border border-slate-200">
             🚍 Front Driver Cabin
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-1.5 p-4 bg-slate-950 rounded-2xl border border-slate-800 max-h-96 overflow-y-auto shadow-inner">
+        <div className="flex flex-col items-center gap-1.5 p-4 bg-slate-50 rounded-2xl border border-slate-200 max-h-96 overflow-y-auto">
           {grid.map((row, rowIdx) => (
             <div key={rowIdx} className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-600 w-5 text-right font-mono font-bold">{rowIdx + 1}</span>
+              <span className="text-[10px] text-slate-400 w-5 text-right font-mono font-bold">{rowIdx + 1}</span>
               {row.map((seat, colIdx) => {
                 const showAisle = layout.totalColumns === 4 && colIdx === 2
                 return (
@@ -487,7 +487,7 @@ function SeatLayoutPreviewModal({ layout, onClose }) {
                         {seat.seatNumber}
                       </div>
                     ) : (
-                      <div className="w-9 h-9 rounded-lg border border-dashed border-slate-800/80" />
+                      <div className="w-9 h-9 rounded-lg border border-dashed border-slate-200" />
                     )}
                   </React.Fragment>
                 )
@@ -496,7 +496,7 @@ function SeatLayoutPreviewModal({ layout, onClose }) {
           ))}
         </div>
 
-        <div className="flex justify-end mt-4 pt-3 border-t border-slate-800">
+        <div className="flex justify-end mt-4 pt-3 border-t border-slate-100">
           <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
         </div>
       </div>

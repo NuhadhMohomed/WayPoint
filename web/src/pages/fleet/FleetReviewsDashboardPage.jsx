@@ -121,16 +121,16 @@ export function FleetReviewsDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold mb-2">
             <Sparkles className="w-3.5 h-3.5 text-waypoint-amber" />
-            SCR-FLEET-101 Verified Passenger Sentiment
+            Verified Passenger Sentiment
           </div>
-          <h1 className="text-2xl font-black font-display text-white tracking-tight">
+          <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight">
             Fleet & Crew Reviews Dashboard
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Real-time passenger ratings across coach cleanliness, timetable punctuality, and driver safety standards.
           </p>
         </div>
@@ -150,16 +150,16 @@ export function FleetReviewsDashboardPage() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-950/70 border border-red-800 text-red-200 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400" />
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-md">
-          <span className="text-xs text-slate-400 font-medium">Overall Passenger Rating</span>
+        <Card className="p-5 border-slate-200 bg-white shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Overall Passenger Rating</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-3xl font-black font-mono text-waypoint-amber">
               {summary?.averageRating ? summary.averageRating.toFixed(1) : '4.8'}
@@ -169,25 +169,25 @@ export function FleetReviewsDashboardPage() {
           <div className="mt-2">{renderStars(Math.round(summary?.averageRating || 5))}</div>
         </Card>
 
-        <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-md">
-          <span className="text-xs text-slate-400 font-medium">Cleanliness Compliance</span>
-          <div className="text-3xl font-black font-mono text-emerald-400 mt-1">
+        <Card className="p-5 border-slate-200 bg-white shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Cleanliness Compliance</span>
+          <div className="text-3xl font-black font-mono text-emerald-600 mt-1">
             {summary?.cleanlinessScore || 96}%
           </div>
           <div className="mt-2 text-[11px] text-slate-500 font-mono">Depot sanitization audit passed</div>
         </Card>
 
-        <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-md">
-          <span className="text-xs text-slate-400 font-medium">Punctuality Score</span>
+        <Card className="p-5 border-slate-200 bg-white shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Punctuality Score</span>
           <div className="text-3xl font-black font-mono text-waypoint-primary mt-1">
             {summary?.punctualityScore || 94}%
           </div>
           <div className="mt-2 text-[11px] text-slate-500 font-mono">On-schedule departure rate</div>
         </Card>
 
-        <Card className="p-5 border-slate-800 bg-slate-900/90 shadow-md">
-          <span className="text-xs text-slate-400 font-medium">Driver Conduct & Safety</span>
-          <div className="text-3xl font-black font-mono text-sky-400 mt-1">
+        <Card className="p-5 border-slate-200 bg-white shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Driver Conduct & Safety</span>
+          <div className="text-3xl font-black font-mono text-sky-600 mt-1">
             {summary?.driverCourtesyScore || 98}%
           </div>
           <div className="mt-2 text-[11px] text-slate-500 font-mono">Zero speeding alerts logged</div>
@@ -195,13 +195,13 @@ export function FleetReviewsDashboardPage() {
       </div>
 
       {/* Reviews List */}
-      <Card className="p-6 border-slate-800 bg-slate-900/90 shadow-xl">
-        <div className="flex items-center justify-between mb-5 border-b border-slate-800 pb-3">
-          <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+      <Card className="p-6 border-slate-200 bg-white shadow-xs">
+        <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+          <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-waypoint-primary" />
             Verified Passenger Testimonials & Trip Logs
           </h3>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-500 font-mono">
             {reviews.length} Verified Reviews
           </span>
         </div>
@@ -220,15 +220,15 @@ export function FleetReviewsDashboardPage() {
             {reviews.map((rev) => (
               <div
                 key={rev.id}
-                className="p-4 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all space-y-2 shadow-sm"
+                className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all space-y-2 shadow-xs"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs font-bold text-indigo-700">
                       {rev.passengerName ? rev.passengerName[0] : 'P'}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white">{rev.passengerName || 'Verified Passenger'}</div>
+                      <div className="text-xs font-bold text-slate-900">{rev.passengerName || 'Verified Passenger'}</div>
                       <div className="text-[10px] text-slate-500 font-mono">{rev.route || 'Sri Lankan Intercity Corridor'}</div>
                     </div>
                   </div>
@@ -239,7 +239,7 @@ export function FleetReviewsDashboardPage() {
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed pt-1">
+                <p className="text-xs text-slate-700 leading-relaxed pt-1">
                   "{rev.comment}"
                 </p>
 
@@ -248,7 +248,7 @@ export function FleetReviewsDashboardPage() {
                     {rev.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] font-medium text-slate-400"
+                        className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-medium text-slate-600"
                       >
                         ✓ {tag}
                       </span>

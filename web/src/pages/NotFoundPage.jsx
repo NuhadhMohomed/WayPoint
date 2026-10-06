@@ -7,13 +7,13 @@ import { Button } from '../components/ui/Button'
  */
 export function NotFoundPage() {
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center select-none text-slate-100">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center select-none text-slate-800">
       <div className="relative mb-8">
-        <div className="text-9xl font-black tracking-widest text-slate-800/80 font-mono">
+        <div className="text-9xl font-black tracking-widest text-slate-200 font-mono">
           404
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl text-indigo-400">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-xl text-indigo-600">
             <svg
               className="h-10 w-10 animate-pulse"
               fill="none"
@@ -31,14 +31,14 @@ export function NotFoundPage() {
         </div>
       </div>
 
-      <div className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-4">
+      <div className="inline-block px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold mb-4">
         Unscheduled Destination • Off Network
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-md">
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-md text-slate-900 font-display">
         Corridor Not Found
       </h1>
-      <p className="mt-2 text-sm text-slate-400 max-w-md leading-relaxed">
+      <p className="mt-2 text-sm text-slate-500 max-w-md leading-relaxed">
         The requested transit view or waypoint does not exist in the National Operations Directory. It may have been rerouted or decommissioned.
       </p>
 
@@ -55,7 +55,7 @@ export function NotFoundPage() {
         </Link>
       </div>
 
-      <div className="mt-12 text-xs font-mono text-slate-600">
+      <div className="mt-12 text-xs font-mono text-slate-400">
         WayPoint NOC Telematics Engine • Error Code: ERR_WAYPOINT_404
       </div>
     </div>

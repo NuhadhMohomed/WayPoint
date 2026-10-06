@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from '../LoginPage';
-import { RegisterPage } from '../RegisterPage';
 import { NotFoundPage } from '../NotFoundPage';
 import { OverviewPage } from '../OverviewPage';
 import { useAuthStore } from '../../store/authStore';
@@ -75,19 +74,16 @@ describe('Authentication & Overview Pages', () => {
     });
   });
 
-  it('renders RegisterPage with registration fields and submit button', () => {
+  it('renders LoginPage without passenger registration controls and informs passenger of mobile app', () => {
     render(
       <MemoryRouter>
-        <RegisterPage />
+        <LoginPage />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: /create waypoint account/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /register passenger account/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /create an account/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/waypoint operations hub is restricted to authorized transit personnel/i)).toBeInTheDocument();
+    expect(screen.getByText(/passengers should book tickets and manage travel via the waypoint mobile app/i)).toBeInTheDocument();
   });
 
   it('renders NotFoundPage with 404 code and return button', () => {
@@ -104,7 +100,7 @@ describe('Authentication & Overview Pages', () => {
 
   it('renders OverviewPage with live operational metrics and corridor status table', () => {
     useAuthStore.setState({
-      user: { fullName: 'Nuhadh Admin', role: 'TransitManager', email: 'admin@waypoint.lk' },
+      user: { fullName: 'Operations Admin', role: 'TransitManager', email: 'admin@waypoint.lk' },
       isAuthenticated: true,
     });
 

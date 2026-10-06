@@ -36,15 +36,14 @@ export function BookingManifestMonitorPage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-            WEB-11
+          <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+            Manifest Monitor
           </span>
-          <span className="text-xs text-slate-400">Shared with Mithila (Component 3)</span>
         </div>
-        <h1 className="text-2xl font-bold font-display text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
           Booking Manifest & Seat Monitor
         </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 mt-1">
           Real-time seat occupancy dashboard for service departures.
         </p>
       </div>
