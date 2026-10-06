@@ -4,17 +4,22 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
 import '../../../core/widgets/transit_badge.dart';
 import '../models/disruption_models.dart';
+import '../services/disruption_api_service.dart';
 
 class DisruptionAlertScreen extends StatefulWidget {
   final DisruptionAlertModel? disruption;
+  final String? disruptionCaseId;
   final VoidCallback? onAccepted;
   final VoidCallback? onDeclined;
+  final DisruptionApiService? apiService;
 
   const DisruptionAlertScreen({
     super.key,
     this.disruption,
+    this.disruptionCaseId,
     this.onAccepted,
     this.onDeclined,
+    this.apiService,
   });
 
   @override
@@ -22,9 +27,11 @@ class DisruptionAlertScreen extends StatefulWidget {
 }
 
 class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
+  late DisruptionApiService _apiService;
   late DisruptionAlertModel _disruption;
   late int _remainingSeconds;
   Timer? _countdownTimer;
+  bool _isLoading = false;
   bool _isProcessing = false;
   bool _isAccepted = false;
   bool _isRefunded = false;
@@ -32,10 +39,20 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
   @override
   void initState() {
     super.initState();
+    _apiService = widget.apiService ?? DisruptionApiService();
     _disruption =
         widget.disruption ?? DisruptionAlertModel.sampleColomboToElla();
     _remainingSeconds = _disruption.remainingSeconds;
 
+    _startCountdown();
+
+    if (widget.disruption == null && widget.disruptionCaseId != null) {
+      _fetchAiProposal(widget.disruptionCaseId!);
+    }
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       if (_remainingSeconds > 0) {
@@ -46,6 +63,20 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
         timer.cancel();
       }
     });
+  }
+
+  Future<void> _fetchAiProposal(String disruptionCaseId) async {
+    setState(() => _isLoading = true);
+    final proposal = await _apiService.getAiRebookingProposal(
+      disruptionCaseId: disruptionCaseId,
+    );
+    if (!mounted) return;
+    setState(() {
+      _disruption = proposal;
+      _remainingSeconds = proposal.remainingSeconds;
+      _isLoading = false;
+    });
+    _startCountdown();
   }
 
   @override
@@ -62,7 +93,11 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
 
   void _handleAccept() async {
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(milliseconds: 700));
+    if (_disruption.proposalId != null && _disruption.proposalId!.isNotEmpty) {
+      await _apiService.executeRebooking(proposalId: _disruption.proposalId!);
+    } else {
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
     if (!mounted) return;
     setState(() {
       _isProcessing = false;
@@ -406,7 +441,21 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppTheme.primaryColor),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading AI Rebooking Options...',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

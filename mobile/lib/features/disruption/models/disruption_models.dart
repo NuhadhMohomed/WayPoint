@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 
 /// Represents a disrupted transit leg and its AI-generated replacement.
 class DisruptionAlertModel extends Equatable {
+  final String? proposalId;
+  final String? disruptionCaseId;
   final String bookingReference;
   final String passengerName;
   final String disruptionTitle;
@@ -32,6 +34,8 @@ class DisruptionAlertModel extends Equatable {
   final DateTime holdExpiresAt;
 
   const DisruptionAlertModel({
+    this.proposalId,
+    this.disruptionCaseId,
     required this.bookingReference,
     required this.passengerName,
     required this.disruptionTitle,
@@ -55,6 +59,58 @@ class DisruptionAlertModel extends Equatable {
     required this.fareDifferenceLabel,
     required this.holdExpiresAt,
   });
+
+  factory DisruptionAlertModel.fromAiProposal({
+    required Map<String, dynamic> json,
+    String? disruptionCaseId,
+  }) {
+    final candidates = (json['candidates'] as List<dynamic>?) ?? [];
+    final candidate = (candidates.isNotEmpty ? candidates.first : <String, dynamic>{}) as Map<String, dynamic>;
+    final wfId = json['workflowId']?.toString() ?? '000000';
+    final refSuffix = wfId.length >= 6 ? wfId.substring(0, 6).toUpperCase() : wfId.toUpperCase();
+
+    return DisruptionAlertModel(
+      proposalId: json['proposalId']?.toString(),
+      disruptionCaseId: disruptionCaseId,
+      bookingReference: 'WP-$refSuffix',
+      passengerName: 'Passenger',
+      disruptionTitle: 'Service Disrupted: AI Rebooking Available',
+      disruptionReason: json['agentReasoning']?.toString() ??
+          'Our AI operations engine has identified and reserved replacement transport options.',
+      compensationNotice: 'Fare difference absorbed under Fare Protection (BR-REBOOK-002)',
+      originalBusPlate: 'Bus ND-8821',
+      originalBusClass: 'Standard AC',
+      originalDepartureTime: '06:30 AM',
+      originalOriginStop: candidate['originCity']?.toString() ?? 'Colombo Fort',
+      originalArrivalTime: '11:45 AM',
+      originalDestinationStop: candidate['destinationCity']?.toString() ?? 'Ella Town',
+      originalFarePaid: 4950.0,
+      replacementBusPlate: candidate['serviceCode']?.toString() ?? candidate['routeNumber']?.toString() ?? 'Bus WP-REP',
+      replacementBusClass: candidate['busClass']?.toString() ?? 'Luxury Super Line',
+      replacementDepartureTime: candidate['departureTime'] != null
+          ? _formatTimeString(candidate['departureTime'].toString())
+          : '07:15 AM',
+      replacementOriginStop: candidate['originCity']?.toString() ?? 'Colombo Fort',
+      replacementArrivalTime: candidate['arrivalTime'] != null
+          ? _formatTimeString(candidate['arrivalTime'].toString())
+          : '12:20 PM',
+      replacementDestinationStop: candidate['destinationCity']?.toString() ?? 'Ella Town',
+      assignedSeats: const ['1A', '2A'],
+      fareDifference: 0.0,
+      fareDifferenceLabel: 'Rs. 0.00 — Fully Absorbed',
+      holdExpiresAt: DateTime.now().add(const Duration(minutes: 15)),
+    );
+  }
+
+  static String _formatTimeString(String isoString) {
+    final dt = DateTime.tryParse(isoString);
+    if (dt == null) return isoString;
+    final hour = dt.hour;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final formattedHour = hour % 12 == 0 ? 12 : hour % 12;
+    return '$formattedHour:$minute $period';
+  }
 
   /// Remaining seconds on the 15-minute temporary seat lock.
   int get remainingSeconds {
