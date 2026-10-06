@@ -147,10 +147,10 @@ class JourneyCandidateModel {
       departureTime: DateTime.tryParse(json['departureTime']?.toString() ?? '') ?? DateTime.now(),
       arrivalTime: DateTime.tryParse(json['arrivalTime']?.toString() ?? '') ?? DateTime.now(),
       totalFare: (json['totalFare'] as num?)?.toDouble() ?? (json['baseFare'] as num?)?.toDouble() ?? 0.0,
-      durationMinutes: json['durationMinutes'] ?? json['estimatedDurationMinutes'] ?? 0,
+      durationMinutes: json['durationMinutes'] ?? json['totalDurationMinutes'] ?? json['estimatedDurationMinutes'] ?? 0,
       isConnecting: json['isConnecting'] ?? false,
       matchScore: (json['matchScore'] as num?)?.toDouble() ?? 0.90,
-      availableSeats: json['availableSeats'] ?? 20,
+      availableSeats: json['availableSeats'] ?? json['availableSeatsCount'] ?? 20,
       busClass: json['busClass']?.toString() ?? 'Luxury Super Line',
       legs: (json['legs'] as List<dynamic>?)
               ?.map((l) => TransferLegModel.fromJson(l as Map<String, dynamic>))
