@@ -102,15 +102,15 @@ export function ServiceAlertBroadcastPage() {
       )}
 
       {/* Broadcast Header & Stats Banner */}
-      <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 bg-white border border-slate-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 flex-shrink-0">
             <Radio className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">Public Service Alert Broadcast Center (WEB-09)</h4>
-            <p className="text-xs text-slate-400">
-              Immediate omnichannel passenger push notifications and station ticker broadcasts under rule <strong>BR-NOTIF-001</strong>.
+            <h4 className="text-sm font-bold text-slate-900">Public Service Alert Broadcast Center</h4>
+            <p className="text-xs text-slate-500">
+              Immediate omnichannel passenger push notifications and station ticker broadcasts.
             </p>
           </div>
         </div>
@@ -133,13 +133,13 @@ export function ServiceAlertBroadcastPage() {
 
             <form onSubmit={handleBroadcastAlert} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase text-slate-700 mb-1.5">
                   Target Service *
                 </label>
                 <select
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-waypoint-blue"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                   required
                 >
                   <option value="">-- Select affected transit corridor --</option>
@@ -152,7 +152,7 @@ export function ServiceAlertBroadcastPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase text-slate-700 mb-1.5">
                   Notice Headline / Title *
                 </label>
                 <input
@@ -161,13 +161,13 @@ export function ServiceAlertBroadcastPage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. SRV-COL-KDY-0700 Cancelled due to Engine Failure"
                   maxLength={100}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-waypoint-blue"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase text-slate-700 mb-1.5">
                   Announcement Body *
                 </label>
                 <textarea
@@ -175,36 +175,36 @@ export function ServiceAlertBroadcastPage() {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Provide clear advice, transfer instructions, or alternative boarding bays for stranded passengers..."
                   rows="4"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-waypoint-blue"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                   required
                 />
               </div>
 
               {/* Passenger Banner Live Preview */}
               <div className="pt-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-2">
-                  <Eye className="w-3.5 h-3.5 text-sky-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 mb-2">
+                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
                   Passenger App Preview
                 </span>
-                <div className="bg-slate-950/80 border border-amber-500/30 rounded-xl p-3.5 space-y-1.5">
+                <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-3.5 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                    <span className="text-xs font-bold text-amber-300">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span className="text-xs font-bold text-amber-800">
                       {title || 'Service Alert Headline'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300">
+                  <p className="text-xs text-slate-700">
                     {message || 'Announcement details and passenger travel guidance will be rendered here.'}
                   </p>
-                  <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-800/60 flex items-center justify-between">
+                  <div className="text-[10px] text-slate-500 pt-1 border-t border-amber-100 flex items-center justify-between">
                     <span>Target: {selectedServiceObj ? selectedServiceObj.serviceCode : 'Any Service'}</span>
                     <span>Just now</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-800">
-                <Button type="submit" variant="primary" className="w-full" disabled={isBroadcasting}>
+              <div className="pt-3 border-t border-slate-100">
+                <Button type="submit" variant="primary" className="w-full font-bold" disabled={isBroadcasting}>
                   {isBroadcasting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -227,7 +227,7 @@ export function ServiceAlertBroadcastPage() {
           <Card>
             <CardHeader
               title="Active Public Alerts Feed"
-              subtitle={`Live feed of ${serviceAlerts.length} published operational alerts (AllowAnonymous).`}
+              subtitle={`Live feed of ${serviceAlerts.length} published operational alerts across passenger channels.`}
             />
 
             {alertsLoading ? (
@@ -237,7 +237,7 @@ export function ServiceAlertBroadcastPage() {
               </div>
             ) : serviceAlerts.length === 0 ? (
               <div className="text-center py-12 text-slate-400">
-                <Info className="w-8 h-8 mx-auto mb-2 text-slate-500" />
+                <Info className="w-8 h-8 mx-auto mb-2 text-slate-400" />
                 <p>No active public alerts currently broadcast.</p>
               </div>
             ) : (
@@ -245,33 +245,33 @@ export function ServiceAlertBroadcastPage() {
                 {serviceAlerts.map((alert) => (
                   <div
                     key={alert.id}
-                    className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 hover:border-slate-700 transition-all space-y-2"
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-all space-y-2"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700">
                           <Bell className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-white">{alert.title}</h4>
-                          <span className="text-[11px] font-mono text-sky-400">
+                          <h4 className="text-sm font-bold text-slate-900">{alert.title}</h4>
+                          <span className="text-[11px] font-mono text-indigo-600 font-semibold">
                             Service: {alert.serviceCode || 'Network Wide'}
                           </span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                        <Clock className="w-3 h-3" />
+                      <span className="text-[10px] text-slate-500 flex items-center gap-1 font-mono">
+                        <Clock className="w-3.5 h-3.5" />
                         {new Date(alert.postedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-300 pl-9 font-sans leading-relaxed">
+                    <p className="text-xs text-slate-700 pl-9 font-sans leading-relaxed">
                       {alert.message}
                     </p>
 
-                    <div className="pl-9 pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-400">
+                    <div className="pl-9 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-500">
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         Live in Passenger App & Transit Displays
                       </span>
                       <span className="font-mono">ID: {alert.id.substring(0, 8)}</span>

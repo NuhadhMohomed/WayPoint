@@ -64,20 +64,20 @@ export function AdminConsolePage() {
   return (
     <div className="space-y-6">
       {/* Cryptographic Compliance Banner */}
-      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 flex-shrink-0">
             <Lock className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white">Immutable Audit Ledger & Security Administration (WEB-12)</h3>
-              <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Append-Only Verified
+              <h3 className="text-base font-bold text-slate-900">Immutable Audit Ledger & Security Administration</h3>
+              <span className="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Verified Ledger
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Deterministic, tamper-evident audit records capturing all Transport Manager approvals, state transitions, and operational dispatches (<strong>BR-AUDIT-001</strong>).
+            <p className="text-xs text-slate-500 mt-1">
+              Tamper-evident audit records capturing all manager approvals, state transitions, and operational dispatches.
             </p>
           </div>
         </div>
@@ -92,30 +92,30 @@ export function AdminConsolePage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm">
-          <span className="text-xs font-medium text-slate-400">Total Audit Records</span>
-          <div className="text-2xl font-bold font-display text-white mt-1">{auditLogs.length}</div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+          <span className="text-xs font-medium text-slate-500">Total Audit Records</span>
+          <div className="text-2xl font-bold font-display text-slate-900 mt-1">{auditLogs.length}</div>
           <span className="text-[10px] text-slate-400 mt-0.5 block">Stored with before/after state diffs</span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm">
-          <span className="text-xs font-medium text-slate-400">Manager Decisions Logged</span>
-          <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+          <span className="text-xs font-medium text-slate-500">Manager Decisions Logged</span>
+          <div className="text-2xl font-bold font-display text-emerald-600 mt-1">
             {auditLogs.filter((l) => l.actionType?.includes('ApprovalDecision')).length}
           </div>
           <span className="text-[10px] text-slate-400 mt-0.5 block">Signed with Manager NameIdentifier</span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm">
-          <span className="text-xs font-medium text-slate-400">Audit Storage Engine</span>
-          <div className="text-base font-bold font-display text-sky-400 mt-1">PostgreSQL JSONB</div>
-          <span className="text-[10px] text-slate-400 mt-0.5 block">Zero client-side direct access</span>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+          <span className="text-xs font-medium text-slate-500">Audit Trail Integrity</span>
+          <div className="text-base font-bold font-display text-sky-700 mt-1">Structured Ledger</div>
+          <span className="text-[10px] text-slate-400 mt-0.5 block">Tamper-evident system logs</span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm">
-          <span className="text-xs font-medium text-slate-400">Audit Immutability</span>
-          <div className="text-base font-bold font-display text-purple-400 mt-1">No UPDATE / DELETE</div>
-          <span className="text-[10px] text-slate-400 mt-0.5 block">Read-only audit compliance</span>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+          <span className="text-xs font-medium text-slate-500">Record Permanence</span>
+          <div className="text-base font-bold font-display text-purple-700 mt-1">Write-Once Verified</div>
+          <span className="text-[10px] text-slate-400 mt-0.5 block">Compliant enterprise record keeping</span>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export function AdminConsolePage() {
                   placeholder="Filter by Actor or Entity ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-waypoint-blue w-60"
+                  className="bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-waypoint-blue/20 focus:border-waypoint-blue w-60 shadow-xs"
                 />
               </div>
 
@@ -142,7 +142,7 @@ export function AdminConsolePage() {
               <select
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-waypoint-blue"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-waypoint-blue/20 focus:border-waypoint-blue shadow-xs"
               >
                 <option value="ALL">All Action Types</option>
                 <option value="ApprovalDecision">Approval Decisions</option>
@@ -170,33 +170,33 @@ export function AdminConsolePage() {
               return (
                 <div
                   key={log.id}
-                  className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-700 transition-all"
+                  className="bg-white border border-slate-200/80 rounded-xl overflow-hidden hover:border-slate-300 shadow-xs transition-all"
                 >
                   <div
                     onClick={() => toggleExpanded(log.id)}
                     className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer text-xs"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
-                        <History className="w-4 h-4 text-sky-400" />
+                      <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0">
+                        <History className="w-4 h-4 text-sky-600" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm">{log.actionType}</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900 text-sky-300 border border-slate-800">
+                          <span className="font-bold text-slate-900 text-sm">{log.actionType}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200">
                             {log.entityName}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                          <span>Actor: <strong className="text-slate-200 font-mono">{log.actorId || 'System'}</strong></span>
+                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                          <span>Actor: <strong className="text-slate-800 font-mono">{log.actorId || 'System'}</strong></span>
                           <span>•</span>
-                          <span>Entity ID: <strong className="text-slate-300 font-mono">{log.entityId}</strong></span>
+                          <span>Entity ID: <strong className="text-slate-800 font-mono">{log.entityId}</strong></span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 self-start sm:self-auto">
-                      <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
+                      <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
                         {new Date(log.timestamp).toLocaleString()}
                       </span>
@@ -210,16 +210,16 @@ export function AdminConsolePage() {
 
                   {/* Expandable State Diff Viewer */}
                   {isExpanded && (
-                    <div className="p-4 bg-slate-950/90 border-t border-slate-800/80 space-y-3">
+                    <div className="p-4 bg-slate-50/80 border-t border-slate-200 space-y-3">
                       <JsonDiffViewer
                         oldData={log.beforeStateJson}
                         newData={log.afterStateJson}
                         title={`State Mutation: ${log.actionType} (${log.entityName})`}
                       />
 
-                      <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-800/60 flex items-center justify-between font-mono">
+                      <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-200 flex items-center justify-between font-mono">
                         <span>Ledger Transaction Entry ID: {log.id}</span>
-                        <span className="text-emerald-400 font-bold">✓ SHA-256 Immutable Proof</span>
+                        <span className="text-emerald-600 font-bold">✓ SHA-256 Immutable Proof</span>
                       </div>
                     </div>
                   )}
