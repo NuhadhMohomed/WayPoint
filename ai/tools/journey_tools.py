@@ -47,8 +47,8 @@ async def search_routes(
         "GET",
         "/routes",
         params={
-            "originCity": validated.origin_city,
-            "destinationCity": validated.destination_city,
+            "origin": validated.origin_city,
+            "destination": validated.destination_city,
         },
     )
 
