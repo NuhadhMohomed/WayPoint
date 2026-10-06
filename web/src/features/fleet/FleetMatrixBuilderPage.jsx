@@ -53,7 +53,9 @@ export function FleetMatrixBuilderPage() {
 
   useEffect(() => {
     fetchBuses()
-    fleetApi.getSeatLayouts().then(setSeatLayouts).catch(() => {})
+    fleetApi.getSeatLayouts().then((data) => {
+      setSeatLayouts(Array.isArray(data) ? data : (data?.items || []))
+    }).catch(() => {})
   }, [fetchBuses])
 
   const handleToggleMaintenance = async (bus) => {
@@ -84,7 +86,7 @@ export function FleetMatrixBuilderPage() {
   }
 
   const handleExportCsv = () => {
-    const exportData = buses.map((b) => ({
+    const exportData = (buses || []).map((b) => ({
       Registration: b.registrationNumber,
       Class: b.busClass,
       SeatCapacity: b.totalSeatCapacity,
@@ -114,10 +116,10 @@ export function FleetMatrixBuilderPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total Fleet', value: busPagination.totalCount, color: 'text-indigo-600' },
-          { label: 'Active in Service', value: buses.filter(b => !b.isUnderMaintenance).length, color: 'text-emerald-600' },
-          { label: 'Depot Maintenance', value: buses.filter(b => b.isUnderMaintenance).length, color: 'text-amber-600' },
-          { label: 'Layout Blueprints', value: seatLayouts.length, color: 'text-sky-600' },
+          { label: 'Total Fleet', value: busPagination?.totalCount ?? buses?.length ?? 0, color: 'text-indigo-600' },
+          { label: 'Active in Service', value: (buses || []).filter(b => !b.isUnderMaintenance).length, color: 'text-emerald-600' },
+          { label: 'Depot Maintenance', value: (buses || []).filter(b => b.isUnderMaintenance).length, color: 'text-amber-600' },
+          { label: 'Layout Blueprints', value: (seatLayouts || []).length, color: 'text-sky-600' },
         ].map((stat) => (
           <div key={stat.label} className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
             <div className={`text-2xl font-black font-mono ${stat.color}`}>{stat.value}</div>
@@ -439,13 +441,24 @@ function SeatLayoutPreviewModal({ layout, onClose }) {
     VIP: 'bg-amber-100 border-amber-400 text-amber-900 font-bold',
   }
 
-  const grid = Array.from({ length: layout.totalRows }, () =>
-    Array.from({ length: layout.totalColumns }, () => null)
+  const seats = layout?.seats || []
+  const totalRows = layout?.totalRows || 10
+  const totalColumns = layout?.totalColumns || 4
+
+  const minRow = seats.length > 0 ? Math.min(...seats.map(s => s.rowIndex)) : 0
+  const minCol = seats.length > 0 ? Math.min(...seats.map(s => s.columnIndex)) : 0
+  const rowOffset = minRow === 1 ? 1 : 0
+  const colOffset = minCol === 1 ? 1 : 0
+
+  const grid = Array.from({ length: totalRows }, () =>
+    Array.from({ length: totalColumns }, () => null)
   )
 
-  layout.seats.forEach((seat) => {
-    if (seat.rowIndex < layout.totalRows && seat.columnIndex < layout.totalColumns) {
-      grid[seat.rowIndex][seat.columnIndex] = seat
+  seats.forEach((seat) => {
+    const r = seat.rowIndex - rowOffset
+    const c = seat.columnIndex - colOffset
+    if (r >= 0 && r < totalRows && c >= 0 && c < totalColumns) {
+      grid[r][c] = seat
     }
   })
 
@@ -454,8 +467,8 @@ function SeatLayoutPreviewModal({ layout, onClose }) {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg p-6 text-slate-800" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-base font-bold font-display text-slate-900">{layout.name}</h3>
-            <p className="text-xs text-slate-500 font-mono">{layout.totalRows} rows × {layout.totalColumns} cols • {layout.seats.length} total seats</p>
+            <h3 className="text-base font-bold font-display text-slate-900">{layout?.name}</h3>
+            <p className="text-xs text-slate-500 font-mono">{totalRows} rows × {totalColumns} cols • {seats.length} total seats</p>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
             <X className="w-5 h-5" />

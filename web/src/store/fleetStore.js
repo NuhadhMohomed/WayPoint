@@ -19,29 +19,38 @@ export const useFleetStore = create((set) => ({
   activeTab: 'buses',
 
   // Actions
-  setBuses: (data) => set({
-    buses: data.items,
-    busPagination: {
-      pageNumber: data.pageNumber,
-      pageSize: data.pageSize,
-      totalCount: data.totalCount,
-      totalPages: data.totalPages,
-    },
-  }),
+  setBuses: (data) => {
+    const items = Array.isArray(data) ? data : (data?.items || [])
+    set({
+      buses: items,
+      busPagination: {
+        pageNumber: data?.pageNumber || 1,
+        pageSize: data?.pageSize || 20,
+        totalCount: data?.totalCount ?? items.length,
+        totalPages: data?.totalPages || 1,
+      },
+    })
+  },
   setBusesLoading: (loading) => set({ busesLoading: loading }),
 
-  setDrivers: (data) => set({
-    drivers: data.items,
-    driverPagination: {
-      pageNumber: data.pageNumber,
-      pageSize: data.pageSize,
-      totalCount: data.totalCount,
-      totalPages: data.totalPages,
-    },
-  }),
+  setDrivers: (data) => {
+    const items = Array.isArray(data) ? data : (data?.items || [])
+    set({
+      drivers: items,
+      driverPagination: {
+        pageNumber: data?.pageNumber || 1,
+        pageSize: data?.pageSize || 20,
+        totalCount: data?.totalCount ?? items.length,
+        totalPages: data?.totalPages || 1,
+      },
+    })
+  },
   setDriversLoading: (loading) => set({ driversLoading: loading }),
 
-  setSeatLayouts: (layouts) => set({ seatLayouts: layouts }),
+  setSeatLayouts: (layouts) => {
+    const items = Array.isArray(layouts) ? layouts : (layouts?.items || [])
+    set({ seatLayouts: items })
+  },
   setLayoutsLoading: (loading) => set({ layoutsLoading: loading }),
 
   setActiveTab: (tab) => set({ activeTab: tab }),

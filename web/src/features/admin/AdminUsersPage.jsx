@@ -31,23 +31,59 @@ export function AdminUsersPage() {
   const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false)
 
   const loadUsers = useCallback(async () => {
+    if (currentUser && currentUser.role && currentUser.role !== 'Admin') {
+      return
+    }
     setIsLoading(true)
     setErrorMessage(null)
     try {
       const data = await adminApi.getUsers({
         pageSize: 100 // load up to 100 for client search and filtering in DataTable
       })
-      setUsers(data.items || [])
+      const items = Array.isArray(data) ? data : (data?.items || [])
+      setUsers(items)
     } catch (err) {
-      setErrorMessage(err.response?.data?.detail || 'Failed to load user directory.')
+      setErrorMessage(err.response?.data?.detail || err.message || 'Failed to load user directory.')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [currentUser])
 
   useEffect(() => {
     loadUsers()
   }, [loadUsers])
+
+  if (currentUser && currentUser.role && currentUser.role !== 'Admin') {
+    return (
+      <Card className="p-8 border-slate-200 bg-white text-center max-w-xl mx-auto mt-6 shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-amber-600 shadow-xs">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 font-display">Administrator Access Required</h2>
+        <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">
+          The User & Role Governance console is restricted to <strong>System Administrators</strong> (BR-ADMIN-001).
+          You are currently signed in as <strong>{currentUser.fullName || currentUser.email}</strong> with role{' '}
+          <span className="font-semibold text-slate-800">{currentUser.role}</span>.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+            Go Back
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              useAuthStore.getState().logout()
+              window.location.href = '/login'
+            }}
+            className="font-bold shadow-sm"
+          >
+            Sign in as Administrator
+          </Button>
+        </div>
+      </Card>
+    )
+  }
 
   // Telemetry Metrics
   const metrics = useMemo(() => {
