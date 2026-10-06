@@ -167,6 +167,18 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
     );
   }
 
+  String _extractCleanCity(String location, String fallback) {
+    for (final city in _majorCities) {
+      if (location.toLowerCase().contains(city.toLowerCase())) {
+        return city;
+      }
+    }
+    final parenIdx = location.indexOf('(');
+    if (parenIdx > 0) return location.substring(0, parenIdx).trim();
+    if (location.trim().isNotEmpty) return location.trim();
+    return fallback;
+  }
+
   Future<void> _executeAiSearch(String objective) async {
     setState(() => _isAiSearching = true);
 
@@ -175,16 +187,31 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
         objective: objective,
         passengerCount: _passengerCount,
         travelDate: _travelDate,
+        defaultOrigin: _originCity,
+        defaultDestination: _destinationCity,
       );
 
       if (!mounted) return;
       setState(() => _isAiSearching = false);
 
+      final resolvedOrig = result.resolvedOrigin != null
+          ? _extractCleanCity(result.resolvedOrigin!, _originCity)
+          : (result.candidates.isNotEmpty ? _extractCleanCity(result.candidates.first.origin, _originCity) : _originCity);
+
+      final resolvedDest = result.resolvedDestination != null
+          ? _extractCleanCity(result.resolvedDestination!, _destinationCity)
+          : (result.candidates.isNotEmpty ? _extractCleanCity(result.candidates.first.destination, _destinationCity) : _destinationCity);
+
+      setState(() {
+        _originCity = resolvedOrig;
+        _destinationCity = resolvedDest;
+      });
+
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => JourneyComparisonScreen(
-            originCity: _originCity,
-            destinationCity: _destinationCity,
+            originCity: resolvedOrig,
+            destinationCity: resolvedDest,
             travelDate: _travelDate,
             candidates: result.candidates,
             agentReasoning: result.agentReasoning,
@@ -253,6 +280,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
             // AI Journey Prompt Card
             AiJourneyPromptCard(
               isSearching: _isAiSearching,
+              defaultPrompt: 'Best scenic bus from $_originCity to $_destinationCity with AC',
               onSubmit: _executeAiSearch,
             ),
 

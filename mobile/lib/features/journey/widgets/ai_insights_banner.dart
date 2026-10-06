@@ -76,7 +76,9 @@ class AiInsightsBanner extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isAiFallback
-                ? 'Showing verified direct and connecting routes matching your request corridor (AI service currently offline).'
+                ? (agentReasoning.isNotEmpty
+                    ? agentReasoning
+                    : 'Showing verified direct and connecting routes matching your request corridor (AI service currently offline).')
                 : agentReasoning,
             style: TextStyle(
               fontSize: 12,
@@ -84,6 +86,17 @@ class AiInsightsBanner extends StatelessWidget {
               color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
             ),
           ),
+          if (isAiFallback && agentReasoning.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Showing verified direct and connecting routes matching your request corridor (AI service currently offline).',
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
+            ),
+          ],
         ],
       ),
     );

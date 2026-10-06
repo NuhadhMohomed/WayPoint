@@ -1,0 +1,120 @@
+name: WayPoint Deployment & Release Artifacts
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # =========================================================================
+  # 1. Package ASP.NET Core Backend Release
+  # =========================================================================
+  package-backend:
+    name: Package Backend Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish ASP.NET Core Web API
+        run: >
+          dotnet publish backend/WayPoint.API/WayPoint.API.csproj
+          --configuration Release
+          --output ./publish/api
+          --no-self-contained
+
+      - name: Upload Backend Release Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: waypoint-api-release
+          path: ./publish/api
+          retention-days: 14
+
+  # =========================================================================
+  # 2. Package React Web Production Assets
+  # =========================================================================
+  package-frontend:
+    name: Package Web Frontend Bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web/package.json
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web Production Bundle (Vite)
+        run: npm run build
+        env:
+          VITE_API_URL: https://waypoint-api-production.up.railway.app/api/v1
+
+      - name: Upload Web Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: waypoint-web-bundle
+          path: web/dist
+          retention-days: 14
+
+  # =========================================================================
+  # 3. Build & Package Flutter Android Release APK
+  # =========================================================================
+  package-mobile-apk:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: waypoint-mobile-release-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30

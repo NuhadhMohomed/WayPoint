@@ -43,12 +43,23 @@ class JourneyComparisonScreen extends StatelessWidget {
       appBar: AppBar(
         title: Column(
           children: [
-            Text(
-              '$originCity → $destinationCity',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showAiBanner) ...[
+                  const Icon(Icons.auto_awesome, size: 14, color: AppTheme.primaryColor),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  '$originCity → $destinationCity',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             Text(
-              dateFormat.format(travelDate),
+              showAiBanner
+                  ? 'AI Curated Itinerary • ${dateFormat.format(travelDate)}'
+                  : dateFormat.format(travelDate),
               style: TextStyle(fontSize: 11, color: textMuted),
             ),
           ],
