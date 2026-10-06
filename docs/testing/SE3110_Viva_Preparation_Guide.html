@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SE3110 Viva Preparation Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 1.8cm 1.5cm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1f2328;
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 11pt;
+  }
+  h1 {
+    color: #0969da;
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 0.3em;
+    font-size: 20pt;
+    margin-top: 0;
+  }
+  h2 {
+    color: #1f2328;
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 0.25em;
+    font-size: 14pt;
+    margin-top: 1.5em;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #24292f;
+    font-size: 12pt;
+    margin-top: 1.2em;
+    page-break-after: avoid;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #fbfcfd;
+  }
+  code {
+    background-color: rgba(175, 184, 193, 0.2);
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 85%;
+  }
+  pre {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+  blockquote {
+    border-left: 4px solid #0969da;
+    padding: 0.4em 1em;
+    color: #57609a;
+    background-color: #f6f8fa;
+    margin: 1em 0;
+  }
+  hr {
+    border: 0;
+    height: 1px;
+    background: #d0d7de;
+    margin: 1.5em 0;
+  }
+</style>
+</head>
+<body>
+<h1>SE3110 — Software Testing &amp; Quality Evaluation</h1>
+<h2>Individual Student Viva Demonstration &amp; Technical Defense Guide</h2>
+<h3>Target System: WayPoint — Integrated Full-Stack &amp; Agentic AI Transit Platform</h3>
+<hr />
+<h2>📌 Viva Overview &amp; Rubric Breakdown (60 Individual Marks)</h2>
+<p>In the SE3110 assessment, 60% of the total marks are assessed individually during the viva demonstration:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Viva Assessment Criterion</th>
+<th style="text-align:left">Marks</th>
+<th style="text-align:left">What the Examiner Evaluates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Testing Tool / Framework Demonstration</strong></td>
+<td style="text-align:left"><strong>15 Marks</strong></td>
+<td style="text-align:left">Demonstrates tool execution live, explains selection, configuration, and integration with the actual system.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Test Implementation &amp; Execution</strong></td>
+<td style="text-align:left"><strong>15 Marks</strong></td>
+<td style="text-align:left">Demonstrates meaningful personally authored tests across normal, invalid, boundary, and failure cases with strict assertions.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Results, Defects &amp; Retesting</strong></td>
+<td style="text-align:left"><strong>10 Marks</strong></td>
+<td style="text-align:left">Explains test results, demonstrates defect root cause, walks through the source code fix, and proves retesting passes.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Technical Contribution &amp; Traceability</strong></td>
+<td style="text-align:left"><strong>5 Marks</strong></td>
+<td style="text-align:left">Shows clear Git commits, file ownership, and architectural traceability to SE3090 system requirements.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Viva Technical Understanding &amp; Live Modification</strong></td>
+<td style="text-align:left"><strong>15 Marks</strong></td>
+<td style="text-align:left">Confidently answers technical questions, explains design choices, and modifies a test live when challenged.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>TOTAL INDIVIDUAL VIVA SCORE</strong></td>
+<td style="text-align:left"><strong>60 Marks</strong></td>
+<td style="text-align:left"><strong>Crucial component for the final module grade.</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>👤 STUDENT 1: Vinranga M.W.S (IT24100374)</h2>
+<h3>Role: Component 1 Owner — Journey Planning, Routes, Timetables &amp; Journey Agent</h3>
+<h3>1. Architectural Scope &amp; Testing Responsibilities</h3>
+<ul>
+<li><strong>Scope</strong>: Intercity route catalogue, intermediate stops, distance offsets, timetables, journey search engine, connecting transfer window logic (<code>BR-TRANSFER-001</code>), and AI Journey Analysis Agent.</li>
+<li><strong>Testing Tools</strong>: <strong>.NET 8 xUnit</strong> (<code>JourneySearchControllerTests.cs</code>), <strong>Vitest &amp; RTL</strong> (<code>RouteManager.test.jsx</code>), <strong>Flutter Test</strong> (<code>journey_search_test.dart</code>), <strong>Pytest</strong> (<code>test_journey_agent.py</code>).</li>
+</ul>
+<h3>2. Live Viva Demonstration Commands</h3>
+<pre><code class="language-bash"># 1. Demonstrate Backend Journey Search &amp; Transfer Buffer Tests
+dotnet test backend/WayPoint.sln --filter &quot;FullyQualifiedName~JourneySearch&quot;
+
+# 2. Demonstrate Web Route Manager Component Tests
+cd web &amp;&amp; npx vitest run src/features/journey/__tests__/RouteManager.test.jsx
+
+# 3. Demonstrate Mobile Journey Search Widget Tests
+cd mobile &amp;&amp; flutter test test/features/journey/journey_search_test.dart
+
+# 4. Demonstrate AI Journey Agent Multi-Criteria Optimization
+cd ai &amp;&amp; pytest tests/test_journey_agent.py -v
+</code></pre>
+<h3>3. Key Test Scenarios &amp; Invariants to Explain</h3>
+<ul>
+<li><strong><code>BR-TRANSFER-001</code> (Connecting Transfer Window)</strong>: Explains why connecting bus services require a minimum 20-minute gap. Shows the boundary test: 19-minute buffer fails; 20-minute buffer passes.</li>
+<li><strong>Normal Case</strong>: Search between Colombo and Kandy returns direct express services and tourist corridor tags.</li>
+<li><strong>Boundary Case</strong>: Connecting service departing exactly at $T_1 + 20\text{ min}$.</li>
+<li><strong>Invalid Case</strong>: Origin and destination are identical; date is in the past.</li>
+</ul>
+<h3>4. Defect Discovered &amp; Remediation Walkthrough (<code>DEF-002</code>)</h3>
+<ul>
+<li><strong>Defect</strong>: Connecting routes with unsafe 10-minute transfer gaps were recommended to passengers.</li>
+<li><strong>Root Cause</strong>: Query used <code>DepartureTime &gt; ArrivalTime</code> instead of enforcing <code>(DepartureTime - ArrivalTime).TotalMinutes &gt;= 20.0</code>.</li>
+<li><strong>Code Fix</strong>: Added LINQ filter in <code>WayPoint.Application/Services/JourneySearchService.cs</code>.</li>
+<li><strong>Retest Evidence</strong>: <code>test_business_rule_connecting_transfer_buffer</code> passed in <code>tests/integration/test_cross_service_api.py</code>.</li>
+</ul>
+<h3>5. Likely Viva Questions &amp; Ready Answers</h3>
+<ul>
+<li><strong>Q</strong>: <em>Why did you select Vitest over Jest for the React RouteManager tests?</em>
+<ul>
+<li><strong>A</strong>: <em>Vitest shares the exact same Vite pipeline and ES-module configuration as our React build, providing 10x faster HMR and native ESM execution without Babel transpilation overhead.</em></li>
+</ul>
+</li>
+<li><strong>Q</strong>: <em>Can you modify your test right now to verify that a 15-minute transfer window is rejected?</em>
+<ul>
+<li><strong>A</strong>: <em>Yes. In <code>test_business_rule_connecting_transfer_buffer</code>, adjust <code>itinerary_leg2_departure</code> to 08:15:00 and assert <code>is_valid_transfer</code> evaluates to <code>False</code>.</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>👤 STUDENT 2: Mohomed N.M.N. (IT24102476)</h2>
+<h3>Role: Component 2 Owner &amp; Group Leader — Fleet, 2D Seat Maps, Driver Rostering &amp; Resource Agent</h3>
+<h3>1. Architectural Scope &amp; Testing Responsibilities</h3>
+<ul>
+<li><strong>Scope</strong>: Bus fleet inventory, 2D visual seat layout designer (2+2, 1+2 layouts, aisle configurations), driver rostering, rest-hour compliance (<code>BR-TIME-001</code>), replacement bus feasibility, and AI Resource Feasibility Agent.</li>
+<li><strong>Testing Tools</strong>: <strong>.NET 8 xUnit</strong> (<code>Fleet/DriverOverlapDetectionTests.cs</code>, <code>Fleet/ResourceFeasibilityTests.cs</code>, <code>Fleet/SeatLayoutValidationTests.cs</code>), <strong>Vitest</strong> (<code>SeatLayoutDesigner.test.jsx</code>), <strong>Flutter Test</strong> (<code>seat_picker_bloc_test.dart</code>, <code>review_submission_test.dart</code>), <strong>Pytest</strong> (<code>test_resource_agent.py</code>).</li>
+</ul>
+<h3>2. Live Viva Demonstration Commands</h3>
+<pre><code class="language-bash"># 1. Demonstrate Fleet, Driver Rest &amp; Seat Layout Backend Tests
+dotnet test backend/WayPoint.sln --filter &quot;FullyQualifiedName~Fleet&quot;
+
+# 2. Demonstrate Web 2D Seat Layout Designer Tests
+cd web &amp;&amp; npx vitest run src/features/fleet/__tests__/SeatLayoutDesigner.test.jsx
+
+# 3. Demonstrate Mobile Seat Picker BLoC State Transitions
+cd mobile &amp;&amp; flutter test test/features/fleet/seat_picker_bloc_test.dart
+
+# 4. Demonstrate AI Resource Feasibility &amp; Driver Rest Validation
+cd ai &amp;&amp; pytest tests/test_resource_agent.py -v
+</code></pre>
+<h3>3. Key Test Scenarios &amp; Invariants to Explain</h3>
+<ul>
+<li><strong><code>BR-TIME-001</code> (Driver Rest Hours)</strong>: Explains the labor safety rule requiring $&gt;8$ hours mandatory rest between intercity shifts.</li>
+<li><strong>2D Seat Matrix Generation</strong>: Demonstrates mathematical coordinate generation ($R \times C$) with automatic aisle gap insertion.</li>
+<li><strong>Normal Case</strong>: Assigning driver to Shift B starting 9 hours after Shift A completes.</li>
+<li><strong>Invalid / Failure Case</strong>: Assigning driver to Shift B starting 5 hours after Shift A (fails with rest violation).</li>
+<li><strong>Boundary Case</strong>: Shift gap of exactly 8 hours and 0 minutes.</li>
+</ul>
+<h3>4. Defect Discovered &amp; Remediation Walkthrough (<code>DEF-006</code>)</h3>
+<ul>
+<li><strong>Defect</strong>: Driver roster scheduler accepted overlapping assignments without checking the 8-hour rest gap.</li>
+<li><strong>Root Cause</strong>: Validation only checked for direct time interval overlaps (<code>StartA &lt;= EndB &amp;&amp; EndA &gt;= StartB</code>).</li>
+<li><strong>Code Fix</strong>: Added <code>restBufferHours = (newShift.StartTime - previousShift.EndTime).TotalHours; if (restBufferHours &lt; 8.0) throw ...</code> in <code>DriverService.cs</code>.</li>
+<li><strong>Retest Evidence</strong>: <code>DriverOverlapDetectionTests.cs</code> passed with 100% assertions green.</li>
+</ul>
+<h3>5. Likely Viva Questions &amp; Ready Answers</h3>
+<ul>
+<li><strong>Q</strong>: <em>How did you test the interactive 2D Seat Picker on Flutter without running the emulator?</em>
+<ul>
+<li><strong>A</strong>: <em>Using <code>bloc_test</code> and <code>flutter_test</code>. We tested the <code>SeatPickerBloc</code> state machine directly: validating that <code>SelectSeat(&quot;12A&quot;)</code> emits <code>SeatsHolding</code>, starts a 600-second ticker, and rejects duplicate clicks when seats are held.</em></li>
+</ul>
+</li>
+<li><strong>Q</strong>: <em>What happens if an AI agent attempts to roster a driver who has only rested 6 hours?</em>
+<ul>
+<li><strong>A</strong>: <em>The LangGraph state transitions to <code>ResourceAgent</code>, but the deterministic Python guardrail <code>validate_driver_rest</code> intercepts the proposal and returns <code>is_valid: False</code> before any database record is written.</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>👤 STUDENT 3: Dissanayaka A.D.M.N.K. (IT24100225)</h2>
+<h3>Role: Component 3 Owner — Booking, Hold Concurrency, Payments &amp; Digital Ticketing</h3>
+<h3>1. Architectural Scope &amp; Testing Responsibilities</h3>
+<ul>
+<li><strong>Scope</strong>: 10-minute temporary seat hold concurrency locks (<code>BR-HOLD-001</code>), payment sandbox gateway, cryptographic HMAC-SHA256 QR ticket issuance (<code>BR-HMAC-001</code>), tiered refunds (<code>BR-REFUND-001</code>), and AI Booking &amp; Policy Agent.</li>
+<li><strong>Testing Tools</strong>: <strong>.NET 8 xUnit</strong> (<code>BookingTests.cs</code>), <strong>k6 &amp; Python Benchmark Runner</strong> (<code>run_concurrency_benchmarks.py</code>), <strong>Vitest</strong> (<code>BookingManifest.test.jsx</code>), <strong>Flutter Test</strong> (<code>ticket_wallet_test.dart</code>), <strong>Pytest</strong> (<code>test_booking_agent.py</code>).</li>
+</ul>
+<h3>2. Live Viva Demonstration Commands</h3>
+<pre><code class="language-bash"># 1. Demonstrate Seat Hold Concurrency, HMAC Tampering &amp; Tiered Refunds
+dotnet test backend/WayPoint.sln --filter &quot;FullyQualifiedName~BookingTests&quot;
+
+# 2. Demonstrate Live High-Concurrency Load Benchmark
+python tests/performance/run_concurrency_benchmarks.py
+
+# 3. Demonstrate Web Booking Manifest Monitor Tests
+cd web &amp;&amp; npx vitest run src/features/bookings/__tests__/BookingManifest.test.jsx
+
+# 4. Demonstrate Mobile Ticket Wallet QR Code Tests
+cd mobile &amp;&amp; flutter test test/features/ticket_wallet_test.dart
+</code></pre>
+<h3>3. Key Test Scenarios &amp; Invariants to Explain</h3>
+<ul>
+<li><strong><code>BR-HOLD-001</code> (Concurrency &amp; Double-Booking Prevention)</strong>: Two concurrent requests fire simultaneously for Seat <code>12A</code>. Exactly one receives 200 OK and one receives 409 Conflict.</li>
+<li><strong><code>BR-REFUND-001</code> (Tiered Refund Schedule)</strong>:
+<ul>
+<li>Cancellation $&gt;24$h before departure: 90% refund.</li>
+<li>Cancellation $12\text{--}24$h before departure: 50% refund.</li>
+<li>Cancellation $&lt;12$h before departure: 0% refund.</li>
+</ul>
+</li>
+<li><strong><code>BR-HMAC-001</code> (Cryptographic Anti-Tamper QR Pass)</strong>: Generates HMAC-SHA256 hash using server secret; demonstrates that altering a single character in the payload causes immediate rejection upon conductor scan.</li>
+</ul>
+<h3>4. Defects Discovered &amp; Remediation Walkthrough (<code>DEF-001</code>, <code>DEF-003</code>, <code>DEF-007</code>)</h3>
+<ul>
+<li><strong><code>DEF-001</code></strong>: Concurrency race condition allowed simultaneous hold requests to both succeed. Remediation: Added EF Core optimistic concurrency tokens (<code>xmin</code>) and atomic transactions.</li>
+<li><strong><code>DEF-003</code></strong>: Floating-point precision bug in 50% refund calculation. Remediation: Converted all calculations to C# <code>decimal</code> with <code>Math.Round(..., MidpointRounding.AwayFromZero)</code>.</li>
+<li><strong><code>DEF-007</code></strong>: QR ticket payload only hashed booking reference, allowing attackers to forge seat numbers. Remediation: Updated HMAC to bind <code>WP|REF:...|SRV:...|SEATS:...|PASS:...|HMAC:...</code>.</li>
+</ul>
+<h3>5. Likely Viva Questions &amp; Ready Answers</h3>
+<ul>
+<li><strong>Q</strong>: <em>How do you simulate race conditions deterministically in xUnit?</em>
+<ul>
+<li><strong>A</strong>: <em>In <code>BookingTests.cs</code>, we instantiate two separate <code>DbContext</code> instances pointing to the same database. We launch two controller tasks using <code>Task.WhenAll(task1, task2)</code>. We assert that the status codes contain exactly one 200 OK and one 409 Conflict.</em></li>
+</ul>
+</li>
+<li><strong>Q</strong>: <em>What were the P95 latency and throughput results from your k6/python benchmark?</em>
+<ul>
+<li><strong>A</strong>: <em>Under 25 concurrent workers, our seat hold endpoint achieved 12.35 requests/sec with a P50 median latency of 1924ms, successfully rejecting concurrent attempts without deadlocking.</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>👤 STUDENT 4: Dineth sasmitha J.S.D. (IT24102912)</h2>
+<h3>Role: Component 4 Owner — Disruption Mitigation, AI Safety, Approval Gate &amp; Conductor Scanner</h3>
+<h3>1. Architectural Scope &amp; Testing Responsibilities</h3>
+<ul>
+<li><strong>Scope</strong>: Disruption incident intake, passenger blast radius analysis, multi-agent AI rebooking orchestration, Transport Manager approval gate (<code>BR-APPROVAL-001</code>), mobile conductor QR camera scanner, and Validation &amp; Safety Agent.</li>
+<li><strong>Testing Tools</strong>: <strong>.NET 8 xUnit</strong> (<code>DisruptionTests.cs</code>), <strong>Pytest &amp; LangGraph</strong> (<code>test_safety_agent.py</code>, <code>test_safe_failure.py</code>, <code>test_tool_registry.py</code>), <strong>Vitest</strong> (<code>DisruptionHub.test.jsx</code>), <strong>Flutter Test</strong> (<code>conductor_tools_test.dart</code>, <code>disruption_alert_test.dart</code>).</li>
+</ul>
+<h3>2. Live Viva Demonstration Commands</h3>
+<pre><code class="language-bash"># 1. Demonstrate Disruption Management, Approval State Machine &amp; Audit Tests
+dotnet test backend/WayPoint.sln --filter &quot;FullyQualifiedName~DisruptionTests&quot;
+
+# 2. Demonstrate Closed-Loop Cross-Platform Integration Workflow (Fig. 2)
+pytest tests/e2e/test_closed_loop_workflow.py -v
+
+# 3. Demonstrate AI Tool Allow-List, Guardrails &amp; Safe-Failure Tests
+cd ai &amp;&amp; pytest tests/test_safety_agent.py tests/test_safe_failure.py tests/test_tool_registry.py -v
+
+# 4. Demonstrate Web Disruption Hub &amp; Manager Approval Gate
+cd web &amp;&amp; npx vitest run src/features/disruptions/__tests__/DisruptionHub.test.jsx
+</code></pre>
+<h3>3. Key Test Scenarios &amp; Invariants to Explain</h3>
+<ul>
+<li><strong><code>BR-APPROVAL-001</code> (Manager Approval Gate)</strong>: Explains why timetable delays $&gt;15$ minutes or route cancellations CANNOT be auto-executed and must wait in <code>PendingApproval</code> status for a human manager.</li>
+<li><strong><code>BR-AITOOL-001</code> (Strict 10-Tool Allow-List)</strong>: Demonstrates that the AI microservice rejects any tool outside the 10 allow-listed tools.</li>
+<li><strong><code>FR-AI-004</code> (Safe-Failure Circuit Breaker)</strong>: Demonstrates that 3 consecutive failures trip the circuit breaker and return a safe error object instead of crashing or retrying infinitely.</li>
+<li><strong><code>FR-AI-008</code> (Prompt Injection Defusing)</strong>: Demonstrates that jailbreak attempts in incident notes are stripped and quarantined.</li>
+</ul>
+<h3>4. Defects Discovered &amp; Remediation Walkthrough (<code>DEF-004</code>, <code>DEF-005</code>, <code>DEF-008</code>)</h3>
+<ul>
+<li><strong><code>DEF-004</code></strong>: Boundary condition allowed a 16-minute delay to execute without Manager Approval. Remediation: Corrected comparison from <code>&gt;= 20</code> to <code>&gt; 15</code> in <code>ApprovalService.cs</code>.</li>
+<li><strong><code>DEF-005</code></strong>: Prompt injection vulnerability in disruption description notes. Remediation: Built <code>sanitize_user_input</code> and <code>wrap_user_input</code> regex guardrails.</li>
+<li><strong><code>DEF-008</code></strong>: Indefinite retry loop on gateway outage causing microservice thread starvation. Remediation: Built <code>SafeFailureManager</code> with <code>MAX_RETRIES = 3</code> and short-circuit return.</li>
+</ul>
+<h3>5. Likely Viva Questions &amp; Ready Answers</h3>
+<ul>
+<li><strong>Q</strong>: <em>How does your testing prove that an AI agent cannot confirm a payment or modify a schedule on its own?</em>
+<ul>
+<li><strong>A</strong>: <em>In <code>test_tool_registry.py</code> and <code>test_safety_agent.py</code>, we assert that neither <code>PaymentCharge</code> nor <code>DirectScheduleUpdate</code> exist in the 10 allow-listed tools. The safety agent only possesses <code>create_rebooking_proposal</code> and <code>request_manager_approval</code>. Operational database mutations are only executed when a human manager sends an authenticated <code>POST /api/v1/approval/decide</code> request.</em></li>
+</ul>
+</li>
+<li><strong>Q</strong>: <em>Can you run the closed-loop E2E test right now to prove that all tiers work together?</em>
+<ul>
+<li><strong>A</strong>: <em>Yes. We run <code>pytest tests/e2e/test_closed_loop_workflow.py -v</code>. It validates the 7 steps: Health $\rightarrow$ Search $\rightarrow$ Hold $\rightarrow$ Disruption Intake $\rightarrow$ Manager Approval $\rightarrow$ Payment/QR $\rightarrow$ Conductor Verification in under 7 seconds.</em></li>
+</ul>
+</li>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SE3110 Test Case Document</title>
+<style>
+  @page {
+    size: A4;
+    margin: 1.8cm 1.5cm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1f2328;
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 11pt;
+  }
+  h1 {
+    color: #0969da;
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 0.3em;
+    font-size: 20pt;
+    margin-top: 0;
+  }
+  h2 {
+    color: #1f2328;
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 0.25em;
+    font-size: 14pt;
+    margin-top: 1.5em;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #24292f;
+    font-size: 12pt;
+    margin-top: 1.2em;
+    page-break-after: avoid;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #fbfcfd;
+  }
+  code {
+    background-color: rgba(175, 184, 193, 0.2);
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 85%;
+  }
+  pre {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+  blockquote {
+    border-left: 4px solid #0969da;
+    padding: 0.4em 1em;
+    color: #57609a;
+    background-color: #f6f8fa;
+    margin: 1em 0;
+  }
+  hr {
+    border: 0;
+    height: 1px;
+    background: #d0d7de;
+    margin: 1.5em 0;
+  }
+</style>
+</head>
+<body>
+<h1>SE3110 — Software Testing &amp; Quality Evaluation</h1>
+<h2>Comprehensive Test Case Specification Document</h2>
+<h3>Target System: WayPoint — Integrated Full-Stack &amp; Agentic AI Transit Platform</h3>
+<hr />
+<h2>📌 Document Control &amp; Metadata</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Field</th>
+<th style="text-align:left">Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Module</strong></td>
+<td style="text-align:left"><strong>SE3110: Quality Management in Software Engineering</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Academic Year / Semester</strong></td>
+<td style="text-align:left">Year 3, Semester 1 — Academic Year 2026</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Institution</strong></td>
+<td style="text-align:left">Sri Lanka Institute of Information Technology (SLIIT)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Project Title</strong></td>
+<td style="text-align:left">WayPoint Transit Operations &amp; Journey Planning Platform</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Document Type</strong></td>
+<td style="text-align:left">Comprehensive Test Case Specification Repository</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Version</strong></td>
+<td style="text-align:left">1.0 (Final Release)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Date</strong></td>
+<td style="text-align:left">8th October 2026</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Total Test Cases</strong></td>
+<td style="text-align:left">68 Structured Test Specifications (Traceable to 448 Automated Executions)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Overall Pass Rate</strong></td>
+<td style="text-align:left"><strong>100% (448 / 448 automated test instances passed)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>👥 Student Component &amp; Responsibility Matrix</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Student Name</th>
+<th style="text-align:left">Student IT Number</th>
+<th style="text-align:left">Assigned Component</th>
+<th style="text-align:left">Testing Focus &amp; Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Vinranga M.W.S</strong></td>
+<td style="text-align:left"><strong>IT24100374</strong></td>
+<td style="text-align:left"><strong>Component 1</strong>:<br>Journey Planning &amp; Routes</td>
+<td style="text-align:left">Route catalogue, timetables, connecting transfer window logic (<code>BR-TRANSFER-001</code>), journey search, Journey Agent.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Mohomed N.M.N.</strong><br><em>(Leader)</em></td>
+<td style="text-align:left"><strong>IT24102476</strong></td>
+<td style="text-align:left"><strong>Component 2</strong>:<br>Fleet, 2D Seats &amp; Operations</td>
+<td style="text-align:left">Bus fleet inventory, 2D seat map designer, driver rostering rest hours (<code>BR-TIME-001</code>), Resource Feasibility Agent.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Dissanayaka A.D.M.N.K.</strong></td>
+<td style="text-align:left"><strong>IT24100225</strong></td>
+<td style="text-align:left"><strong>Component 3</strong>:<br>Seat Hold, Payments &amp; QR</td>
+<td style="text-align:left">10-minute hold concurrency lock (<code>BR-HOLD-001</code>), payment sandbox, HMAC-SHA256 QR tickets, tiered refunds (<code>BR-REFUND-001</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Dineth sasmitha J.S.D.</strong></td>
+<td style="text-align:left"><strong>IT24102912</strong></td>
+<td style="text-align:left"><strong>Component 4</strong>:<br>Disruption, Approval &amp; Safety</td>
+<td style="text-align:left">Disruption intake, passenger blast radius, Transport Manager approval gate (<code>BR-APPROVAL-001</code>), conductor scanner, Safety Agent.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>1. Testing Category 1: Authoritative Backend &amp; API Testing (.NET 8 / xUnit)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Component / Feature</th>
+<th style="text-align:left">Test Type</th>
+<th style="text-align:left">Preconditions</th>
+<th style="text-align:left">Inputs &amp; Execution Steps</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-001</code></strong></td>
+<td style="text-align:left">Booking / Tiered Refund</td>
+<td style="text-align:left">Unit (Normal)</td>
+<td style="text-align:left">Booking exists $&gt;24$h before departure</td>
+<td style="text-align:left">Calculate refund for Rs. 5,700 fare at $T-30$ hours.</td>
+<td style="text-align:left">90% refund (Rs. 5,130), 10% cancellation fee retained.</td>
+<td style="text-align:left">Exact Rs. 5,130 refund calculated.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-REFUND-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-002</code></strong></td>
+<td style="text-align:left">Booking / Tiered Refund</td>
+<td style="text-align:left">Unit (Boundary)</td>
+<td style="text-align:left">Booking exists $12\text{--}24$h before departure</td>
+<td style="text-align:left">Calculate refund for Rs. 5,700 fare at $T-18$ hours.</td>
+<td style="text-align:left">50% refund (Rs. 2,850), 50% cancellation fee.</td>
+<td style="text-align:left">Exact Rs. 2,850 refund calculated.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-REFUND-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-003</code></strong></td>
+<td style="text-align:left">Booking / Tiered Refund</td>
+<td style="text-align:left">Unit (Edge/Fail)</td>
+<td style="text-align:left">Booking exists $&lt;12$h before departure</td>
+<td style="text-align:left">Calculate refund for Rs. 5,700 fare at $T-6$ hours.</td>
+<td style="text-align:left">0% refund (Rs. 0.00), non-refundable message returned.</td>
+<td style="text-align:left">Rs. 0 refund returned; cancellation fee 100%.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-REFUND-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-004</code></strong></td>
+<td style="text-align:left">Security / HMAC QR Ticket</td>
+<td style="text-align:left">Unit (Normal)</td>
+<td style="text-align:left">Legitimate booking reference <code>WP-7B92K1</code></td>
+<td style="text-align:left">Invoke <code>GenerateTicketPayloadAsync</code> with valid booking data.</td>
+<td style="text-align:left">Returns HMAC-SHA256 signed payload string with <code>WP|</code> prefix.</td>
+<td style="text-align:left">Valid 64-char HMAC token produced and verified.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-HMAC-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-005</code></strong></td>
+<td style="text-align:left">Security / HMAC QR Ticket</td>
+<td style="text-align:left">Unit (Invalid/Tamper)</td>
+<td style="text-align:left">Authentic QR ticket generated</td>
+<td style="text-align:left">Modify seat from <code>4A</code> to <code>1A</code> in payload and call <code>VerifyTicketQrAsync</code>.</td>
+<td style="text-align:left">Verification fails with <code>Security Violation: Tampered Signature</code>.</td>
+<td style="text-align:left">IsValid=False; Security violation flagged.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-HMAC-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-006</code></strong></td>
+<td style="text-align:left">Booking / Payment Sandbox</td>
+<td style="text-align:left">Unit (Normal)</td>
+<td style="text-align:left">Sandbox gateway active</td>
+<td style="text-align:left">Submit card <code>4000 0000 0000 0001</code> with amount Rs. 5,700.</td>
+<td style="text-align:left">Gateway returns <code>IsSuccess=True</code> with <code>TXN-</code> transaction ID.</td>
+<td style="text-align:left">Status <code>Success</code>, <code>TXN-</code> generated.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>US-PASS-004</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-007</code></strong></td>
+<td style="text-align:left">Booking / Payment Sandbox</td>
+<td style="text-align:left">Unit (Failure)</td>
+<td style="text-align:left">Sandbox gateway active</td>
+<td style="text-align:left">Submit card <code>4000 0000 0000 0002</code> (declined preset).</td>
+<td style="text-align:left">Gateway returns <code>IsSuccess=False</code>, GatewayStatus=<code>Declined</code>.</td>
+<td style="text-align:left">IsSuccess=False, Declined status returned.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>US-PASS-004</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-008</code></strong></td>
+<td style="text-align:left">Disruption / Impact Severity</td>
+<td style="text-align:left">Unit (Normal)</td>
+<td style="text-align:left">Disrupted service logged</td>
+<td style="text-align:left">Timetable shift is 10 minutes ($&lt;15$ min).</td>
+<td style="text-align:left">Impact classified as <code>Low</code>; auto-executable by operator.</td>
+<td style="text-align:left">Impact=<code>Low</code> returned.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-DISRUPT-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-009</code></strong></td>
+<td style="text-align:left">Disruption / Impact Severity</td>
+<td style="text-align:left">Unit (Boundary)</td>
+<td style="text-align:left">Disrupted service logged</td>
+<td style="text-align:left">Timetable shift is exactly 15 minutes.</td>
+<td style="text-align:left">Impact classified as <code>Low</code> (inclusive threshold).</td>
+<td style="text-align:left">Impact=<code>Low</code> returned.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-DISRUPT-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-010</code></strong></td>
+<td style="text-align:left">Disruption / Impact Severity</td>
+<td style="text-align:left">Unit (Boundary)</td>
+<td style="text-align:left">Disrupted service logged</td>
+<td style="text-align:left">Timetable shift is 16 minutes ($&gt;15$ min).</td>
+<td style="text-align:left">Impact classified as <code>High</code>; requires Transport Manager sign-off.</td>
+<td style="text-align:left">Impact=<code>High</code> returned.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-APPROVAL-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-011</code></strong></td>
+<td style="text-align:left">Fleet / Driver Rest Rules</td>
+<td style="text-align:left">Unit (Normal)</td>
+<td style="text-align:left">Driver assigned to Shift A ending 10:00</td>
+<td style="text-align:left">Assign Driver to Shift B starting 19:00 (9 hrs gap).</td>
+<td style="text-align:left">Assignment accepted; rest buffer exceeds mandatory 8 hours.</td>
+<td style="text-align:left">Validation passed; no overlap.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-TIME-001</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-BE-012</code></strong></td>
+<td style="text-align:left">Fleet / Driver Rest Rules</td>
+<td style="text-align:left">Unit (Invalid)</td>
+<td style="text-align:left">Driver assigned to Shift A ending 10:00</td>
+<td style="text-align:left">Assign Driver to Shift B starting 15:00 (5 hrs gap).</td>
+<td style="text-align:left">Assignment rejected; violates 8-hour mandatory rest gap.</td>
+<td style="text-align:left">Validation failed with labor safety exception.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-TIME-001</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Testing Category 2: Relational Database &amp; Concurrency Testing (PostgreSQL / EF Core)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Component / Feature</th>
+<th style="text-align:left">Test Type</th>
+<th style="text-align:left">Preconditions</th>
+<th style="text-align:left">Inputs &amp; Execution Steps</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-DB-001</code></strong></td>
+<td style="text-align:left">SeatHold / Concurrency Token</td>
+<td style="text-align:left">Integration (Race Condition)</td>
+<td style="text-align:left">Service active, seat <code>12A</code> available in DB</td>
+<td style="text-align:left">Fire two parallel asynchronous hold requests for seat <code>12A</code> simultaneously.</td>
+<td style="text-align:left">Exactly 1 request receives HTTP <code>200/201 OK</code>; exactly 1 request receives HTTP <code>409 Conflict</code>.</td>
+<td style="text-align:left">Request 1 = 200 OK; Request 2 = 409 Conflict. Zero double-holds.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-02</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-DB-002</code></strong></td>
+<td style="text-align:left">SeatHold / Expiry Lifecycle</td>
+<td style="text-align:left">Integration (Boundary)</td>
+<td style="text-align:left">Hold created at $T_0$ with 10-minute expiry</td>
+<td style="text-align:left">Query seat status at $T_0 + 9\text{m }50\text{s}$ vs $T_0 + 10\text{m }01\text{s}$.</td>
+<td style="text-align:left">Seat status transitions from <code>Held</code> to <code>Available</code> after 10 minutes.</td>
+<td style="text-align:left">Hold expired automatically; seat returned to available inventory.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-HOLD-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-DB-003</code></strong></td>
+<td style="text-align:left">Identity / Unique Constraint</td>
+<td style="text-align:left">Integration (Invalid)</td>
+<td style="text-align:left">User <code>passenger@waypoint.lk</code> exists in DB</td>
+<td style="text-align:left">Attempt <code>INSERT</code> with duplicate email address.</td>
+<td style="text-align:left">PostgreSQL throws <code>23505 UniqueViolation</code>; EF Core throws <code>DbUpdateException</code>.</td>
+<td style="text-align:left">HTTP 400/409 duplicate registration rejected.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Security / DB</td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-DB-004</code></strong></td>
+<td style="text-align:left">Audit / Log Hash Chain</td>
+<td style="text-align:left">Integration (Data Integrity)</td>
+<td style="text-align:left">Operational change committed</td>
+<td style="text-align:left">Verify SHA-256 tamper-evident hash chain linking log entries.</td>
+<td style="text-align:left">Each audit entry hashes previous record's hash + current payload.</td>
+<td style="text-align:left">Hash integrity verified across log series.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-AUDIT-01</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-DB-005</code></strong></td>
+<td style="text-align:left">Fleet / Seat Layout Matrix</td>
+<td style="text-align:left">Integration (Constraint)</td>
+<td style="text-align:left">Bus layout defined with 10 rows $\times$ 4 cols</td>
+<td style="text-align:left">Insert seats violating foreign key or matrix bounds.</td>
+<td style="text-align:left">Constraint violation prevents orphaned seat records.</td>
+<td style="text-align:left">Relational integrity strictly maintained.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-FLEET-01</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Testing Category 3: React Web Frontend Testing (Vitest &amp; RTL)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Component / Feature</th>
+<th style="text-align:left">Test Type</th>
+<th style="text-align:left">Preconditions</th>
+<th style="text-align:left">Inputs &amp; Execution Steps</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-001</code></strong></td>
+<td style="text-align:left">Journey / RouteManager</td>
+<td style="text-align:left">Component (Normal)</td>
+<td style="text-align:left">Operator logged in</td>
+<td style="text-align:left">Render <code>RouteManagerPage</code> with mocked catalogue data.</td>
+<td style="text-align:left">Renders route list table, corridor badges, and stop creation modal.</td>
+<td style="text-align:left">Component rendered cleanly; all columns visible.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-03</code></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-002</code></strong></td>
+<td style="text-align:left">Fleet / SeatLayoutDesigner</td>
+<td style="text-align:left">Component (Normal)</td>
+<td style="text-align:left">Fleet manager logged in</td>
+<td style="text-align:left">Render <code>SeatLayoutDesignerPage</code> and select 2+2 layout preset.</td>
+<td style="text-align:left">Generates 4-column seat grid with central aisle gap visualization.</td>
+<td style="text-align:left">Grid rendered; seat click toggles availability state.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-03</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-003</code></strong></td>
+<td style="text-align:left">Bookings / ManifestMonitor</td>
+<td style="text-align:left">Component (Normal)</td>
+<td style="text-align:left">Active service selected</td>
+<td style="text-align:left">Render <code>BookingManifestMonitorPage</code> with passenger list.</td>
+<td style="text-align:left">Displays real-time manifest, hold countdown monitor, and search bar.</td>
+<td style="text-align:left">Filter input filters passenger rows instantly.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-03</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-004</code></strong></td>
+<td style="text-align:left">Disruptions / DisruptionHub</td>
+<td style="text-align:left">Component (Normal)</td>
+<td style="text-align:left">Transport Manager logged in</td>
+<td style="text-align:left">Render <code>DisruptionHubPage</code> with high-impact rebooking proposal.</td>
+<td style="text-align:left">Disruption details shown; Manager Approval button enabled.</td>
+<td style="text-align:left">&quot;Approve Rebooking&quot; triggers action handler.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-03</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-005</code></strong></td>
+<td style="text-align:left">Admin / UserGovernance</td>
+<td style="text-align:left">Component (Normal)</td>
+<td style="text-align:left">Admin logged in</td>
+<td style="text-align:left">Render <code>AdminUsersPage</code> with locked user account.</td>
+<td style="text-align:left">Displays lockout badge and provides &quot;Unlock Account&quot; button.</td>
+<td style="text-align:left">Account unlocked; table state reflects active status.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-SEC-01</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-WEB-006</code></strong></td>
+<td style="text-align:left">Auth / RBAC Route Guard</td>
+<td style="text-align:left">Protected Route</td>
+<td style="text-align:left">Unauthenticated visitor</td>
+<td style="text-align:left">Attempt navigation to <code>/admin/users</code> or <code>/disruptions/manage</code>.</td>
+<td style="text-align:left">Protected route intercepts navigation and redirects to <code>/login</code>.</td>
+<td style="text-align:left">User redirected to <code>/login</code> with returnUrl set.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-SEC-02</code></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>4. Testing Category 4: Flutter Mobile Client Testing (flutter_test)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Component / Feature</th>
+<th style="text-align:left">Test Type</th>
+<th style="text-align:left">Preconditions</th>
+<th style="text-align:left">Inputs &amp; Execution Steps</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-001</code></strong></td>
+<td style="text-align:left">Journey / SearchScreen</td>
+<td style="text-align:left">Widget (Normal)</td>
+<td style="text-align:left">App launched on Explore tab</td>
+<td style="text-align:left">Select Origin=&quot;Colombo&quot;, Dest=&quot;Kandy&quot;, Date=&quot;2026-10-15&quot;.</td>
+<td style="text-align:left">Displays timetable card list with departure times and fare badges.</td>
+<td style="text-align:left">Journey cards displayed with corridor chips.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-002</code></strong></td>
+<td style="text-align:left">Fleet / SeatPickerBloc</td>
+<td style="text-align:left">Unit (State Transition)</td>
+<td style="text-align:left">Service seat layout loaded</td>
+<td style="text-align:left">Dispatch <code>SelectSeat(&quot;12A&quot;)</code> followed by <code>HoldSeats()</code>.</td>
+<td style="text-align:left">State transitions: <code>Loaded</code> $\rightarrow$ <code>SeatsHolding</code> $\rightarrow$ <code>SeatsHeld</code>.</td>
+<td style="text-align:left">State emitted with 600s countdown timer.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-003</code></strong></td>
+<td style="text-align:left">Fleet / SeatPickerBloc</td>
+<td style="text-align:left">Unit (Invalid/Duplicate)</td>
+<td style="text-align:left">Seat <code>12A</code> already selected</td>
+<td style="text-align:left">Dispatch <code>SelectSeat(&quot;12A&quot;)</code> again.</td>
+<td style="text-align:left">Duplicate selection ignored; selection count remains 1.</td>
+<td style="text-align:left">Duplicate rejected; state preserved.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-004</code></strong></td>
+<td style="text-align:left">Fleet / ReviewSubmission</td>
+<td style="text-align:left">Widget (Validation)</td>
+<td style="text-align:left">Passenger completed journey</td>
+<td style="text-align:left">Tap &quot;Submit Review&quot; with 0 stars selected.</td>
+<td style="text-align:left">Form displays error: &quot;Please select a star rating&quot;.</td>
+<td style="text-align:left">Validation banner displayed; API call blocked.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-005</code></strong></td>
+<td style="text-align:left">Tickets / TicketWallet</td>
+<td style="text-align:left">Widget (Normal)</td>
+<td style="text-align:left">Confirmed booking exists</td>
+<td style="text-align:left">Navigate to Tickets tab.</td>
+<td style="text-align:left">Renders dynamic QR barcode and brightness booster control.</td>
+<td style="text-align:left">QR widget rendered with booking reference <code>WP-XXXXXX</code>.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-006</code></strong></td>
+<td style="text-align:left">Disruptions / AlertBanner</td>
+<td style="text-align:left">Widget (Normal)</td>
+<td style="text-align:left">Disruption broadcasted</td>
+<td style="text-align:left">Push alert received for booked service.</td>
+<td style="text-align:left">Displays persistent alert banner with delay info and reroute choice.</td>
+<td style="text-align:left">Alert card displayed with action buttons.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-MOB-007</code></strong></td>
+<td style="text-align:left">Conductor / QRScanner</td>
+<td style="text-align:left">Widget (Normal)</td>
+<td style="text-align:left">Conductor logged in</td>
+<td style="text-align:left">Simulate camera scan of valid QR ticket payload.</td>
+<td style="text-align:left">Displays green validation checkmark and passenger boarding button.</td>
+<td style="text-align:left">Valid ticket confirmed; boarding status updated.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-TEST-04</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Testing Category 5: Closed-Loop Cross-Platform Integration &amp; E2E Testing</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Workflow Step</th>
+<th style="text-align:left">Test Level</th>
+<th style="text-align:left">Triggering Actor</th>
+<th style="text-align:left">Execution Steps &amp; Target Endpoints</th>
+<th style="text-align:left">Expected System Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-001</code></strong></td>
+<td style="text-align:left">Step 1: Health &amp; Connectivity</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">System Client</td>
+<td style="text-align:left"><code>GET /health</code></td>
+<td style="text-align:left">Status=200, <code>database=&quot;Connected&quot;</code>.</td>
+<td style="text-align:left">HTTP 200, DB healthy.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Baseline</td>
+<td style="text-align:left">Shared</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-002</code></strong></td>
+<td style="text-align:left">Step 2: Journey Exploration</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Passenger (Mobile)</td>
+<td style="text-align:left"><code>POST /api/v1/journeysearch/search</code></td>
+<td style="text-align:left">Returns matching bus services between Colombo &amp; Kandy.</td>
+<td style="text-align:left">Search returned valid service payload.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-TRANSFER-001</code></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-003</code></strong></td>
+<td style="text-align:left">Step 3: Interactive Seat Hold</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Passenger (Mobile)</td>
+<td style="text-align:left"><code>POST /api/v1/seathold</code> (Seat <code>12A</code>)</td>
+<td style="text-align:left">Returns 201 Created with 10-minute hold lock; seat unavailable to others.</td>
+<td style="text-align:left">Hold lock created; HTTP 200/201.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-HOLD-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-004</code></strong></td>
+<td style="text-align:left">Step 4: Disruption &amp; AI Proposal</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Dispatcher (Web)</td>
+<td style="text-align:left"><code>POST /api/v1/disruption/cases</code></td>
+<td style="text-align:left">LangGraph AI generates rebooking plan; marks status <code>PendingApproval</code>.</td>
+<td style="text-align:left">Case logged; impact evaluated.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>FR-AI-003</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-005</code></strong></td>
+<td style="text-align:left">Step 5: Manager Approval Gate</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Manager (Web)</td>
+<td style="text-align:left"><code>POST /api/v1/approval/decide</code></td>
+<td style="text-align:left">Decision recorded; high-impact rebooking plan approved for execution.</td>
+<td style="text-align:left">Manager approval registered.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-APPROVAL-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-006</code></strong></td>
+<td style="text-align:left">Step 6: Checkout &amp; QR Issuance</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Passenger (Mobile)</td>
+<td style="text-align:left"><code>POST /api/v1/payment/charge</code></td>
+<td style="text-align:left">Commits payment, assigns seat, generates HMAC-SHA256 signed QR pass.</td>
+<td style="text-align:left">QR generated with tamper-proof HMAC.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-HMAC-001</code></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-E2E-007</code></strong></td>
+<td style="text-align:left">Step 7: Conductor Boarding Scan</td>
+<td style="text-align:left">E2E Integration</td>
+<td style="text-align:left">Conductor (Mobile)</td>
+<td style="text-align:left"><code>POST /api/v1/ticket/verify-qr</code></td>
+<td style="text-align:left">Validates HMAC signature; marks ticket status as <code>Boarded</code>.</td>
+<td style="text-align:left">Signature verified; boarding complete.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Closed-Loop</td>
+<td style="text-align:left">Dineth</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. Testing Category 6: Non-Functional Testing (Performance &amp; Security — REQUIRED)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">Non-Functional Area</th>
+<th style="text-align:left">Tool / Framework</th>
+<th style="text-align:left">Test Configuration</th>
+<th style="text-align:left">Execution Steps &amp; Payload</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Measured Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-PERF-001</code></strong></td>
+<td style="text-align:left">Concurrency / Load Testing</td>
+<td style="text-align:left">k6 &amp; Python Benchmark</td>
+<td style="text-align:left">20 concurrent VUs, 50 requests</td>
+<td style="text-align:left"><code>GET /health</code> under concurrent load.</td>
+<td style="text-align:left">Throughput $\ge 5$ req/s, P95 $&lt; 5000$ms.</td>
+<td style="text-align:left"><strong>7.76 req/s</strong>, P50=1243ms, P95=4645ms, 0% errors.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-PERF-002</code></strong></td>
+<td style="text-align:left">High-Traffic Search Latency</td>
+<td style="text-align:left">k6 &amp; Python Benchmark</td>
+<td style="text-align:left">20 concurrent VUs, 50 requests</td>
+<td style="text-align:left"><code>POST /journeysearch/search</code> concurrent search queries.</td>
+<td style="text-align:left">P95 latency $&lt; 1000$ms, 0 server crashes.</td>
+<td style="text-align:left"><strong>28.19 req/s</strong>, P50=574ms, P95=624ms, 0% 500 errors.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-PERF-003</code></strong></td>
+<td style="text-align:left">Seat Hold Collision Contention</td>
+<td style="text-align:left">k6 &amp; Python Benchmark</td>
+<td style="text-align:left">25 concurrent VUs, 50 requests</td>
+<td style="text-align:left">Rapid concurrent seat hold attempts on single seat <code>12A</code>.</td>
+<td style="text-align:left">No double bookings; atomic isolation maintained.</td>
+<td style="text-align:left"><strong>12.35 req/s</strong>, P50=1924ms, atomic barrier verified.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-001</code></strong></td>
+<td style="text-align:left">Forged JWT Token Rejection</td>
+<td style="text-align:left">Python Requests &amp; Pytest</td>
+<td style="text-align:left">Forged HS256 JWT token</td>
+<td style="text-align:left"><code>GET /api/v1/user/profile</code> with tampered role claim (<code>Admin</code>).</td>
+<td style="text-align:left">Rejects with HTTP 401 Unauthorized; invalid signature.</td>
+<td style="text-align:left"><strong>HTTP 401</strong>; access denied.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-002</code></strong></td>
+<td style="text-align:left">RBAC Privilege Escalation</td>
+<td style="text-align:left">Python Requests &amp; Pytest</td>
+<td style="text-align:left">Valid Passenger token</td>
+<td style="text-align:left"><code>POST /api/v1/bus</code> (attempting fleet vehicle creation).</td>
+<td style="text-align:left">Rejects with HTTP 403 Forbidden; role unauthorized.</td>
+<td style="text-align:left"><strong>HTTP 403 / 401</strong>; blocked.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-003</code></strong></td>
+<td style="text-align:left">SQL Injection Immunity</td>
+<td style="text-align:left">Python Requests &amp; Pytest</td>
+<td style="text-align:left">Parameterized EF Core queries</td>
+<td style="text-align:left">Search query with <code>' OR 1=1 --</code> and <code>'; DROP TABLE;</code>.</td>
+<td style="text-align:left">No SQL syntax errors; no database schema leaks; status $\ne 500$.</td>
+<td style="text-align:left"><strong>Status 200/404</strong>; 0 crashes; safe parameterized query.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Sethum</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-004</code></strong></td>
+<td style="text-align:left">HMAC QR Tamper Detection</td>
+<td style="text-align:left">Python Pytest &amp; HMAC</td>
+<td style="text-align:left">Altered seat data in QR string</td>
+<td style="text-align:left">Modify seat from <code>4B</code> to <code>1A</code> in cryptographic payload.</td>
+<td style="text-align:left">Signature mismatch detected; rejected immediately.</td>
+<td style="text-align:left"><strong>HMAC signature mismatch flagged</strong>; forgery prevented.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Mithila</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-005</code></strong></td>
+<td style="text-align:left">AI Prompt Injection Defusing</td>
+<td style="text-align:left">Python Pytest &amp; Regex</td>
+<td style="text-align:left">Adversarial jailbreak string</td>
+<td style="text-align:left"><code>sanitize_user_input(&quot;IGNORE PREVIOUS INSTRUCTIONS...&quot;)</code>.</td>
+<td style="text-align:left">Injection markers stripped; user input safely wrapped in tags.</td>
+<td style="text-align:left"><strong>Injection pattern neutralized</strong>; prompt defused.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-NF-SEC-006</code></strong></td>
+<td style="text-align:left">Safe-Failure Fault Tolerance</td>
+<td style="text-align:left">Python Pytest &amp; Asyncio</td>
+<td style="text-align:left">Simulated 3 cascading outages</td>
+<td style="text-align:left">Agent fails 3 consecutive times during rebooking execution.</td>
+<td style="text-align:left">Circuit breaker trips; workflow enters <code>SafeFailure</code> (FR-AI-004).</td>
+<td style="text-align:left"><strong>SafeFailure status emitted</strong>; zero unhandled crashes.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>7. Testing Category 7: Agentic AI Testing &amp; Evaluation (Pytest / LangGraph)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Test Case ID</th>
+<th style="text-align:left">AI Subsystem Area</th>
+<th style="text-align:left">Test Type</th>
+<th style="text-align:left">Preconditions</th>
+<th style="text-align:left">Inputs &amp; Execution Steps</th>
+<th style="text-align:left">Expected Result</th>
+<th style="text-align:left">Actual Result</th>
+<th style="text-align:left">Status</th>
+<th style="text-align:left">Traceability</th>
+<th style="text-align:left">Member</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-001</code></strong></td>
+<td style="text-align:left">Tool Registry Strict Allow-List</td>
+<td style="text-align:left">Evaluation (Security)</td>
+<td style="text-align:left">Tool registry initialized</td>
+<td style="text-align:left">Query allow-listed tools in AI microservice.</td>
+<td style="text-align:left">Exactly 10 registered tools; unauthorized tools rejected.</td>
+<td style="text-align:left">Exactly 10 tools; strict registry enforced.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-AITOOL-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-002</code></strong></td>
+<td style="text-align:left">LangGraph State Transition</td>
+<td style="text-align:left">Workflow (Normal)</td>
+<td style="text-align:left">Disruption workflow invoked</td>
+<td style="text-align:left">Pass valid disrupted service state through LangGraph graph.</td>
+<td style="text-align:left">5 nodes execute in sequence: Journey $\rightarrow$ Resource $\rightarrow$ Booking $\rightarrow$ Safety $\rightarrow$ End.</td>
+<td style="text-align:left">All 5 nodes executed successfully.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>REQ-AI-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-003</code></strong></td>
+<td style="text-align:left">Driver Rest Hours Guardrail</td>
+<td style="text-align:left">Guardrail (Labor Safety)</td>
+<td style="text-align:left">Replacement driver assigned</td>
+<td style="text-align:left">Replacement driver has 6 hours rest prior to shift.</td>
+<td style="text-align:left">Deterministic guardrail rejects assignment; requires $&gt;8$ hours.</td>
+<td style="text-align:left">Guardrail flagged labor violation.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-TIME-001</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-004</code></strong></td>
+<td style="text-align:left">Bus Seating Capacity Guardrail</td>
+<td style="text-align:left">Guardrail (Physical Limits)</td>
+<td style="text-align:left">Replacement vehicle assigned</td>
+<td style="text-align:left">Replacement bus capacity (40 seats) $&lt;$ affected passengers (45).</td>
+<td style="text-align:left">Guardrail rejects vehicle; capacity deficit flagged.</td>
+<td style="text-align:left">Guardrail rejected allocation.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-FLEET-001</code></td>
+<td style="text-align:left">Nuhadh</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-005</code></strong></td>
+<td style="text-align:left">Manager Approval Gate Override</td>
+<td style="text-align:left">Guardrail (Governance)</td>
+<td style="text-align:left">AI classifies disruption as minor</td>
+<td style="text-align:left">Route cancellation occurs or delay exceeds 15 minutes.</td>
+<td style="text-align:left">Deterministic guardrail forces classification to <code>HighImpact</code>.</td>
+<td style="text-align:left">Guardrail overrode to HighImpact; Manager Gate engaged.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>BR-APPROVAL-001</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>TC-AI-006</code></strong></td>
+<td style="text-align:left">Safe-Failure Consecutive Trip</td>
+<td style="text-align:left">Guardrail (Resilience)</td>
+<td style="text-align:left">Agent encounters network error</td>
+<td style="text-align:left">Re-attempt execution up to retry threshold ($N=3$).</td>
+<td style="text-align:left">Workflow marks status as <code>SafeFailure</code>; zero silent failures.</td>
+<td style="text-align:left">SafeFailure triggered on 3rd failure.</td>
+<td style="text-align:left"><strong>Passed</strong></td>
+<td style="text-align:left"><code>FR-AI-004</code></td>
+<td style="text-align:left">Dineth</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>8. Test Execution Summary Matrix</h2>
+<pre><code>========================================================================================
+                      WAYPOINT AUTOMATED TEST EXECUTION SUMMARY
+========================================================================================
+Test Suite / Subsystem                 Tool / Framework        Total Tests   Passed   Failed
+----------------------------------------------------------------------------------------
+1. Authoritative Backend (.NET 8)      xUnit / Moq / Fluent           82        82        0
+2. Web Frontend Single-Page App        Vitest / Testing Library       36        36        0
+3. Flutter Mobile Application          flutter_test / mocktail        65        65        0
+4. Agentic AI Subsystem (Python)       Pytest / LangGraph            246       246        0
+5. Closed-Loop E2E Workflow            Python / Requests / Pytest      7         7        0
+6. Cross-Service API &amp; DB Integration  Python / Requests / Pytest      6         6        0
+7. Automated Security Audit &amp; Pen-Test Python / Pytest / Cryptography  6         6        0
+----------------------------------------------------------------------------------------
+TOTAL AUTOMATED TEST VERIFICATIONS                                   448       448        0  (100% PASS)
+========================================================================================
+</code></pre>
+
+</body>
+</html>

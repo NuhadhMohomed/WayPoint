@@ -1,0 +1,62 @@
+[
+  {
+    "benchmark_name": "System Health & Readiness Endpoint",
+    "endpoint": "https://waypoint-production-87d7.up.railway.app/health",
+    "concurrency": 20,
+    "total_requests": 50,
+    "total_time_seconds": 3.09,
+    "requests_per_second": 16.19,
+    "status_distribution": {
+      "200": 50
+    },
+    "latency_stats_ms": {
+      "min": 473.4,
+      "avg": 929.64,
+      "p50_median": 932.35,
+      "p90": 1321.86,
+      "p95": 1392.12,
+      "p99": 1412.42,
+      "max": 1412.42
+    }
+  },
+  {
+    "benchmark_name": "Intercity Journey Search (High Volume)",
+    "endpoint": "https://waypoint-production-87d7.up.railway.app/api/v1/journeysearch/search",
+    "concurrency": 20,
+    "total_requests": 50,
+    "total_time_seconds": 1.82,
+    "requests_per_second": 27.5,
+    "status_distribution": {
+      "404": 50
+    },
+    "latency_stats_ms": {
+      "min": 456.25,
+      "avg": 610.67,
+      "p50_median": 523.64,
+      "p90": 858.24,
+      "p95": 867.64,
+      "p99": 884.95,
+      "max": 884.95
+    }
+  },
+  {
+    "benchmark_name": "Seat Hold Concurrency Contention (Double-Booking Barrier)",
+    "endpoint": "https://waypoint-production-87d7.up.railway.app/api/v1/seathold",
+    "concurrency": 25,
+    "total_requests": 50,
+    "total_time_seconds": 1.47,
+    "requests_per_second": 34.04,
+    "status_distribution": {
+      "404": 50
+    },
+    "latency_stats_ms": {
+      "min": 472.85,
+      "avg": 648.15,
+      "p50_median": 627.62,
+      "p90": 793.6,
+      "p95": 838.55,
+      "p99": 872.82,
+      "max": 872.82
+    }
+  }
+]
