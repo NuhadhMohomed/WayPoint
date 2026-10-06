@@ -24,6 +24,19 @@ from agents.safety_agent import safety_agent_node
 logger = logging.getLogger("waypoint.ai.graph")
 
 
+def _route_after_booking(state: WorkflowState) -> str:
+    """
+    Conditional edge after the Booking & Policy Agent.
+
+    Journey recommendations skip the Safety Agent (it has no disruption
+    to classify).  Disruption rebooking workflows proceed to Safety.
+    """
+    if state.get("workflow_type") == "journey_recommendation":
+        logger.info("Skipping safety agent for journey_recommendation")
+        return END
+    return "safety"
+
+
 def _route_after_safety(state: WorkflowState) -> str:
     """
     Conditional edge after the Validation & Safety Agent.
@@ -44,7 +57,9 @@ def build_graph() -> StateGraph:
     Build and return the compiled multi-agent LangGraph workflow.
 
     Graph structure:
-        START → planner → journey → resource → booking → safety → END
+        START → planner → journey → resource → booking
+          → (journey_recommendation) END
+          → (disruption_rebooking)   safety → END
 
     The safety agent sets the workflow_status field to control
     what happens after the graph completes:
@@ -61,12 +76,14 @@ def build_graph() -> StateGraph:
     graph.add_node("booking", booking_agent_node)
     graph.add_node("safety", safety_agent_node)
 
-    # Sequential edges: START → planner → journey → resource → booking → safety
+    # Sequential edges: START → planner → journey → resource → booking
     graph.add_edge(START, "planner")
     graph.add_edge("planner", "journey")
     graph.add_edge("journey", "resource")
     graph.add_edge("resource", "booking")
-    graph.add_edge("booking", "safety")
+
+    # Conditional edge after booking: skip safety for journey recommendations
+    graph.add_conditional_edges("booking", _route_after_booking)
 
     # Conditional edge after safety → END
     graph.add_conditional_edges("safety", _route_after_safety)
