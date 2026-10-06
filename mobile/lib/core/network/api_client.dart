@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../storage/secure_storage_service.dart';
 
@@ -7,14 +8,20 @@ class ApiClient {
   final Dio dio;
   final SecureStorageService storageService;
 
-  static const String defaultBaseUrl = 'http://10.0.2.2:5010/api/v1';
+  static String get defaultBaseUrl =>
+      (kIsWeb ||
+              defaultTargetPlatform == TargetPlatform.windows ||
+              defaultTargetPlatform == TargetPlatform.macOS ||
+              defaultTargetPlatform == TargetPlatform.linux)
+          ? 'http://localhost:5010/api/v1'
+          : 'http://10.0.2.2:5010/api/v1';
 
   ApiClient({
     Dio? dioClient,
     SecureStorageService? storage,
-    String baseUrl = defaultBaseUrl,
+    String? baseUrl,
   })  : dio = dioClient ?? Dio(BaseOptions(
-          baseUrl: baseUrl,
+          baseUrl: baseUrl ?? defaultBaseUrl,
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 15),
           headers: {

@@ -31,7 +31,7 @@ class WayPointCard extends StatelessWidget {
       border: border ?? Border.all(color: borderColor, width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),

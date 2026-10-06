@@ -141,7 +141,7 @@ class _ConductorScannerScreenState extends State<ConductorScannerScreen> {
                               margin: const EdgeInsets.symmetric(horizontal: 24),
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.65),
+                                color: Colors.black.withValues(alpha: 0.65),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
@@ -166,7 +166,7 @@ class _ConductorScannerScreenState extends State<ConductorScannerScreen> {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFF32DE84).withOpacity(0.2),
+                                      color: const Color(0xFF32DE84).withValues(alpha: 0.2),
                                       blurRadius: 20,
                                       spreadRadius: 2,
                                     ),
@@ -183,7 +183,7 @@ class _ConductorScannerScreenState extends State<ConductorScannerScreen> {
                                 icon: const Icon(Icons.keyboard_outlined, size: 20),
                                 label: const Text('Enter Booking Ref Manually'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black.withOpacity(0.75),
+                                  backgroundColor: Colors.black.withValues(alpha: 0.75),
                                   foregroundColor: Colors.white,
                                   side: const BorderSide(color: Color(0xFF32DE84), width: 1.5),
                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -200,7 +200,7 @@ class _ConductorScannerScreenState extends State<ConductorScannerScreen> {
                 // Loading overlay
                 if (state is VerifyingTicket)
                   Container(
-                    color: Colors.black.withOpacity(0.75),
+                    color: Colors.black.withValues(alpha: 0.75),
                     child: const Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -280,7 +280,7 @@ class _ResultOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: color.withOpacity(0.95),
+      color: color.withValues(alpha: 0.95),
       padding: const EdgeInsets.all(32),
       child: Center(
         child: Column(
@@ -289,7 +289,7 @@ class _ResultOverlay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.2),
+                color: accentColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: accentColor, size: 72),
@@ -308,7 +308,7 @@ class _ResultOverlay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(

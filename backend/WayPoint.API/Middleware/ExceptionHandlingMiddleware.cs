@@ -21,10 +21,17 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogInformation("Request was cancelled by client: {Path}", context.Request.Path);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception occurred while processing request: {Path}", context.Request.Path);
-            await HandleExceptionAsync(context, ex);
+            if (!context.Response.HasStarted)
+            {
+                await HandleExceptionAsync(context, ex);
+            }
         }
     }
 

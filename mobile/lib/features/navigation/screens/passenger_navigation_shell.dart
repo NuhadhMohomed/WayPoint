@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/theme_cubit.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/models/auth_models.dart';
 import '../../auth/screens/passenger_auth_screen.dart';
@@ -45,7 +44,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        indicatorColor: AppTheme.secondaryColor.withOpacity(0.2),
+        indicatorColor: AppTheme.secondaryColor.withValues(alpha: 0.2),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
@@ -72,43 +71,6 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
     );
   }
 
-  Widget _buildPlaceholderTab({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String actionText,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 48, color: AppTheme.primaryColor),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildProfileTab(BuildContext context) {
     final user = widget.user;
@@ -147,7 +109,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.15),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

@@ -22,12 +22,12 @@ class FirstRunWelcomeCard extends StatelessWidget {
         color: isDark ? AppTheme.darkCardBackground : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.primaryColor.withOpacity(0.35),
+          color: AppTheme.primaryColor.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.08),
+            color: AppTheme.primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -45,7 +45,7 @@ class FirstRunWelcomeCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.15),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

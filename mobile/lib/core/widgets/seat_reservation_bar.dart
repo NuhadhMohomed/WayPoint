@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import 'waypoint_button.dart';
@@ -47,7 +47,7 @@ class SeatReservationBar extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
             offset: const Offset(0, -4),
             blurRadius: 16,
           ),

@@ -33,7 +33,7 @@ class WayPointLogo extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.28),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.35),
+            color: AppTheme.primaryColor.withValues(alpha: 0.35),
             blurRadius: size * 0.3,
             offset: Offset(0, size * 0.1),
           ),

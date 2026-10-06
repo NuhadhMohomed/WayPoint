@@ -143,7 +143,7 @@ class _TicketWalletScreenState extends State<TicketWalletScreen>
           // Offline Cryptographic Pass Banner
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: AppTheme.primaryColor.withOpacity(0.12),
+            color: AppTheme.primaryColor.withValues(alpha: 0.12),
             child: const Row(
               children: [
                 Icon(Icons.cloud_done_rounded, color: AppTheme.primaryColor, size: 16),

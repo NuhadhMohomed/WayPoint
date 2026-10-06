@@ -45,7 +45,7 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        indicatorColor: AppTheme.primaryColor.withOpacity(0.2),
+        indicatorColor: AppTheme.primaryColor.withValues(alpha: 0.2),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.qr_code_scanner_outlined),
@@ -67,42 +67,6 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
     );
   }
 
-  Widget _buildStaffTab({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 48, color: AppTheme.primaryColor),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildStaffSettingsTab(BuildContext context) {
     return Padding(
@@ -122,7 +86,7 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.15),
+                color: AppTheme.primaryColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

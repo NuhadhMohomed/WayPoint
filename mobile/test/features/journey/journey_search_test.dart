@@ -52,4 +52,75 @@ void main() {
     // Verify CTA buttons
     expect(find.text('Pick Seats'), findsNWidgets(2));
   });
+
+  testWidgets('JourneySearchScreen renders AI Trip Planner card with natural language prompts and presets', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: JourneySearchScreen(),
+        ),
+      ),
+    );
+
+    // Verify AI Trip Planner header
+    expect(find.text('AI Trip Planner'), findsOneWidget);
+    expect(find.text('Natural Language Search'), findsOneWidget);
+
+    // Verify prompt presets
+    expect(find.text('Scenic route to Ella'), findsOneWidget);
+    expect(find.text('Fastest to Kandy'), findsOneWidget);
+    expect(find.text('Luxury to Galle'), findsOneWidget);
+    expect(find.text('Comfort & legroom'), findsOneWidget);
+
+    // Verify Ask AI submit button
+    expect(find.text('Ask AI'), findsOneWidget);
+  });
+
+  testWidgets('JourneyComparisonScreen renders AI Insights Banner with match scores and agent reasoning', (WidgetTester tester) async {
+    final direct = JourneyCandidateModel.sampleColomboToEllaDirect();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JourneyComparisonScreen(
+          originCity: 'Colombo',
+          destinationCity: 'Ella',
+          travelDate: DateTime.now().add(const Duration(days: 1)),
+          candidates: [direct],
+          agentReasoning: 'Selected EX-08 Express due to superior comfort, morning departure, and 95% corridor match.',
+          isAiFallback: false,
+        ),
+      ),
+    );
+
+    // Verify AI Insights Banner
+    expect(find.text('AI Recommendation Insights'), findsOneWidget);
+    expect(find.text('AI Verified'), findsOneWidget);
+    expect(find.textContaining('Selected EX-08 Express due to superior comfort'), findsOneWidget);
+
+    // Verify Match Score rendering
+    expect(find.textContaining('% Match'), findsOneWidget);
+  });
+
+  testWidgets('JourneyComparisonScreen renders safe fallback banner when AI service is offline (BR-AIVAL-002)', (WidgetTester tester) async {
+    final direct = JourneyCandidateModel.sampleColomboToEllaDirect();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JourneyComparisonScreen(
+          originCity: 'Colombo',
+          destinationCity: 'Ella',
+          travelDate: DateTime.now().add(const Duration(days: 1)),
+          candidates: [direct],
+          agentReasoning: '',
+          isAiFallback: true,
+        ),
+      ),
+    );
+
+    // Verify Safe Fallback Banner
+    expect(find.text('AI Offline — Safe Fallback'), findsOneWidget);
+    expect(find.text('Fallback Mode'), findsOneWidget);
+    expect(find.textContaining('Showing verified direct and connecting routes matching your request corridor'), findsOneWidget);
+  });
 }
+

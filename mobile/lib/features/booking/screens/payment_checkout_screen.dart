@@ -220,7 +220,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.2),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -498,7 +498,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.15),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppTheme.primaryColor),
                     ),
@@ -753,7 +753,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.2),
+                color: AppTheme.primaryColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
@@ -801,10 +801,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? chipColor.withOpacity(0.18) : Colors.transparent,
+                    color: isSelected ? chipColor.withValues(alpha: 0.18) : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSelected ? chipColor : Colors.grey.withOpacity(0.3),
+                      color: isSelected ? chipColor : Colors.grey.withValues(alpha: 0.3),
                       width: isSelected ? 1.8 : 1.0,
                     ),
                   ),
@@ -928,9 +928,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.08),
+        color: AppTheme.primaryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.25)),
+        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.25)),
       ),
       child: const Row(
         children: [

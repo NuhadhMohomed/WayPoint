@@ -205,8 +205,8 @@ class JourneyComparisonScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSafeTransfer
-                                ? const Color(0xFF064E3B).withOpacity(0.2)
-                                : const Color(0xFF7F1D1D).withOpacity(0.2),
+                                ? const Color(0xFF064E3B).withValues(alpha: 0.2)
+                                : const Color(0xFF7F1D1D).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSafeTransfer ? const Color(0xFF059669) : const Color(0xFFDC2626),

@@ -239,11 +239,11 @@ class _SeatCell extends StatelessWidget {
       border = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
       textColor = isDark ? Colors.white : Colors.black87;
     } else if (status == 'Held') {
-      bg = AppTheme.secondaryColor.withOpacity(0.25);
+      bg = AppTheme.secondaryColor.withValues(alpha: 0.25);
       border = AppTheme.secondaryColor;
       textColor = AppTheme.secondaryColor;
     } else {
-      bg = isDark ? const Color(0xFF1A243B).withOpacity(0.5) : const Color(0xFFE2E8F0);
+      bg = isDark ? const Color(0xFF1A243B).withValues(alpha: 0.5) : const Color(0xFFE2E8F0);
       border = Colors.transparent;
       textColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
     }
@@ -272,7 +272,7 @@ class _SeatCell extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

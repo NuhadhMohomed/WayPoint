@@ -109,7 +109,7 @@ class _ConductorManifestScreenState extends State<ConductorManifestScreen> {
                           child: FilterChip(
                             label: Text(filter),
                             selected: isSelected,
-                            selectedColor: const Color(0xFF32DE84).withOpacity(0.2),
+                            selectedColor: const Color(0xFF32DE84).withValues(alpha: 0.2),
                             checkmarkColor: isDark ? const Color(0xFF32DE84) : const Color(0xFF005312),
                             labelStyle: TextStyle(
                               fontSize: 12,
@@ -260,7 +260,7 @@ class _ConductorManifestScreenState extends State<ConductorManifestScreen> {
                                           alignment: Alignment.center,
                                           decoration: BoxDecoration(
                                             color: isBoarded
-                                                ? const Color(0xFF32DE84).withOpacity(0.18)
+                                                ? const Color(0xFF32DE84).withValues(alpha: 0.18)
                                                 : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                                             borderRadius: BorderRadius.circular(10),
                                             border: Border.all(
@@ -309,7 +309,7 @@ class _ConductorManifestScreenState extends State<ConductorManifestScreen> {
                                             decoration: BoxDecoration(
                                               color: isBoarded
                                                   ? const Color(0xFF005312)
-                                                  : const Color(0xFFFEB300).withOpacity(0.2),
+                                                  : const Color(0xFFFEB300).withValues(alpha: 0.2),
                                               borderRadius: BorderRadius.circular(16),
                                               border: Border.all(
                                                 color: isBoarded

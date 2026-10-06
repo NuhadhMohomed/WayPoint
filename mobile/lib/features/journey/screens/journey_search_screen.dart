@@ -300,7 +300,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.primaryColor.withOpacity(isDark ? 0.18 : 0.1)
+                            ? AppTheme.primaryColor.withValues(alpha: isDark ? 0.18 : 0.1)
                             : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
@@ -311,7 +311,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
                             ? null
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(alpha: 0.04),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -328,7 +328,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withOpacity(0.2),
+                                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

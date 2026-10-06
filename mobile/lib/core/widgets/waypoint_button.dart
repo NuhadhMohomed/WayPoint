@@ -103,8 +103,8 @@ class WayPointButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: bg,
           foregroundColor: fg,
-          disabledBackgroundColor: bg.withOpacity(0.5),
-          disabledForegroundColor: fg.withOpacity(0.5),
+          disabledBackgroundColor: bg.withValues(alpha: 0.5),
+          disabledForegroundColor: fg.withValues(alpha: 0.5),
           elevation: 0,
           side: side,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

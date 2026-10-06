@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_button.dart';
@@ -96,7 +96,7 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
           // Direct Only Switch
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            activeColor: AppTheme.primaryColor,
+            activeTrackColor: AppTheme.primaryColor,
             title: const Text(
               'Direct Corridors Only',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
@@ -114,7 +114,7 @@ class _PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
           // Air Conditioned Switch
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            activeColor: AppTheme.primaryColor,
+            activeTrackColor: AppTheme.primaryColor,
             title: const Text(
               'Air-Conditioned Bus (AC)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),

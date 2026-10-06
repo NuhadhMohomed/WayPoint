@@ -33,7 +33,7 @@ class EmptyStateView extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: (isDark ? AppTheme.primaryContainerDark : AppTheme.primaryContainerLight).withOpacity(0.6),
+                color: (isDark ? AppTheme.primaryContainerDark : AppTheme.primaryContainerLight).withValues(alpha: 0.6),
                 shape: BoxShape.circle,
               ),
               child: Center(

@@ -213,7 +213,7 @@ class ReviewSubmissionScreenState extends State<ReviewSubmissionScreen> {
                 return FilterChip(
                   label: Text(tag),
                   selected: isSelected,
-                  selectedColor: const Color(0xFF32DE84).withOpacity(0.2),
+                  selectedColor: const Color(0xFF32DE84).withValues(alpha: 0.2),
                   checkmarkColor: isDark ? const Color(0xFF32DE84) : const Color(0xFF005312),
                   labelStyle: TextStyle(
                     fontSize: 12,
