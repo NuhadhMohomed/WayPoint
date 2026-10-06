@@ -19,7 +19,7 @@ vi.mock('../bookingApi', () => ({
   },
 }))
 
-describe('Component 3: Booking & Manifest Frontend Suite (Mithila)', () => {
+describe('Booking & Manifest Frontend Suite', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     bookingApi.getBookings.mockResolvedValue([

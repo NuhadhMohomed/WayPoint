@@ -27,9 +27,8 @@ import { downloadCsv } from '../../lib/csvExport'
 import { bookingApi } from './bookingApi'
 
 /**
- * WEB-11: Booking Manifest & Payment Sandbox Monitor
- * Stitch Screen ID: 2828cbc93fdf4d3db64e00a5fd242cd3
- * Component 3: Booking, Ticketing & Passenger Options (Mithila)
+ * Booking Manifest & Payment Monitor
+ * Real-time passenger roster, seat reservations, and payment processing.
  */
 export function BookingManifestMonitorPage() {
   const [selectedServiceId, setSelectedServiceId] = useState('SRV-COL-ELLA-0800')
@@ -320,35 +319,32 @@ export function BookingManifestMonitorPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-waypoint-amber/20 text-waypoint-amber border border-waypoint-amber/30 tracking-wide uppercase">
-              WEB-11 • Component 3
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              Lead: <strong className="text-white">Mithila</strong> (Manifest & Payment Sandbox)
+            <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200 tracking-wide">
+              Passenger Manifest
             </span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight font-display">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight font-display">
             Booking Manifest & Payment Sandbox Monitor
           </h1>
-          <p className="text-xs lg:text-sm text-slate-400 mt-1">
-            Real-time passenger roster, seat reservations, payment gateway simulator, and BR-REFUND-001 cancellations.
+          <p className="text-xs lg:text-sm text-slate-500 mt-1">
+            Real-time passenger roster, seat reservations, checkout processing, and ticket cancellations.
           </p>
         </div>
 
         {/* Service Selector Dropdown */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
-            <Bus className="w-4 h-4 text-waypoint-blue" />
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
+            <Bus className="w-4 h-4 text-waypoint-primary" />
             <select
               value={selectedServiceId}
               onChange={(e) => setSelectedServiceId(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
             >
               {services.map(s => (
-                <option key={s.id} value={s.id} className="bg-slate-900 text-white">
+                <option key={s.id} value={s.id} className="bg-white text-slate-800">
                   {s.id} • {s.title}
                 </option>
               ))}
@@ -370,29 +366,29 @@ export function BookingManifestMonitorPage() {
 
       {/* Corridor Service Capacity Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-xs text-slate-400">Total Capacity</div>
-          <div className="text-xl font-bold font-mono text-white mt-1">40 Seats</div>
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="text-xs text-slate-500">Total Capacity</div>
+          <div className="text-xl font-bold font-mono text-slate-900 mt-1">40 Seats</div>
           <div className="text-[11px] text-slate-500 mt-0.5">{activeService.busClass}</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-xs text-slate-400">Confirmed Booked</div>
-          <div className="text-xl font-bold font-mono text-emerald-400 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="text-xs text-slate-500">Confirmed Booked</div>
+          <div className="text-xl font-bold font-mono text-emerald-600 mt-1">
             {bookings.filter(b => b.status === 'Confirmed' || b.status === 'Boarded').length * 2} Seats
           </div>
-          <div className="text-[11px] text-emerald-500 mt-0.5">Tickets Issued</div>
+          <div className="text-[11px] text-emerald-600 mt-0.5">Tickets Issued</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-xs text-slate-400">Temporarily Held</div>
-          <div className="text-xl font-bold font-mono text-waypoint-amber mt-1">2 Seats</div>
-          <div className="text-[11px] text-amber-500/80 mt-0.5">Ticking 10m window</div>
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="text-xs text-slate-500">Temporarily Held</div>
+          <div className="text-xl font-bold font-mono text-amber-600 mt-1">2 Seats</div>
+          <div className="text-[11px] text-amber-600 mt-0.5">Ticking 10m window</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-xs text-slate-400">Base Fare per Seat</div>
-          <div className="text-xl font-bold font-mono text-sky-400 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="text-xs text-slate-500">Base Fare per Seat</div>
+          <div className="text-xl font-bold font-mono text-sky-600 mt-1">
             {formatLkr(activeService.farePerSeat)}
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">Per passenger rate</div>
@@ -403,12 +399,12 @@ export function BookingManifestMonitorPage() {
       <Card className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-waypoint-blue" />
+            <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-waypoint-primary" />
               Passenger Manifest Roster
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Service: <span className="text-amber-400 font-mono font-semibold">{activeService.id}</span> • {activeService.title} ({activeService.time})
+            <p className="text-xs text-slate-500 mt-0.5">
+              Service: <span className="text-amber-600 font-mono font-semibold">{activeService.id}</span> • {activeService.title} ({activeService.time})
             </p>
           </div>
 
@@ -421,19 +417,19 @@ export function BookingManifestMonitorPage() {
                 placeholder="Search ref, passenger..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-waypoint-blue"
+                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-waypoint-primary"
               />
             </div>
 
-            <div className="flex rounded-lg bg-slate-950 p-1 border border-slate-800 text-xs">
+            <div className="flex rounded-lg bg-slate-100 p-1 border border-slate-200 text-xs">
               {['All', 'Confirmed', 'Boarded', 'Cancelled'].map(f => (
                 <button
                   key={f}
                   onClick={() => setStatusFilter(f)}
                   className={`px-3 py-1 rounded-md transition-all font-medium ${
                     statusFilter === f
-                      ? 'bg-waypoint-primary text-waypoint-onPrimary shadow-sm font-bold'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-white text-slate-900 shadow-sm font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   {f}
@@ -467,7 +463,7 @@ export function BookingManifestMonitorPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-800 text-slate-400 uppercase tracking-wider font-mono text-[11px]">
+            <thead className="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-mono text-[11px] bg-slate-50/50">
               <tr>
                 <th className="pb-3 pl-2">Ref Code</th>
                 <th className="pb-3">Passenger Details</th>
@@ -478,7 +474,7 @@ export function BookingManifestMonitorPage() {
                 <th className="pb-3 text-right pr-2">Operator Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-slate-100">
               {filteredBookings.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
@@ -487,27 +483,27 @@ export function BookingManifestMonitorPage() {
                 </tr>
               ) : (
                 filteredBookings.map((b) => (
-                  <tr key={b.bookingReference} className="hover:bg-slate-950/40 transition-colors">
-                    <td className="py-3.5 pl-2 font-mono font-bold text-white">
+                  <tr key={b.bookingReference} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 pl-2 font-mono font-bold text-slate-900">
                       {b.bookingReference}
                     </td>
                     <td className="py-3.5">
-                      <div className="font-semibold text-white">{b.passengerName || 'Nimal Silva'}</div>
-                      <div className="text-[11px] text-slate-400 font-mono">{b.passengerPhone || '+94 77 123 4567'}</div>
+                      <div className="font-semibold text-slate-900">{b.passengerName || 'Nimal Silva'}</div>
+                      <div className="text-[11px] text-slate-500 font-mono">{b.passengerPhone || '+94 77 123 4567'}</div>
                     </td>
                     <td className="py-3.5 font-mono">
                       <div className="flex gap-1.5">
                         {(Array.isArray(b.seatNumbers) ? b.seatNumbers : [b.seatNumbers]).map(s => (
-                          <span key={s} className="px-2 py-0.5 rounded bg-slate-800 text-white font-bold text-[11px] border border-slate-700">
+                          <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200">
                             {s}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-3.5 text-slate-300">
+                    <td className="py-3.5 text-slate-600">
                       {b.boardingPoint || 'Makumbura MMC (Platform 3)'}
                     </td>
-                    <td className="py-3.5 font-mono font-semibold text-emerald-400">
+                    <td className="py-3.5 font-mono font-semibold text-emerald-600">
                       {formatLkr(b.totalFareAmount || 5700.0)}
                     </td>
                     <td className="py-3.5">
@@ -539,7 +535,7 @@ export function BookingManifestMonitorPage() {
                             variant="danger"
                             size="sm"
                             onClick={() => setCancelModalBooking(b)}
-                            className="h-7 text-[11px] px-2.5 bg-rose-600/80 hover:bg-rose-600"
+                            className="h-7 text-[11px] px-2.5 bg-rose-600 text-white hover:bg-rose-700"
                           >
                             Cancel / Refund
                           </Button>
@@ -558,13 +554,13 @@ export function BookingManifestMonitorPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Simulator 1: Payment Sandbox Simulator */}
         <Card className="p-6">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-waypoint-amber" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-waypoint-primary" />
                 Payment Sandbox Gateway Simulator
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Simulates card charges against the live ASP.NET Core `/payments/confirm-sandbox-charge` endpoint.
               </p>
             </div>
@@ -573,7 +569,7 @@ export function BookingManifestMonitorPage() {
           <form onSubmit={handleExecuteSandboxCharge} className="space-y-4">
             {/* Preset Card Chips */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Preset Test Card Persona:
               </label>
               <div className="grid grid-cols-3 gap-2 text-xs">
@@ -582,8 +578,8 @@ export function BookingManifestMonitorPage() {
                   onClick={() => handlePresetChange('success')}
                   className={`p-2 rounded-lg border text-left transition-all ${
                     sandboxCardPreset === 'success'
-                      ? 'bg-emerald-950/40 border-emerald-500/80 text-emerald-300 font-bold'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <div className="font-semibold">Instant Success</div>
@@ -595,8 +591,8 @@ export function BookingManifestMonitorPage() {
                   onClick={() => handlePresetChange('declined')}
                   className={`p-2 rounded-lg border text-left transition-all ${
                     sandboxCardPreset === 'declined'
-                      ? 'bg-rose-950/40 border-rose-500/80 text-rose-300 font-bold'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-rose-50 border-rose-300 text-rose-800 font-bold'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <div className="font-semibold">Card Declined</div>
@@ -608,8 +604,8 @@ export function BookingManifestMonitorPage() {
                   onClick={() => handlePresetChange('timeout')}
                   className={`p-2 rounded-lg border text-left transition-all ${
                     sandboxCardPreset === 'timeout'
-                      ? 'bg-amber-950/40 border-amber-500/80 text-amber-300 font-bold'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <div className="font-semibold">Gateway Timeout</div>
@@ -620,22 +616,22 @@ export function BookingManifestMonitorPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1 font-mono">Card Number</label>
+                <label className="block text-xs text-slate-600 mb-1 font-mono">Card Number</label>
                 <input
                   type="text"
                   value={sandboxCardNumber}
                   onChange={(e) => setSandboxCardNumber(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none focus:border-waypoint-blue"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:border-waypoint-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1 font-mono">Amount (LKR)</label>
+                <label className="block text-xs text-slate-600 mb-1 font-mono">Amount (LKR)</label>
                 <input
                   type="number"
                   value={sandboxAmount}
                   onChange={(e) => setSandboxAmount(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none focus:border-waypoint-blue"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:border-waypoint-primary"
                 />
               </div>
             </div>
@@ -645,8 +641,8 @@ export function BookingManifestMonitorPage() {
               <div
                 className={`p-3.5 rounded-xl border text-xs ${
                   sandboxResult.isSuccess
-                    ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300'
-                    : 'bg-rose-950/30 border-rose-800 text-rose-300'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
                 }`}
               >
                 <div className="font-bold flex items-center gap-1.5">
@@ -673,13 +669,13 @@ export function BookingManifestMonitorPage() {
 
         {/* Simulator 2: 10-Min Seat Hold & Concurrency Tester */}
         <Card className="p-6">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Clock className="w-4 h-4 text-waypoint-blue" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-4 h-4 text-waypoint-primary" />
                 10-Minute Seat Hold & Concurrency Tester
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Tests server-side 409 Conflict checks against active PostgreSQL SeatHolds.
               </p>
             </div>
@@ -687,7 +683,7 @@ export function BookingManifestMonitorPage() {
 
           <form onSubmit={handleHoldSeats} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Seat Numbers to Hold (comma-separated):
               </label>
               <input
@@ -695,10 +691,10 @@ export function BookingManifestMonitorPage() {
                 value={holdSeatsInput}
                 onChange={(e) => setHoldSeatsInput(e.target.value)}
                 placeholder="e.g. 4A, 4B or 12C"
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none focus:border-waypoint-blue"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:border-waypoint-primary"
               />
               <p className="text-[11px] text-slate-500 mt-1">
-                Tip: Try holding <strong className="text-slate-300">4A, 4B</strong> (which are already held/booked) to verify the <strong>409 Conflict</strong> response.
+                Tip: Try holding <strong className="text-slate-700">4A, 4B</strong> (which are already held/booked) to verify the <strong>409 Conflict</strong> response.
               </p>
             </div>
 
@@ -707,8 +703,8 @@ export function BookingManifestMonitorPage() {
               <div
                 className={`p-3.5 rounded-xl border text-xs ${
                   holdResult.success
-                    ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300'
-                    : 'bg-amber-950/30 border-amber-800 text-amber-300'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
                 }`}
               >
                 <div className="font-bold flex items-center gap-1.5">
@@ -735,34 +731,34 @@ export function BookingManifestMonitorPage() {
 
       {/* Modal 1: Tiered Refund Modal (BR-REFUND-001) */}
       {cancelModalBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-white border border-slate-200 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
-                <h3 className="text-base font-bold text-white font-display">
+                <h3 className="text-base font-bold text-slate-900 font-display">
                   Operator Cancellation & Refund
                 </h3>
-                <p className="text-xs text-slate-400">
-                  Ref: <span className="font-mono text-white font-bold">{cancelModalBooking.bookingReference}</span>
+                <p className="text-xs text-slate-500">
+                  Ref: <span className="font-mono text-slate-900 font-bold">{cancelModalBooking.bookingReference}</span>
                 </p>
               </div>
               <button
                 onClick={() => setCancelModalBooking(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-600 p-1"
               >
                 ✕
               </button>
             </div>
 
             {/* BR-REFUND-001 Policy Breakdown */}
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2 mb-4">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 mb-4">
               <div className="flex justify-between">
-                <span className="text-slate-400">Departure Offset:</span>
-                <span className="font-semibold text-white">{cancelModalBooking.hoursUntilDeparture} hours until departure</span>
+                <span className="text-slate-500">Departure Offset:</span>
+                <span className="font-semibold text-slate-800">{cancelModalBooking.hoursUntilDeparture} hours until departure</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Policy Tier:</span>
-                <span className="font-semibold text-emerald-400">
+                <span className="text-slate-500">Policy Tier:</span>
+                <span className="font-semibold text-emerald-700">
                   {cancelModalBooking.hoursUntilDeparture > 24
                     ? 'Tier 1: 90% Refund (10% platform fee)'
                     : cancelModalBooking.hoursUntilDeparture >= 12
@@ -772,9 +768,9 @@ export function BookingManifestMonitorPage() {
                     : 'Tier 4: 0% Non-refundable (< 2h)'}
                 </span>
               </div>
-              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold">
-                <span className="text-slate-300">Net Refund Credited:</span>
-                <span className="text-emerald-400 font-mono">
+              <div className="border-t border-slate-200 pt-2 flex justify-between font-bold">
+                <span className="text-slate-700">Net Refund Credited:</span>
+                <span className="text-emerald-700 font-mono">
                   {formatLkr(
                     cancelModalBooking.totalFareAmount *
                       (cancelModalBooking.hoursUntilDeparture > 24
@@ -790,13 +786,13 @@ export function BookingManifestMonitorPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Cancellation Reason:
               </label>
               <select
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-waypoint-blue"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-waypoint-primary"
               >
                 <option value="Change of travel plans">Change of travel plans</option>
                 <option value="Passenger medical emergency">Passenger medical emergency</option>
@@ -828,25 +824,25 @@ export function BookingManifestMonitorPage() {
 
       {/* Modal 2: Inspect E-Ticket Pass */}
       {inspectTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm p-6 rounded-2xl bg-white border border-slate-200 shadow-2xl text-center">
             <div className="flex justify-between items-center mb-4">
               <TransitBadge status="Luxury" label="Official Boarding Pass" />
               <button
                 onClick={() => setInspectTicket(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-600 p-1"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-4 rounded-xl bg-white text-slate-900 font-mono text-xs mb-4">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs mb-4">
               <div className="text-[10px] text-slate-500 uppercase">Sri Lanka Transit Board</div>
               <div className="text-base font-bold text-slate-900 mt-1">{inspectTicket.bookingReference}</div>
               <div className="text-xs text-slate-700 mt-0.5">{inspectTicket.passengerName}</div>
               <div className="text-xs font-bold text-blue-700 mt-1">Seats: {inspectTicket.seatNumbers?.join(', ')}</div>
               
-              <div className="my-3 p-3 bg-slate-100 rounded-lg border border-dashed border-slate-300">
+              <div className="my-3 p-3 bg-white rounded-lg border border-dashed border-slate-300">
                 <QrCode className="w-32 h-32 mx-auto text-slate-900" />
                 <div className="text-[9px] text-slate-500 mt-1 font-mono break-all">
                   {inspectTicket.ticketQrPayload}
