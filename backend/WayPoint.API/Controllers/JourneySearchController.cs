@@ -59,7 +59,7 @@ public sealed class JourneySearchController : ControllerBase
 
             var candidates = aiResult.CandidateRoutes.Select(c => new CandidateJourneyDto
             {
-                ServiceId = c.ServiceId,
+                ServiceId = Guid.TryParse(c.ServiceId, out var sid) ? sid : Guid.Empty,
                 ServiceCode = c.ServiceCode,
                 RouteNumber = c.RouteNumber,
                 OriginCity = c.Origin,

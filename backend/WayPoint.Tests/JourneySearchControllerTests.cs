@@ -43,7 +43,7 @@ public class JourneySearchControllerTests
                   {
                       new()
                       {
-                          ServiceId = Guid.NewGuid(),
+                          ServiceId = Guid.NewGuid().ToString(),
                           ServiceCode = "SRV-COL-ELLA",
                           RouteNumber = "EX-08",
                           Origin = "Colombo",

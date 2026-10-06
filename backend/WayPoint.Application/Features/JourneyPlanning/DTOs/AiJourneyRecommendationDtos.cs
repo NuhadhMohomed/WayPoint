@@ -21,7 +21,7 @@ public class AiJourneyRecommendationResponseDto
 public class AiCandidateRouteDto
 {
     [JsonPropertyName("service_id")]
-    public Guid ServiceId { get; set; }
+    public string ServiceId { get; set; } = string.Empty;
 
     [JsonPropertyName("service_code")]
     public string ServiceCode { get; set; } = string.Empty;
