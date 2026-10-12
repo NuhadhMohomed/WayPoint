@@ -98,10 +98,20 @@ public class BookingController : ControllerBase
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Checkout failed: {Message}", ex.Message);
-            return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+            if (ex.Message.Contains("expired", StringComparison.OrdinalIgnoreCase))
             {
-                Status = StatusCodes.Status410Gone,
-                Title = "Hold Expired or Invalid",
+                return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+                {
+                    Status = StatusCodes.Status410Gone,
+                    Title = "Hold Expired or Invalid",
+                    Detail = ex.Message
+                });
+            }
+
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Payment Verification Failed",
                 Detail = ex.Message
             });
         }

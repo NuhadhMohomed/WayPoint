@@ -373,11 +373,24 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
         modelBuilder.Entity<PaymentAttempt>(entity =>
         {
             entity.Property(p => p.Amount).HasPrecision(10, 2);
+            entity.Property(p => p.Currency).HasMaxLength(10).HasDefaultValue("LKR");
             entity.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
             entity.HasOne(p => p.Booking)
                   .WithMany(b => b.PaymentAttempts)
                   .HasForeignKey(p => p.BookingId)
+                  .IsRequired(false)
                   .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(p => p.Hold)
+                  .WithMany()
+                  .HasForeignKey(p => p.HoldId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(p => p.Passenger)
+                  .WithMany()
+                  .HasForeignKey(p => p.PassengerId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(p => p.GatewayTransactionId).IsUnique();
         });
 
         modelBuilder.Entity<Refund>(entity =>

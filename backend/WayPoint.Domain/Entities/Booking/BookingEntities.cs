@@ -52,14 +52,19 @@ public class Ticket : BaseEntity
 
 public class PaymentAttempt : BaseEntity
 {
-    public Guid BookingId { get; set; }
+    public Guid? BookingId { get; set; }
+    public Guid? HoldId { get; set; }
+    public Guid? PassengerId { get; set; }
     public string GatewayTransactionId { get; set; } = string.Empty;
     public decimal Amount { get; set; }
+    public string Currency { get; set; } = "LKR";
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public Booking Booking { get; set; } = null!;
+    public Booking? Booking { get; set; }
+    public SeatHold? Hold { get; set; }
+    public PassengerProfile? Passenger { get; set; }
 }
 
 public class Refund : BaseEntity

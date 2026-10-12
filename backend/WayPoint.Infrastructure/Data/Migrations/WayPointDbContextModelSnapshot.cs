@@ -271,15 +271,28 @@ namespace WayPoint.Infrastructure.Data.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
-                    b.Property<Guid>("BookingId")
+                    b.Property<Guid?>("BookingId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("LKR");
+
                     b.Property<string>("GatewayTransactionId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("HoldId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PassengerId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
@@ -295,6 +308,13 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookingId");
+
+                    b.HasIndex("GatewayTransactionId")
+                        .IsUnique();
+
+                    b.HasIndex("HoldId");
+
+                    b.HasIndex("PassengerId");
 
                     b.ToTable("PaymentAttempts");
                 });
@@ -1539,10 +1559,23 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.HasOne("WayPoint.Domain.Entities.Booking.Booking", "Booking")
                         .WithMany("PaymentAttempts")
                         .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WayPoint.Domain.Entities.Booking.SeatHold", "Hold")
+                        .WithMany()
+                        .HasForeignKey("HoldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("WayPoint.Domain.Entities.Identity.PassengerProfile", "Passenger")
+                        .WithMany()
+                        .HasForeignKey("PassengerId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Booking");
+
+                    b.Navigation("Hold");
+
+                    b.Navigation("Passenger");
                 });
 
             modelBuilder.Entity("WayPoint.Domain.Entities.Booking.Refund", b =>

@@ -63,17 +63,23 @@ class BookingApiService {
     required String cardNumber,
     required double amount,
     String cardholderName = 'NIMAL SILVA',
+    String? holdId,
   }) async {
     try {
+      final payload = <String, dynamic>{
+        'cardNumber': cardNumber,
+        'cardholderName': cardholderName,
+        'expiryDate': '08/28',
+        'cvv': '123',
+        'amount': amount,
+      };
+      if (holdId != null && holdId.isNotEmpty) {
+        payload['holdId'] = holdId;
+      }
+
       final response = await _dio.post(
         '/payments/confirm-sandbox-charge',
-        data: {
-          'cardNumber': cardNumber,
-          'cardholderName': cardholderName,
-          'expiryDate': '08/28',
-          'cvv': '123',
-          'amount': amount,
-        },
+        data: payload,
       );
 
       if (response.data != null) {

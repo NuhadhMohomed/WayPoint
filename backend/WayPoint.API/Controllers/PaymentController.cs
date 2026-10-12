@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
+using WayPoint.Domain.Enums;
 
 namespace WayPoint.API.Controllers;
 
@@ -89,6 +90,16 @@ public class PaymentController : ControllerBase
                     Status = StatusCodes.Status403Forbidden,
                     Title = "Access Denied",
                     Detail = "You do not have permission to process payments for another passenger's seat hold."
+                });
+            }
+
+            if (hold.Status != SeatHoldStatus.Held || hold.HeldUntil <= DateTime.UtcNow)
+            {
+                return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+                {
+                    Status = StatusCodes.Status410Gone,
+                    Title = "Hold Expired",
+                    Detail = "Seat hold has expired. Cannot process payment for an expired hold."
                 });
             }
         }

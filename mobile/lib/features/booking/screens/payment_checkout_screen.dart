@@ -155,6 +155,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       cardNumber: _cardNumberController.text,
       amount: _totalPayable,
       cardholderName: _nameController.text,
+      holdId: widget.holdInfo.holdId,
     );
 
     if (!mounted) return;

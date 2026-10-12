@@ -276,9 +276,43 @@ public class BookingService : IBookingService
         // Preset 2: Simulated card decline / insufficient funds (Card ending in 0002)
         if (cleanCard.EndsWith("0002"))
         {
+            var failedTxnId = $"TXN-FAIL-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+            if (_context != null)
+            {
+                Guid? passengerId = null;
+                if (request.HoldId.HasValue)
+                {
+                    var hold = await _context.SeatHolds
+                        .Include(h => h.Passenger)
+                        .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                    passengerId = hold?.PassengerId;
+                }
+                else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
+                {
+                    var profile = await _context.PassengerProfiles
+                        .FirstOrDefaultAsync(p => p.UserId == _currentUserService.UserId.Value, cancellationToken);
+                    passengerId = profile?.Id;
+                }
+
+                var attempt = new PaymentAttempt
+                {
+                    Id = Guid.NewGuid(),
+                    GatewayTransactionId = failedTxnId,
+                    Amount = request.Amount,
+                    Currency = "LKR",
+                    Status = PaymentStatus.Failed,
+                    HoldId = request.HoldId,
+                    PassengerId = passengerId,
+                    ProcessedAt = DateTime.UtcNow
+                };
+                await _context.PaymentAttempts.AddAsync(attempt, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
             return new PaymentChargeResponseDto
             {
                 IsSuccess = false,
+                TransactionId = failedTxnId,
                 GatewayStatus = "Declined",
                 Message = "402 Payment Required: Insufficient Funds. Your card issuer declined this transaction.",
                 ProcessedAt = DateTime.UtcNow
@@ -288,9 +322,43 @@ public class BookingService : IBookingService
         // Preset 3: Simulated gateway timeout (Card ending in 0003)
         if (cleanCard.EndsWith("0003"))
         {
+            var pendingTxnId = $"TXN-PEND-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+            if (_context != null)
+            {
+                Guid? passengerId = null;
+                if (request.HoldId.HasValue)
+                {
+                    var hold = await _context.SeatHolds
+                        .Include(h => h.Passenger)
+                        .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                    passengerId = hold?.PassengerId;
+                }
+                else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
+                {
+                    var profile = await _context.PassengerProfiles
+                        .FirstOrDefaultAsync(p => p.UserId == _currentUserService.UserId.Value, cancellationToken);
+                    passengerId = profile?.Id;
+                }
+
+                var attempt = new PaymentAttempt
+                {
+                    Id = Guid.NewGuid(),
+                    GatewayTransactionId = pendingTxnId,
+                    Amount = request.Amount,
+                    Currency = "LKR",
+                    Status = PaymentStatus.Pending,
+                    HoldId = request.HoldId,
+                    PassengerId = passengerId,
+                    ProcessedAt = DateTime.UtcNow
+                };
+                await _context.PaymentAttempts.AddAsync(attempt, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
             return new PaymentChargeResponseDto
             {
                 IsSuccess = false,
+                TransactionId = pendingTxnId,
                 GatewayStatus = "Timeout",
                 Message = "504 Gateway Timeout: The payment network did not respond within the allocated timeframe.",
                 ProcessedAt = DateTime.UtcNow
@@ -299,6 +367,38 @@ public class BookingService : IBookingService
 
         // Preset 1: Instant Success (Card ending in 0001 or standard test cards)
         var txnId = $"TXN-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+        if (_context != null)
+        {
+            Guid? passengerId = null;
+            if (request.HoldId.HasValue)
+            {
+                var hold = await _context.SeatHolds
+                    .Include(h => h.Passenger)
+                    .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                passengerId = hold?.PassengerId;
+            }
+            else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
+            {
+                var profile = await _context.PassengerProfiles
+                    .FirstOrDefaultAsync(p => p.UserId == _currentUserService.UserId.Value, cancellationToken);
+                passengerId = profile?.Id;
+            }
+
+            var attempt = new PaymentAttempt
+            {
+                Id = Guid.NewGuid(),
+                GatewayTransactionId = txnId,
+                Amount = request.Amount,
+                Currency = "LKR",
+                Status = PaymentStatus.Success,
+                HoldId = request.HoldId,
+                PassengerId = passengerId,
+                ProcessedAt = DateTime.UtcNow
+            };
+            await _context.PaymentAttempts.AddAsync(attempt, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         return new PaymentChargeResponseDto
         {
             IsSuccess = true,
@@ -311,149 +411,230 @@ public class BookingService : IBookingService
 
     public async Task<BookingConfirmationDto> ExecuteCheckoutAsync(BookingCheckoutRequestDto request, CancellationToken cancellationToken = default)
     {
+        // 1. Initial parameter sanity checks
+        if (string.IsNullOrWhiteSpace(request.PaymentTransactionId))
+        {
+            throw new InvalidOperationException("Payment transaction ID is required.");
+        }
+
+        if (request.PaymentTransactionId.StartsWith("FAIL", StringComparison.OrdinalIgnoreCase) ||
+            request.PaymentTransactionId.StartsWith("DECLINE", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Payment failed or card was declined. Transaction rolled back.");
+        }
+
         var strategy = _context.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-            // 1. Fetch the primary hold
-            var hold = await _context.SeatHolds
-                .Include(h => h.Service)
-                    .ThenInclude(s => s.Route)
-                .Include(h => h.Seat)
-                .Include(h => h.Passenger)
-                    .ThenInclude(p => p.User)
-                .FirstOrDefaultAsync(h => h.Id == request.HoldId, cancellationToken);
+                // 2. Fetch the primary hold
+                var hold = await _context.SeatHolds
+                    .Include(h => h.Service)
+                        .ThenInclude(s => s.Route)
+                    .Include(h => h.Seat)
+                    .Include(h => h.Passenger)
+                        .ThenInclude(p => p.User)
+                    .FirstOrDefaultAsync(h => h.Id == request.HoldId, cancellationToken);
 
-            if (hold == null)
-            {
-                throw new KeyNotFoundException("Active seat hold was not found.");
-            }
-
-            // BOLA / Ownership enforcement: caller must own the seat hold being checked out
-            if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
-            {
-                var currentUserId = _currentUserService.UserId;
-                if (!currentUserId.HasValue || hold.Passenger?.UserId != currentUserId.Value)
+                if (hold == null)
                 {
-                    throw new UnauthorizedAccessException("You do not have permission to checkout this seat hold.");
+                    throw new KeyNotFoundException("Active seat hold was not found.");
                 }
-            }
 
-            // 2. Server-side validation of 10-minute hold window
-            if (hold.Status != SeatHoldStatus.Held || hold.HeldUntil <= DateTime.UtcNow)
-            {
-                hold.Status = SeatHoldStatus.Expired;
+                // 3. BOLA / Ownership enforcement: caller must own the seat hold being checked out (Security Fix 01)
+                if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+                {
+                    var currentUserId = _currentUserService.UserId;
+                    if (!currentUserId.HasValue || hold.Passenger?.UserId != currentUserId.Value)
+                    {
+                        throw new UnauthorizedAccessException("You do not have permission to checkout this seat hold.");
+                    }
+                }
+
+                // 4. Server-side payment transaction verification (Security Fix 02)
+                var payment = await _context.PaymentAttempts
+                    .FirstOrDefaultAsync(p => p.GatewayTransactionId == request.PaymentTransactionId, cancellationToken);
+
+                if (payment == null)
+                {
+                    throw new InvalidOperationException("Payment transaction does not exist or could not be verified in server records.");
+                }
+
+                // 4a. Only transactions explicitly marked successful may confirm a booking
+                if (payment.Status != PaymentStatus.Success)
+                {
+                    throw new InvalidOperationException($"Payment transaction has status '{payment.Status}' and cannot confirm a booking. Only successful transactions are accepted.");
+                }
+
+                // 4b. Verify payment currency
+                if (!string.Equals(payment.Currency, "LKR", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException($"Payment currency '{payment.Currency}' is invalid. WayPoint requires LKR.");
+                }
+
+                // 4c. Verify payment belongs to the correct passenger
+                if (payment.PassengerId.HasValue && payment.PassengerId.Value != hold.PassengerId)
+                {
+                    throw new UnauthorizedAccessException("Payment transaction does not belong to the authenticated passenger.");
+                }
+
+                // 4d. Idempotency & Replay Protection: Check if payment was already used
+                if (payment.BookingId.HasValue)
+                {
+                    // Check if this is a duplicate checkout request for the same booking
+                    if (payment.HoldId == hold.Id || hold.Status == SeatHoldStatus.ConvertedToBooking)
+                    {
+                        var existingBooking = await _context.Bookings
+                            .Include(b => b.Service)
+                                .ThenInclude(s => s.Route)
+                            .Include(b => b.Ticket)
+                            .Include(b => b.Passenger)
+                                .ThenInclude(p => p.User)
+                            .FirstOrDefaultAsync(b => b.Id == payment.BookingId.Value, cancellationToken);
+
+                        if (existingBooking != null)
+                        {
+                            var existingRoute = existingBooking.Service?.Route;
+                            var existingSeats = existingBooking.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                            return new BookingConfirmationDto
+                            {
+                                BookingId = existingBooking.Id,
+                                BookingReference = existingBooking.BookingReference,
+                                ServiceId = existingBooking.ServiceId,
+                                ServiceCode = existingBooking.Service?.ServiceCode ?? "",
+                                RouteTitle = existingRoute != null ? $"{existingRoute.OriginCity} - {existingRoute.DestinationCity} ({existingRoute.Name})" : (existingBooking.Service?.ServiceCode ?? ""),
+                                OriginCity = existingRoute?.OriginCity ?? "Makumbura MMC (Colombo)",
+                                DestinationCity = existingRoute?.DestinationCity ?? "Ella City Station",
+                                DepartureTime = existingBooking.Service?.DepartureTime ?? DateTime.UtcNow,
+                                ArrivalTime = existingBooking.Service?.ArrivalTime ?? DateTime.UtcNow,
+                                SeatNumbers = existingSeats,
+                                TotalFareAmount = existingBooking.TotalFareAmount,
+                                Status = existingBooking.Status.ToString(),
+                                ConfirmedAt = existingBooking.CreatedAt,
+                                TicketId = existingBooking.Ticket?.Id ?? Guid.Empty,
+                                QrCodePayload = existingBooking.Ticket?.QrCodePayload ?? ""
+                            };
+                        }
+                    }
+
+                    // Attempted reuse of an already confirmed transaction for an unrelated booking
+                    throw new InvalidOperationException("Payment transaction has already been used to confirm another booking.");
+                }
+
+                // 4e. Verify payment is linked to this seat hold
+                if (payment.HoldId.HasValue && payment.HoldId.Value != hold.Id)
+                {
+                    throw new InvalidOperationException("Payment transaction is linked to a different seat hold.");
+                }
+
+                // 5. Server-side validation of 10-minute hold window
+                if (hold.Status != SeatHoldStatus.Held || hold.HeldUntil <= DateTime.UtcNow)
+                {
+                    hold.Status = SeatHoldStatus.Expired;
+                    await _context.SaveChangesAsync(cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw new InvalidOperationException("Seat hold has expired. Please re-select your seats.");
+                }
+
+                // 6. Find all sibling holds for this passenger, service, and hold timestamp
+                var batchHolds = await _context.SeatHolds
+                    .Where(sh => sh.ServiceId == hold.ServiceId &&
+                                 sh.PassengerId == hold.PassengerId &&
+                                 sh.Status == SeatHoldStatus.Held &&
+                                 sh.HeldUntil > DateTime.UtcNow)
+                    .Include(sh => sh.Seat)
+                    .ToListAsync(cancellationToken);
+
+                var seatNumbersList = batchHolds.Select(h => h.Seat.SeatNumber).Distinct().OrderBy(s => s).ToList();
+                var totalFare = hold.Service.BaseFare * seatNumbersList.Count;
+
+                // 7. Verify payment amount matches required total fare
+                if (payment.Amount != totalFare)
+                {
+                    throw new InvalidOperationException($"Payment amount mismatch. Transaction amount: {payment.Amount:F2}, required fare: {totalFare:F2}.");
+                }
+
+                // 8. Generate unique 8-character Booking Reference: WP-XXXXXX
+                var randomSuffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+                var bookingRef = $"WP-{randomSuffix}";
+
+                var passengerName = !string.IsNullOrWhiteSpace(request.PassengerName)
+                    ? request.PassengerName
+                    : (hold.Passenger?.User?.FullName ?? "Nimal Silva");
+
+                // 9. Create Booking Entity
+                var booking = new Booking
+                {
+                    Id = Guid.NewGuid(),
+                    BookingReference = bookingRef,
+                    PassengerId = hold.PassengerId,
+                    ServiceId = hold.ServiceId,
+                    SeatNumbers = string.Join(",", seatNumbersList),
+                    TotalFareAmount = totalFare,
+                    Status = BookingStatus.Confirmed
+                };
+                await _context.Bookings.AddAsync(booking, cancellationToken);
+
+                // 10. Update and Link Payment Attempt
+                payment.BookingId = booking.Id;
+                payment.HoldId = hold.Id;
+                payment.PassengerId = hold.PassengerId;
+
+                // 11. Generate HMAC-SHA256 Cryptographic QR Ticket Payload
+                var qrPayload = await GenerateTicketPayloadAsync(
+                    bookingRef,
+                    hold.Service.ServiceCode,
+                    string.Join(",", seatNumbersList),
+                    passengerName
+                );
+
+                // 12. Issue Digital Ticket
+                var ticket = new Ticket
+                {
+                    BookingId = booking.Id,
+                    QrCodePayload = qrPayload,
+                    Status = TicketStatus.Issued,
+                    IsBoarded = false
+                };
+                await _context.Tickets.AddAsync(ticket, cancellationToken);
+
+                // 13. Transition SeatHolds to ConvertedToBooking
+                foreach (var h in batchHolds)
+                {
+                    h.Status = SeatHoldStatus.ConvertedToBooking;
+                }
+
                 await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                var route = hold.Service.Route;
+                return new BookingConfirmationDto
+                {
+                    BookingId = booking.Id,
+                    BookingReference = bookingRef,
+                    ServiceId = hold.ServiceId,
+                    ServiceCode = hold.Service.ServiceCode,
+                    RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : hold.Service.ServiceCode,
+                    OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
+                    DestinationCity = route?.DestinationCity ?? "Ella City Station",
+                    DepartureTime = hold.Service.DepartureTime,
+                    ArrivalTime = hold.Service.ArrivalTime,
+                    SeatNumbers = seatNumbersList,
+                    TotalFareAmount = totalFare,
+                    Status = "Confirmed",
+                    ConfirmedAt = DateTime.UtcNow,
+                    TicketId = ticket.Id,
+                    QrCodePayload = qrPayload
+                };
+            }
+            catch
+            {
                 await transaction.RollbackAsync(cancellationToken);
-                throw new InvalidOperationException("Seat hold has expired. Please re-select your seats.");
+                throw;
             }
-
-            // 3. Find all sibling holds for this passenger, service, and hold timestamp
-            var batchHolds = await _context.SeatHolds
-                .Where(sh => sh.ServiceId == hold.ServiceId &&
-                             sh.PassengerId == hold.PassengerId &&
-                             sh.Status == SeatHoldStatus.Held &&
-                             sh.HeldUntil > DateTime.UtcNow)
-                .Include(sh => sh.Seat)
-                .ToListAsync(cancellationToken);
-
-            var seatNumbersList = batchHolds.Select(h => h.Seat.SeatNumber).Distinct().OrderBy(s => s).ToList();
-            var totalFare = hold.Service.BaseFare * seatNumbersList.Count;
-
-            // 4. Generate unique 8-character Booking Reference: WP-XXXXXX
-            var randomSuffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-            var bookingRef = $"WP-{randomSuffix}";
-
-            var passengerName = !string.IsNullOrWhiteSpace(request.PassengerName)
-                ? request.PassengerName
-                : (hold.Passenger?.User?.FullName ?? "Nimal Silva");
-
-            // 5. Payment Validation & Failure Simulation
-            if (string.IsNullOrWhiteSpace(request.PaymentTransactionId) ||
-                request.PaymentTransactionId.StartsWith("FAIL", StringComparison.OrdinalIgnoreCase) ||
-                request.PaymentTransactionId.StartsWith("DECLINE", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException("Payment failed or card was declined. Transaction rolled back.");
-            }
-
-            // 6. Create Booking Entity
-            var booking = new Booking
-            {
-                Id = Guid.NewGuid(),
-                BookingReference = bookingRef,
-                PassengerId = hold.PassengerId,
-                ServiceId = hold.ServiceId,
-                SeatNumbers = string.Join(",", seatNumbersList),
-                TotalFareAmount = totalFare,
-                Status = BookingStatus.Confirmed
-            };
-            await _context.Bookings.AddAsync(booking, cancellationToken);
-
-            // 7. Record Payment Attempt
-            var payment = new PaymentAttempt
-            {
-                BookingId = booking.Id,
-                GatewayTransactionId = request.PaymentTransactionId,
-                Amount = totalFare,
-                Status = PaymentStatus.Success,
-                ProcessedAt = DateTime.UtcNow
-            };
-            await _context.PaymentAttempts.AddAsync(payment, cancellationToken);
-
-            // 7. Generate HMAC-SHA256 Cryptographic QR Ticket Payload
-            var qrPayload = await GenerateTicketPayloadAsync(
-                bookingRef,
-                hold.Service.ServiceCode,
-                string.Join(",", seatNumbersList),
-                passengerName
-            );
-
-            // 8. Issue Digital Ticket
-            var ticket = new Ticket
-            {
-                BookingId = booking.Id,
-                QrCodePayload = qrPayload,
-                Status = TicketStatus.Issued,
-                IsBoarded = false
-            };
-            await _context.Tickets.AddAsync(ticket, cancellationToken);
-
-            // 9. Transition SeatHolds to ConvertedToBooking
-            foreach (var h in batchHolds)
-            {
-                h.Status = SeatHoldStatus.ConvertedToBooking;
-            }
-
-            await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-
-            var route = hold.Service.Route;
-            return new BookingConfirmationDto
-            {
-                BookingId = booking.Id,
-                BookingReference = bookingRef,
-                ServiceId = hold.ServiceId,
-                ServiceCode = hold.Service.ServiceCode,
-                RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : hold.Service.ServiceCode,
-                OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
-                DestinationCity = route?.DestinationCity ?? "Ella City Station",
-                DepartureTime = hold.Service.DepartureTime,
-                ArrivalTime = hold.Service.ArrivalTime,
-                SeatNumbers = seatNumbersList,
-                TotalFareAmount = totalFare,
-                Status = "Confirmed",
-                ConfirmedAt = DateTime.UtcNow,
-                TicketId = ticket.Id,
-                QrCodePayload = qrPayload
-            };
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
         });
     }
 
