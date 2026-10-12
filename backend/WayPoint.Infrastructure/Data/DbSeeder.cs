@@ -84,7 +84,17 @@ public static class DbSeeder
                 }
             };
 
-            await context.Users.AddRangeAsync(admin, manager, opUser, passenger);
+            // 2b. AI Subsystem Service Account (Least-Privilege: Operator Role)
+            var aiServiceUser = new User
+            {
+                Email = "ai-service@waypoint.lk",
+                FullName = "WayPoint AI Service Account",
+                PasswordHash = defaultPassword,
+                RoleId = operatorRole.Id, // Least privilege: Operator role can query and propose, but cannot self-approve or administer
+                PhoneNumber = "+94770000000"
+            };
+
+            await context.Users.AddRangeAsync(admin, manager, opUser, passenger, aiServiceUser);
             await context.SaveChangesAsync();
         }
 

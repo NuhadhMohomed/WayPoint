@@ -79,11 +79,13 @@ async def execute_with_safe_failure(
 
     except Exception as exc:
         new_retry_count = current_retries + 1
-        error_detail = (
+        raw_error = (
             f"{agent_name} failed (attempt {new_retry_count}/{MAX_RETRIES}): "
             f"{type(exc).__name__}: {exc}"
         )
-        tb = traceback.format_exc()
+        from guardrails.security_sanitizer import sanitize_text
+        error_detail = sanitize_text(raw_error)
+        tb = sanitize_text(traceback.format_exc())
         logger.error("%s\n%s", error_detail, tb)
 
         if new_retry_count >= MAX_RETRIES:

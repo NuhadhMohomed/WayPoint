@@ -12,6 +12,7 @@ public class MockHttpMessageHandler : HttpMessageHandler
     private readonly string _responseContent;
     private readonly HttpStatusCode _statusCode;
     private readonly Exception? _exceptionToThrow;
+    public HttpRequestMessage? LastRequest { get; private set; }
 
     public MockHttpMessageHandler(string responseContent, HttpStatusCode statusCode = HttpStatusCode.OK)
     {
@@ -28,6 +29,7 @@ public class MockHttpMessageHandler : HttpMessageHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        LastRequest = request;
         if (_exceptionToThrow != null)
         {
             throw _exceptionToThrow;
@@ -94,5 +96,30 @@ public class AiRecommendationClientTests
 
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             client.GetJourneyRecommendationAsync("Trip to Ella", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetJourneyRecommendationAsync_WithApiKeyHeader_TransmitsXApiKey()
+    {
+        var jsonResponse = @"{
+            ""workflow_id"": ""e0f7f3a2-71c1-4b1f-9b2f-2d7c588e1a12"",
+            ""workflow_type"": ""journey_recommendation"",
+            ""status"": ""Completed"",
+            ""steps_completed"": 1,
+            ""candidate_routes"": [],
+            ""agent_reasoning"": ""Test""
+        }";
+
+        var handler = new MockHttpMessageHandler(jsonResponse);
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:8000") };
+        httpClient.DefaultRequestHeaders.Add("X-API-Key", "waypoint-secure-ai-key-2026");
+        var client = new AiRecommendationClient(httpClient);
+
+        var result = await client.GetJourneyRecommendationAsync("Direct bus to Galle", CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.NotNull(handler.LastRequest);
+        Assert.True(handler.LastRequest.Headers.Contains("X-API-Key"));
+        Assert.Equal("waypoint-secure-ai-key-2026", handler.LastRequest.Headers.GetValues("X-API-Key").First());
     }
 }

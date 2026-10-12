@@ -63,6 +63,12 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(aiBaseUrl);
             var timeoutSeconds = int.TryParse(configuration["AI_TIMEOUT_SECONDS"], out var sec) ? sec : 30;
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+
+            var aiApiKey = configuration["AI_API_KEY"] ?? configuration["AI_SERVICE_API_KEY"] ?? configuration["AiSubsystem:ApiKey"];
+            if (!string.IsNullOrWhiteSpace(aiApiKey))
+            {
+                client.DefaultRequestHeaders.Add("X-API-Key", aiApiKey);
+            }
         });
 
         return services;

@@ -6,6 +6,7 @@ Provides an authenticated httpx.AsyncClient that:
 - Authenticates via POST /api/v1/auth/login with AI service account
 - Caches the JWT and injects Bearer token into all requests
 - Re-authenticates on 401 (token expired)
+- Redacts secrets and credentials from logs and exception messages (Security Fix 05)
 - Returns structured error dicts on failure (RFC 7807 ProblemDetails)
 """
 
@@ -20,6 +21,7 @@ from config import (
     AI_SERVICE_PASSWORD,
     HTTP_TIMEOUT_SECONDS,
 )
+from guardrails.security_sanitizer import sanitize_text, sanitize_dict
 
 logger = logging.getLogger("waypoint.ai.http")
 
@@ -56,14 +58,22 @@ async def _authenticate(client: httpx.AsyncClient) -> str:
         logger.info("AI service account authenticated successfully")
         return _cached_token
     except httpx.HTTPStatusError as exc:
+        # Never log credentials, passwords, or raw response text that may contain sensitive data
         logger.error(
-            "AI service account authentication failed: %s",
-            exc.response.text,
+            "AI service account authentication failed with HTTP status %s",
+            exc.response.status_code,
         )
         raise RuntimeError(
-            f"Failed to authenticate AI service account: "
-            f"{exc.response.status_code}"
-        ) from exc
+            f"Failed to authenticate AI service account: HTTP {exc.response.status_code}"
+        ) from None
+    except Exception as exc:
+        logger.error(
+            "AI service account authentication error: %s",
+            sanitize_text(str(exc)),
+        )
+        raise RuntimeError(
+            "Failed to authenticate AI service account: network or connection failure"
+        ) from None
 
 
 def clear_token_cache() -> None:
@@ -136,18 +146,20 @@ async def make_tool_request(
             except Exception:
                 error_body = {"detail": exc.response.text}
 
+            sanitized_body = sanitize_dict(error_body) if isinstance(error_body, dict) else {}
             logger.error(
                 "Backend tool request failed: %s %s → %s: %s",
                 method,
                 path,
                 exc.response.status_code,
-                error_body,
+                sanitized_body,
             )
+            raw_detail = error_body.get("detail", str(exc)) if isinstance(error_body, dict) else str(exc)
             return {
                 "error": True,
                 "status_code": exc.response.status_code,
-                "detail": error_body.get("detail", str(exc)),
-                "title": error_body.get("title", "Tool Request Failed"),
+                "detail": sanitize_text(str(raw_detail)),
+                "title": error_body.get("title", "Tool Request Failed") if isinstance(error_body, dict) else "Tool Request Failed",
             }
 
         except httpx.TimeoutException:

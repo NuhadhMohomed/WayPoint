@@ -9,30 +9,62 @@ Provides:
 Per ADR-003, this Python FastAPI microservice communicates exclusively
 with the ASP.NET Core backend via HTTP tool callbacks. Zero direct
 database access.
+Security Fix 05: Credentials Security, Service Authentication & Secret Redaction.
 """
 
 import logging
 import os
 import uuid
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 
-from config import AI_EXECUTION_TIMEOUT_SECONDS
+from config import (
+    AI_EXECUTION_TIMEOUT_SECONDS,
+    AI_SERVICE_API_KEY,
+    BACKEND_ORIGIN,
+    ENVIRONMENT,
+    IS_PRODUCTION_OR_STAGING,
+    ConfigurationError,
+    validate_config,
+)
+from guardrails.security_sanitizer import SensitiveDataLogFilter, sanitize_text
 from agents.state import create_initial_state
 from agents.graph import workflow_graph
 from schemas.workflow import WorkflowResult
 from persistence.workflow_logger import WorkflowLogger
 
 # ---------------------------------------------------------------------------
-# Logging
+# Logging with Secret Redaction Filter (Security Fix 05)
 # ---------------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(name)-30s | %(levelname)-7s | %(message)s",
 )
 logger = logging.getLogger("waypoint.ai")
+logger.addFilter(SensitiveDataLogFilter())
+
+from contextlib import asynccontextmanager
+
+# ---------------------------------------------------------------------------
+# Application Lifespan (Security Fix 05)
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Validate security configurations on application startup."""
+    try:
+        validate_config(raise_on_error=True)
+        logger.info(
+            "Security configuration validated successfully for environment '%s'",
+            ENVIRONMENT,
+        )
+    except ConfigurationError as err:
+        logger.critical("FATAL: Security configuration validation failed: %s", err)
+        raise
+    yield
+
 
 # ---------------------------------------------------------------------------
 # FastAPI Application
@@ -44,10 +76,10 @@ app = FastAPI(
         "Intercity Journey Planner & Bus Operations Platform (SE3090)."
     ),
     version="0.1.0",
+    lifespan=lifespan,
 )
 
-BACKEND_ORIGIN = os.getenv("BACKEND_ORIGIN", "http://localhost:5010")
-# ponytail: parse origins if comma-separated, default to backend origin
+# Parse origins if comma-separated, default to backend origin
 _allowed_origins = [o.strip() for o in BACKEND_ORIGIN.split(",") if o.strip()]
 
 app.add_middleware(
@@ -57,6 +89,49 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Service-to-Service Authentication Dependency (Security Fix 05)
+# ---------------------------------------------------------------------------
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_service_auth(api_key: str | None = Security(api_key_header)) -> bool:
+    """
+    Verify service-to-service authentication header for protected endpoints.
+
+    In production/staging environments, or whenever AI_SERVICE_API_KEY is configured,
+    requests must provide a valid matching X-API-Key header.
+    In development mode without an explicit AI_SERVICE_API_KEY, unauthenticated local
+    calls are permitted to maintain frictionless developer workflow.
+    """
+    from config import is_production_or_staging, AI_SERVICE_API_KEY as CURRENT_API_KEY
+
+    expected_key = os.getenv("AI_SERVICE_API_KEY") or os.getenv("AI_API_KEY") or CURRENT_API_KEY
+    is_prod = is_production_or_staging()
+
+    if is_prod or expected_key:
+        if not expected_key and is_prod:
+            logger.error("Service authentication misconfigured: missing AI_SERVICE_API_KEY in production.")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Service authentication misconfigured.",
+            )
+        if not api_key:
+            logger.warning("Service request rejected: missing X-API-Key header")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized: missing service authentication credentials.",
+            )
+        if api_key != expected_key:
+            logger.warning("Service request rejected: invalid X-API-Key header")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized: invalid service authentication credentials.",
+            )
+    return True
+
 
 
 # ---------------------------------------------------------------------------
@@ -86,11 +161,11 @@ class WorkflowRequest(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/api/ai/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Health check endpoint for deployment verification."""
+    """Health check endpoint for deployment verification (Public / Unauthenticated)."""
     return HealthResponse()
 
 
-@app.post("/api/ai/disruption-rebooking")
+@app.post("/api/ai/disruption-rebooking", dependencies=[Depends(verify_service_auth)])
 async def disruption_rebooking(request: WorkflowRequest) -> dict:
     """
     Trigger the disruption recovery multi-agent workflow.
@@ -157,13 +232,15 @@ async def disruption_rebooking(request: WorkflowRequest) -> dict:
         logger.exception(
             "Disruption rebooking failed | workflow=%s", workflow_id
         )
+        # Redact secrets from error message detail
+        sanitized_exc = sanitize_text(str(exc))
         raise HTTPException(
             status_code=500,
-            detail=f"Workflow execution failed: {exc}",
-        ) from exc
+            detail=f"Workflow execution failed: {sanitized_exc}",
+        ) from None
 
 
-@app.post("/api/ai/journey-recommendation")
+@app.post("/api/ai/journey-recommendation", dependencies=[Depends(verify_service_auth)])
 async def journey_recommendation(request: WorkflowRequest) -> dict:
     """
     Trigger the journey recommendation multi-agent workflow.
@@ -223,7 +300,9 @@ async def journey_recommendation(request: WorkflowRequest) -> dict:
         logger.exception(
             "Journey recommendation failed | workflow=%s", workflow_id
         )
+        # Redact secrets from error message detail
+        sanitized_exc = sanitize_text(str(exc))
         raise HTTPException(
             status_code=500,
-            detail=f"Workflow execution failed: {exc}",
-        ) from exc
+            detail=f"Workflow execution failed: {sanitized_exc}",
+        ) from None
