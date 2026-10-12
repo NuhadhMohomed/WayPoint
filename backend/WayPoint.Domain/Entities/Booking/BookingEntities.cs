@@ -78,3 +78,29 @@ public class Refund : BaseEntity
     // Navigation properties
     public Booking Booking { get; set; } = null!;
 }
+
+public enum SeatAllocationType
+{
+    Hold = 1,
+    Booking = 2
+}
+
+public class SeatAllocation : BaseEntity
+{
+    public Guid ServiceId { get; set; }
+    public Guid SeatId { get; set; }
+    public Guid? HoldId { get; set; }
+    public Guid? BookingId { get; set; }
+    public Guid PassengerId { get; set; }
+    public DateTime AllocatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ExpiresAt { get; set; }
+    public SeatAllocationType AllocationType { get; set; } = SeatAllocationType.Hold;
+
+    // Navigation properties
+    public Service Service { get; set; } = null!;
+    public Seat Seat { get; set; } = null!;
+    public PassengerProfile Passenger { get; set; } = null!;
+    public SeatHold? Hold { get; set; }
+    public Booking? Booking { get; set; }
+}
+

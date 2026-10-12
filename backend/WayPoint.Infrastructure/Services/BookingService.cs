@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ namespace WayPoint.Infrastructure.Services;
 
 public class BookingService : IBookingService
 {
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> _serviceLocks = new();
     private readonly WayPointDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly ICurrentUserService? _currentUserService;
@@ -109,9 +111,10 @@ public class BookingService : IBookingService
             throw new InvalidOperationException("No valid passenger profile found to associate with seat hold.");
         }
 
-        // 2. Fetch seats from bus layout
+        // 2. Fetch seats from bus layout - ordered deterministically by Id to avoid deadlocks (Dijkstra resource hierarchy)
         var layoutSeats = await _context.Seats
             .Where(s => s.SeatLayoutId == service.Bus.SeatLayoutId && request.SeatNumbers.Contains(s.SeatNumber))
+            .OrderBy(s => s.Id)
             .ToListAsync(cancellationToken);
 
         if (layoutSeats.Count < request.SeatNumbers.Count)
@@ -121,77 +124,166 @@ public class BookingService : IBookingService
             throw new InvalidOperationException($"Invalid seat numbers for this bus: {string.Join(", ", missing)}");
         }
 
-        // 3. Concurrency Protection: Check for active holds or confirmed bookings
-        var seatIds = layoutSeats.Select(s => s.Id).ToList();
-
-        // Check active holds
-        var activeHolds = await _context.SeatHolds
-            .Where(sh => sh.ServiceId == request.ServiceId &&
-                         seatIds.Contains(sh.SeatId) &&
-                         sh.Status == SeatHoldStatus.Held &&
-                         sh.HeldUntil > DateTime.UtcNow)
-            .Include(sh => sh.Seat)
-            .ToListAsync(cancellationToken);
-
-        if (activeHolds.Count != 0)
+        // 3. Dual-Layer Concurrency Control: Per-service in-process lock + DB transaction & unique constraints
+        var semaphore = _serviceLocks.GetOrAdd(service.Id, _ => new SemaphoreSlim(1, 1));
+        await semaphore.WaitAsync(cancellationToken);
+        try
         {
-            var heldSeatNumbers = string.Join(", ", activeHolds.Select(h => h.Seat.SeatNumber));
-            throw new InvalidOperationException($"Seat(s) {heldSeatNumbers} are currently held by another passenger. Please select alternative seats.");
-        }
-
-        // Check confirmed bookings
-        var confirmedBookings = await _context.Bookings
-            .Where(b => b.ServiceId == request.ServiceId && b.Status == BookingStatus.Confirmed)
-            .ToListAsync(cancellationToken);
-
-        foreach (var seatNum in request.SeatNumbers)
-        {
-            var isBooked = confirmedBookings.Any(b => b.SeatNumbers.Split(',', StringSplitOptions.TrimEntries).Contains(seatNum));
-            if (isBooked)
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                throw new InvalidOperationException($"Seat {seatNum} is already booked and unavailable.");
-            }
+                await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    var now = DateTime.UtcNow;
+
+                    // 3a. Clean up expired hold allocations for this service so seats become available again
+                    var expiredAllocations = await _context.SeatAllocations
+                        .Where(sa => sa.ServiceId == service.Id &&
+                                     sa.AllocationType == SeatAllocationType.Hold &&
+                                     sa.ExpiresAt <= now)
+                        .ToListAsync(cancellationToken);
+
+                    if (expiredAllocations.Count > 0)
+                    {
+                        _context.SeatAllocations.RemoveRange(expiredAllocations);
+                    }
+
+                    var expiredHolds = await _context.SeatHolds
+                        .Where(sh => sh.ServiceId == service.Id &&
+                                     sh.Status == SeatHoldStatus.Held &&
+                                     sh.HeldUntil <= now)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var expiredHold in expiredHolds)
+                    {
+                        expiredHold.Status = SeatHoldStatus.Expired;
+                    }
+
+                    if (expiredAllocations.Count > 0 || expiredHolds.Count > 0)
+                    {
+                        await _context.SaveChangesAsync(cancellationToken);
+                    }
+
+                    var seatIds = layoutSeats.Select(s => s.Id).ToList();
+
+                    // 3b. Verify no active seat allocations exist in the authoritative SeatAllocations table
+                    var activeAllocations = await _context.SeatAllocations
+                        .Include(sa => sa.Seat)
+                        .Where(sa => sa.ServiceId == service.Id &&
+                                     seatIds.Contains(sa.SeatId) &&
+                                     sa.ExpiresAt > now)
+                        .ToListAsync(cancellationToken);
+
+                    if (activeAllocations.Count > 0)
+                    {
+                        var conflictedSeatNumbers = string.Join(", ", activeAllocations.Select(a => a.Seat?.SeatNumber ?? a.SeatId.ToString()));
+                        throw new InvalidOperationException($"Seat(s) {conflictedSeatNumbers} are currently held by another passenger. Please select alternative seats.");
+                    }
+
+                    // 3c. Verify no legacy active holds exist in SeatHolds table
+                    var activeHolds = await _context.SeatHolds
+                        .Where(sh => sh.ServiceId == service.Id &&
+                                     seatIds.Contains(sh.SeatId) &&
+                                     sh.Status == SeatHoldStatus.Held &&
+                                     sh.HeldUntil > now)
+                        .Include(sh => sh.Seat)
+                        .ToListAsync(cancellationToken);
+
+                    if (activeHolds.Count != 0)
+                    {
+                        var heldSeatNumbers = string.Join(", ", activeHolds.Select(h => h.Seat.SeatNumber));
+                        throw new InvalidOperationException($"Seat(s) {heldSeatNumbers} are currently held by another passenger. Please select alternative seats.");
+                    }
+
+                    // 3d. Verify no confirmed bookings occupy any requested seat
+                    var confirmedBookings = await _context.Bookings
+                        .Where(b => b.ServiceId == service.Id && b.Status == BookingStatus.Confirmed)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var seatNum in request.SeatNumbers)
+                    {
+                        var isBooked = confirmedBookings.Any(b => b.SeatNumbers.Split(',', StringSplitOptions.TrimEntries).Contains(seatNum));
+                        if (isBooked)
+                        {
+                            throw new InvalidOperationException($"Seat {seatNum} is already booked and unavailable.");
+                        }
+                    }
+
+                    // 4. Create 10-Minute Seat Holds and DB-Constrained Seat Allocations
+                    var heldAt = DateTime.UtcNow;
+                    var heldUntil = heldAt.AddMinutes(10);
+                    var createdHolds = new List<SeatHold>();
+                    var createdAllocations = new List<SeatAllocation>();
+
+                    foreach (var seat in layoutSeats)
+                    {
+                        var hold = new SeatHold
+                        {
+                            Id = Guid.NewGuid(),
+                            ServiceId = service.Id,
+                            SeatId = seat.Id,
+                            PassengerId = passengerProfile.Id,
+                            HeldAt = heldAt,
+                            HeldUntil = heldUntil,
+                            Status = SeatHoldStatus.Held
+                        };
+                        createdHolds.Add(hold);
+
+                        var allocation = new SeatAllocation
+                        {
+                            Id = Guid.NewGuid(),
+                            ServiceId = service.Id,
+                            SeatId = seat.Id,
+                            HoldId = hold.Id,
+                            PassengerId = passengerProfile.Id,
+                            AllocatedAt = heldAt,
+                            ExpiresAt = heldUntil,
+                            AllocationType = SeatAllocationType.Hold
+                        };
+                        createdAllocations.Add(allocation);
+                    }
+
+                    await _context.SeatHolds.AddRangeAsync(createdHolds, cancellationToken);
+                    await _context.SeatAllocations.AddRangeAsync(createdAllocations, cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    await transaction.CommitAsync(cancellationToken);
+
+                    var primaryHold = createdHolds.First();
+                    var totalAmount = service.BaseFare * request.SeatNumbers.Count;
+
+                    return new SeatHoldResponseDto
+                    {
+                        HoldId = primaryHold.Id,
+                        ServiceId = service.Id,
+                        ServiceCode = service.ServiceCode,
+                        RouteTitle = service.Route != null ? $"{service.Route.OriginCity} - {service.Route.DestinationCity} ({service.Route.Name})" : service.ServiceCode,
+                        SeatNumbers = request.SeatNumbers,
+                        HeldAt = heldAt,
+                        HeldUntil = heldUntil,
+                        SecondsRemaining = (int)(heldUntil - DateTime.UtcNow).TotalSeconds,
+                        BaseFarePerSeat = service.BaseFare,
+                        TotalAmount = totalAmount,
+                        Status = "Held"
+                    };
+                }
+                catch (DbUpdateException ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw new InvalidOperationException("One or more selected seats were concurrently allocated to another passenger. Please select alternative seats.", ex);
+                }
+                catch
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            });
         }
-
-        // 4. Create 10-Minute Seat Holds
-        var heldAt = DateTime.UtcNow;
-        var heldUntil = heldAt.AddMinutes(10);
-        var createdHolds = new List<SeatHold>();
-
-        foreach (var seat in layoutSeats)
+        finally
         {
-            var hold = new SeatHold
-            {
-                ServiceId = service.Id,
-                SeatId = seat.Id,
-                PassengerId = passengerProfile.Id,
-                HeldAt = heldAt,
-                HeldUntil = heldUntil,
-                Status = SeatHoldStatus.Held
-            };
-            createdHolds.Add(hold);
+            semaphore.Release();
         }
-
-        await _context.SeatHolds.AddRangeAsync(createdHolds, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        var primaryHold = createdHolds.First();
-        var totalAmount = service.BaseFare * request.SeatNumbers.Count;
-
-        return new SeatHoldResponseDto
-        {
-            HoldId = primaryHold.Id,
-            ServiceId = service.Id,
-            ServiceCode = service.ServiceCode,
-            RouteTitle = service.Route != null ? $"{service.Route.OriginCity} - {service.Route.DestinationCity} ({service.Route.Name})" : service.ServiceCode,
-            SeatNumbers = request.SeatNumbers,
-            HeldAt = heldAt,
-            HeldUntil = heldUntil,
-            SecondsRemaining = (int)(heldUntil - DateTime.UtcNow).TotalSeconds,
-            BaseFarePerSeat = service.BaseFare,
-            TotalAmount = totalAmount,
-            Status = "Held"
-        };
     }
 
     public async Task<bool> ReleaseSeatHoldAsync(Guid holdId, CancellationToken cancellationToken = default)
@@ -214,6 +306,17 @@ public class BookingService : IBookingService
         if (hold.Status == SeatHoldStatus.Held)
         {
             hold.Status = SeatHoldStatus.Expired;
+
+            // Remove corresponding seat allocation to make seat immediately available
+            var allocations = await _context.SeatAllocations
+                .Where(sa => sa.HoldId == holdId || (sa.ServiceId == hold.ServiceId && sa.SeatId == hold.SeatId && sa.HoldId == hold.Id))
+                .ToListAsync(cancellationToken);
+
+            if (allocations.Count > 0)
+            {
+                _context.SeatAllocations.RemoveRange(allocations);
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
@@ -245,6 +348,17 @@ public class BookingService : IBookingService
         if (hold.Status == SeatHoldStatus.Held && DateTime.UtcNow > hold.HeldUntil)
         {
             hold.Status = SeatHoldStatus.Expired;
+
+            // Remove expired seat allocation
+            var allocations = await _context.SeatAllocations
+                .Where(sa => sa.HoldId == hold.Id)
+                .ToListAsync(cancellationToken);
+
+            if (allocations.Count > 0)
+            {
+                _context.SeatAllocations.RemoveRange(allocations);
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
@@ -534,6 +648,13 @@ public class BookingService : IBookingService
                 if (hold.Status != SeatHoldStatus.Held || hold.HeldUntil <= DateTime.UtcNow)
                 {
                     hold.Status = SeatHoldStatus.Expired;
+                    var expiredAllocations = await _context.SeatAllocations
+                        .Where(sa => sa.HoldId == hold.Id)
+                        .ToListAsync(cancellationToken);
+                    if (expiredAllocations.Count > 0)
+                    {
+                        _context.SeatAllocations.RemoveRange(expiredAllocations);
+                    }
                     await _context.SaveChangesAsync(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     throw new InvalidOperationException("Seat hold has expired. Please re-select your seats.");
@@ -550,6 +671,21 @@ public class BookingService : IBookingService
 
                 var seatNumbersList = batchHolds.Select(h => h.Seat.SeatNumber).Distinct().OrderBy(s => s).ToList();
                 var totalFare = hold.Service.BaseFare * seatNumbersList.Count;
+
+                // 6b. Verify seat allocations: ensure no conflicting valid allocations exist (Security Fix 03)
+                var batchSeatIds = batchHolds.Select(h => h.SeatId).ToList();
+                var existingAllocations = await _context.SeatAllocations
+                    .Where(sa => sa.ServiceId == hold.ServiceId && batchSeatIds.Contains(sa.SeatId))
+                    .ToListAsync(cancellationToken);
+
+                // Any existing allocation must belong to this passenger and not be expired
+                foreach (var alloc in existingAllocations)
+                {
+                    if (alloc.PassengerId != hold.PassengerId || alloc.ExpiresAt <= DateTime.UtcNow)
+                    {
+                        throw new InvalidOperationException("A conflicting seat allocation exists or hold has expired. Checkout cannot proceed.");
+                    }
+                }
 
                 // 7. Verify payment amount matches required total fare
                 if (payment.Amount != totalFare)
@@ -605,6 +741,35 @@ public class BookingService : IBookingService
                 foreach (var h in batchHolds)
                 {
                     h.Status = SeatHoldStatus.ConvertedToBooking;
+                }
+
+                // 14. Convert SeatAllocations to permanent Booking allocations
+                var allocatedSeatIds = existingAllocations.Select(a => a.SeatId).ToHashSet();
+                foreach (var alloc in existingAllocations)
+                {
+                    alloc.AllocationType = SeatAllocationType.Booking;
+                    alloc.BookingId = booking.Id;
+                    alloc.ExpiresAt = DateTime.MaxValue;
+                }
+
+                // For any batch seats that had no prior allocation record (e.g. legacy test seeds)
+                foreach (var h in batchHolds)
+                {
+                    if (!allocatedSeatIds.Contains(h.SeatId))
+                    {
+                        var newAlloc = new SeatAllocation
+                        {
+                            Id = Guid.NewGuid(),
+                            ServiceId = hold.ServiceId,
+                            SeatId = h.SeatId,
+                            BookingId = booking.Id,
+                            PassengerId = hold.PassengerId,
+                            AllocatedAt = DateTime.UtcNow,
+                            ExpiresAt = DateTime.MaxValue,
+                            AllocationType = SeatAllocationType.Booking
+                        };
+                        await _context.SeatAllocations.AddAsync(newAlloc, cancellationToken);
+                    }
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -832,6 +997,16 @@ public class BookingService : IBookingService
         if (booking.Ticket != null)
         {
             booking.Ticket.Status = TicketStatus.Cancelled;
+        }
+
+        // Release seat allocations so seats become available again
+        var bookingAllocations = await _context.SeatAllocations
+            .Where(sa => sa.BookingId == booking.Id)
+            .ToListAsync(cancellationToken);
+
+        if (bookingAllocations.Count > 0)
+        {
+            _context.SeatAllocations.RemoveRange(bookingAllocations);
         }
 
         var refund = new Refund

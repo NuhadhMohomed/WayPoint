@@ -356,6 +356,60 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.ToTable("Refunds");
                 });
 
+            modelBuilder.Entity("WayPoint.Domain.Entities.Booking.SeatAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AllocatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AllocationType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HoldId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PassengerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SeatId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("HoldId");
+
+                    b.HasIndex("PassengerId");
+
+                    b.HasIndex("SeatId");
+
+                    b.HasIndex("ServiceId", "SeatId")
+                        .IsUnique();
+
+                    b.ToTable("SeatAllocations");
+                });
+
             modelBuilder.Entity("WayPoint.Domain.Entities.Booking.SeatHold", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1587,6 +1641,47 @@ namespace WayPoint.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("WayPoint.Domain.Entities.Booking.SeatAllocation", b =>
+                {
+                    b.HasOne("WayPoint.Domain.Entities.Booking.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WayPoint.Domain.Entities.Booking.SeatHold", "Hold")
+                        .WithMany()
+                        .HasForeignKey("HoldId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WayPoint.Domain.Entities.Identity.PassengerProfile", "Passenger")
+                        .WithMany()
+                        .HasForeignKey("PassengerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Fleet.Seat", "Seat")
+                        .WithMany()
+                        .HasForeignKey("SeatId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WayPoint.Domain.Entities.Journey.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Hold");
+
+                    b.Navigation("Passenger");
+
+                    b.Navigation("Seat");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("WayPoint.Domain.Entities.Booking.SeatHold", b =>

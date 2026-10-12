@@ -42,6 +42,7 @@ public interface IWayPointDbContext
 
     // Component 3: Booking, Ticketing & Passenger Options (Mithila)
     DbSet<SeatHold> SeatHolds { get; }
+    DbSet<SeatAllocation> SeatAllocations { get; }
     DbSet<Booking> Bookings { get; }
     DbSet<Ticket> Tickets { get; }
     DbSet<PaymentAttempt> PaymentAttempts { get; }

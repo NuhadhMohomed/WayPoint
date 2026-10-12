@@ -48,6 +48,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
 
     // Component 3: Booking, Ticketing & Payments (Mithila)
     public DbSet<SeatHold> SeatHolds => Set<SeatHold>();
+    public DbSet<SeatAllocation> SeatAllocations => Set<SeatAllocation>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
@@ -340,6 +341,35 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
                   .WithMany()
                   .HasForeignKey(sh => sh.PassengerId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SeatAllocation>(entity =>
+        {
+            entity.HasKey(sa => sa.Id);
+            entity.HasIndex(sa => new { sa.ServiceId, sa.SeatId }).IsUnique();
+            entity.Property(sa => sa.AllocationType).HasConversion<string>().HasMaxLength(20);
+            entity.HasOne(sa => sa.Service)
+                  .WithMany()
+                  .HasForeignKey(sa => sa.ServiceId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(sa => sa.Seat)
+                  .WithMany()
+                  .HasForeignKey(sa => sa.SeatId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(sa => sa.Passenger)
+                  .WithMany()
+                  .HasForeignKey(sa => sa.PassengerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(sa => sa.Hold)
+                  .WithMany()
+                  .HasForeignKey(sa => sa.HoldId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(sa => sa.Booking)
+                  .WithMany()
+                  .HasForeignKey(sa => sa.BookingId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Booking>(entity =>
