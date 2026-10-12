@@ -63,12 +63,13 @@ public class PaymentController : ControllerBase
         var userId = GetCurrentUserId();
         var isStaff = IsCallerStaff();
 
-        // If request references a specific HoldId, enforce ownership
-        if (request.HoldId.HasValue && _context != null)
+        // If request references a specific HoldId or ReservationGroupId, enforce ownership
+        var holdLookupId = request.ReservationGroupId ?? request.HoldId;
+        if (holdLookupId.HasValue && _context != null)
         {
             var hold = await _context.SeatHolds
                 .Include(h => h.Passenger)
-                .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                .FirstOrDefaultAsync(h => h.ReservationGroupId == holdLookupId.Value || h.Id == holdLookupId.Value, cancellationToken);
 
             if (hold == null)
             {
@@ -76,7 +77,7 @@ public class PaymentController : ControllerBase
                 {
                     Status = StatusCodes.Status404NotFound,
                     Title = "Hold Not Found",
-                    Detail = $"Seat hold '{request.HoldId.Value}' was not found."
+                    Detail = $"Seat hold '{holdLookupId.Value}' was not found."
                 });
             }
 
@@ -84,7 +85,7 @@ public class PaymentController : ControllerBase
             {
                 _logger.LogWarning(
                     "Payment ownership violation: User {UserId} attempted to process payment for hold {HoldId} belonging to another passenger",
-                    userId.Value, request.HoldId.Value);
+                    userId.Value, holdLookupId.Value);
                 return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
                 {
                     Status = StatusCodes.Status403Forbidden,

@@ -10,6 +10,7 @@ enum SandboxOutcome {
 /// Strongly-typed model representing an active temporary 10-minute seat hold.
 class SeatHoldInfo extends Equatable {
   final String holdId;
+  final String? reservationGroupId;
   final String serviceId;
   final String serviceCode;
   final String routeTitle;
@@ -25,6 +26,7 @@ class SeatHoldInfo extends Equatable {
 
   const SeatHoldInfo({
     required this.holdId,
+    this.reservationGroupId,
     required this.serviceId,
     required this.serviceCode,
     required this.routeTitle,
@@ -86,6 +88,7 @@ class SeatHoldInfo extends Equatable {
 
     return SeatHoldInfo(
       holdId: json['holdId']?.toString() ?? '',
+      reservationGroupId: json['reservationGroupId']?.toString(),
       serviceId: json['serviceId']?.toString() ?? '',
       serviceCode: json['serviceCode']?.toString() ?? 'SRV-COL-ELLA-0800',
       routeTitle: json['routeTitle']?.toString() ?? 'Colombo - Ella Highland Scenic Corridor',

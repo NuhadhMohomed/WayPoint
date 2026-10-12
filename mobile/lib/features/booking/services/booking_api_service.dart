@@ -64,6 +64,7 @@ class BookingApiService {
     required double amount,
     String cardholderName = 'NIMAL SILVA',
     String? holdId,
+    String? reservationGroupId,
   }) async {
     try {
       final payload = <String, dynamic>{
@@ -75,6 +76,9 @@ class BookingApiService {
       };
       if (holdId != null && holdId.isNotEmpty) {
         payload['holdId'] = holdId;
+      }
+      if (reservationGroupId != null && reservationGroupId.isNotEmpty) {
+        payload['reservationGroupId'] = reservationGroupId;
       }
 
       final response = await _dio.post(
@@ -113,17 +117,23 @@ class BookingApiService {
   /// Executes transactional atomic checkout via POST /api/v1/bookings/checkout (US-PASS-004)
   Future<BookingConfirmationResult> executeCheckout({
     required String holdId,
+    String? reservationGroupId,
     required String paymentTxnId,
     String passengerName = 'Nimal Silva',
   }) async {
     try {
+      final payload = <String, dynamic>{
+        'holdId': holdId,
+        'paymentTransactionId': paymentTxnId,
+        'passengerName': passengerName,
+      };
+      if (reservationGroupId != null && reservationGroupId.isNotEmpty) {
+        payload['reservationGroupId'] = reservationGroupId;
+      }
+
       final response = await _dio.post(
         '/bookings/checkout',
-        data: {
-          'holdId': holdId,
-          'paymentTransactionId': paymentTxnId,
-          'passengerName': passengerName,
-        },
+        data: payload,
       );
 
       if (response.statusCode == 200 && response.data != null) {

@@ -328,6 +328,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
         modelBuilder.Entity<SeatHold>(entity =>
         {
             entity.HasIndex(sh => new { sh.ServiceId, sh.SeatId, sh.HeldUntil, sh.Status });
+            entity.HasIndex(sh => sh.ReservationGroupId);
             entity.Property(sh => sh.Status).HasConversion<string>().HasMaxLength(20);
             entity.HasOne(sh => sh.Service)
                   .WithMany()
@@ -347,6 +348,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
         {
             entity.HasKey(sa => sa.Id);
             entity.HasIndex(sa => new { sa.ServiceId, sa.SeatId }).IsUnique();
+            entity.HasIndex(sa => sa.ReservationGroupId);
             entity.Property(sa => sa.AllocationType).HasConversion<string>().HasMaxLength(20);
             entity.HasOne(sa => sa.Service)
                   .WithMany()
@@ -421,6 +423,7 @@ public class WayPointDbContext : DbContext, IWayPointDbContext
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
             entity.HasIndex(p => p.GatewayTransactionId).IsUnique();
+            entity.HasIndex(p => p.ReservationGroupId);
         });
 
         modelBuilder.Entity<Refund>(entity =>

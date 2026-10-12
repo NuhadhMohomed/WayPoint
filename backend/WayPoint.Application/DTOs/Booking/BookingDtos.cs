@@ -26,6 +26,7 @@ public class SeatHoldRequestDto
 public class SeatHoldResponseDto
 {
     public Guid HoldId { get; set; }
+    public Guid ReservationGroupId { get; set; }
     public Guid ServiceId { get; set; }
     public string ServiceCode { get; set; } = string.Empty;
     public string RouteTitle { get; set; } = string.Empty;
@@ -41,6 +42,7 @@ public class SeatHoldResponseDto
 public class PaymentChargeRequestDto
 {
     public Guid? HoldId { get; set; }
+    public Guid? ReservationGroupId { get; set; }
     public string CardNumber { get; set; } = string.Empty;
     public string CardholderName { get; set; } = string.Empty;
     public string ExpiryDate { get; set; } = string.Empty;
@@ -60,6 +62,7 @@ public class PaymentChargeResponseDto
 public class BookingCheckoutRequestDto
 {
     public Guid HoldId { get; set; }
+    public Guid? ReservationGroupId { get; set; }
     public string PaymentTransactionId { get; set; } = string.Empty;
     public string? PassengerName { get; set; }
     public string? PassengerEmail { get; set; }

@@ -133,7 +133,7 @@ public class SeatHoldController : ControllerBase
         {
             var hold = await _context.SeatHolds
                 .Include(h => h.Passenger)
-                .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(h => h.ReservationGroupId == id || h.Id == id, cancellationToken);
 
             if (hold == null)
             {
@@ -199,7 +199,7 @@ public class SeatHoldController : ControllerBase
         {
             var hold = await _context.SeatHolds
                 .Include(h => h.Passenger)
-                .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(h => h.ReservationGroupId == id || h.Id == id, cancellationToken);
 
             if (hold == null)
             {

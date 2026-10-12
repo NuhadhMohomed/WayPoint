@@ -212,6 +212,7 @@ public class BookingService : IBookingService
                     }
 
                     // 4. Create 10-Minute Seat Holds and DB-Constrained Seat Allocations
+                    var reservationGroupId = Guid.NewGuid();
                     var heldAt = DateTime.UtcNow;
                     var heldUntil = heldAt.AddMinutes(10);
                     var createdHolds = new List<SeatHold>();
@@ -222,6 +223,7 @@ public class BookingService : IBookingService
                         var hold = new SeatHold
                         {
                             Id = Guid.NewGuid(),
+                            ReservationGroupId = reservationGroupId,
                             ServiceId = service.Id,
                             SeatId = seat.Id,
                             PassengerId = passengerProfile.Id,
@@ -234,6 +236,7 @@ public class BookingService : IBookingService
                         var allocation = new SeatAllocation
                         {
                             Id = Guid.NewGuid(),
+                            ReservationGroupId = reservationGroupId,
                             ServiceId = service.Id,
                             SeatId = seat.Id,
                             HoldId = hold.Id,
@@ -257,6 +260,7 @@ public class BookingService : IBookingService
                     return new SeatHoldResponseDto
                     {
                         HoldId = primaryHold.Id,
+                        ReservationGroupId = reservationGroupId,
                         ServiceId = service.Id,
                         ServiceCode = service.ServiceCode,
                         RouteTitle = service.Route != null ? $"{service.Route.OriginCity} - {service.Route.DestinationCity} ({service.Route.Name})" : service.ServiceCode,
@@ -291,7 +295,7 @@ public class BookingService : IBookingService
     {
         var hold = await _context.SeatHolds
             .Include(h => h.Passenger)
-            .FirstOrDefaultAsync(h => h.Id == holdId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.ReservationGroupId == holdId || h.Id == holdId, cancellationToken);
         if (hold == null) return false;
 
         // BOLA / Ownership enforcement: caller must own the hold unless staff
@@ -304,25 +308,35 @@ public class BookingService : IBookingService
             }
         }
 
-        if (hold.Status == SeatHoldStatus.Held)
+        var targetGroupId = hold.ReservationGroupId != Guid.Empty ? hold.ReservationGroupId : hold.Id;
+
+        var groupHolds = await _context.SeatHolds
+            .Where(h => (h.ReservationGroupId != Guid.Empty ? h.ReservationGroupId == targetGroupId : h.Id == targetGroupId) &&
+                        h.Status == SeatHoldStatus.Held)
+            .ToListAsync(cancellationToken);
+
+        if (groupHolds.Count == 0) return false;
+
+        var groupHoldIds = groupHolds.Select(h => h.Id).ToList();
+
+        foreach (var h in groupHolds)
         {
-            hold.Status = SeatHoldStatus.Expired;
-
-            // Remove corresponding seat allocation to make seat immediately available
-            var allocations = await _context.SeatAllocations
-                .Where(sa => sa.HoldId == holdId || (sa.ServiceId == hold.ServiceId && sa.SeatId == hold.SeatId && sa.HoldId == hold.Id))
-                .ToListAsync(cancellationToken);
-
-            if (allocations.Count > 0)
-            {
-                _context.SeatAllocations.RemoveRange(allocations);
-            }
-
-            await _context.SaveChangesAsync(cancellationToken);
-            return true;
+            h.Status = SeatHoldStatus.Expired;
         }
 
-        return false;
+        // Remove corresponding seat allocations for this reservation group to make seats immediately available
+        var allocations = await _context.SeatAllocations
+            .Where(sa => (sa.ReservationGroupId != null && sa.ReservationGroupId == targetGroupId) ||
+                         (sa.HoldId != null && groupHoldIds.Contains(sa.HoldId.Value)))
+            .ToListAsync(cancellationToken);
+
+        if (allocations.Count > 0)
+        {
+            _context.SeatAllocations.RemoveRange(allocations);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<SeatHoldResponseDto?> GetSeatHoldStatusAsync(Guid holdId, CancellationToken cancellationToken = default)
@@ -332,7 +346,7 @@ public class BookingService : IBookingService
                 .ThenInclude(s => s.Route)
             .Include(h => h.Seat)
             .Include(h => h.Passenger)
-            .FirstOrDefaultAsync(h => h.Id == holdId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.ReservationGroupId == holdId || h.Id == holdId, cancellationToken);
 
         if (hold == null) return null;
 
@@ -346,13 +360,26 @@ public class BookingService : IBookingService
             }
         }
 
-        if (hold.Status == SeatHoldStatus.Held && DateTime.UtcNow > hold.HeldUntil)
-        {
-            hold.Status = SeatHoldStatus.Expired;
+        var targetGroupId = hold.ReservationGroupId != Guid.Empty ? hold.ReservationGroupId : hold.Id;
 
-            // Remove expired seat allocation
+        var groupHolds = await _context.SeatHolds
+            .Where(h => (h.ReservationGroupId != Guid.Empty ? h.ReservationGroupId == targetGroupId : h.Id == targetGroupId))
+            .Include(h => h.Seat)
+            .ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var expiredHolds = groupHolds.Where(h => h.Status == SeatHoldStatus.Held && h.HeldUntil <= now).ToList();
+        if (expiredHolds.Count > 0)
+        {
+            foreach (var eh in expiredHolds)
+            {
+                eh.Status = SeatHoldStatus.Expired;
+            }
+
+            var expiredHoldIds = expiredHolds.Select(eh => eh.Id).ToList();
             var allocations = await _context.SeatAllocations
-                .Where(sa => sa.HoldId == hold.Id)
+                .Where(sa => (sa.ReservationGroupId != null && sa.ReservationGroupId == targetGroupId) ||
+                             (sa.HoldId != null && expiredHoldIds.Contains(sa.HoldId.Value)))
                 .ToListAsync(cancellationToken);
 
             if (allocations.Count > 0)
@@ -363,21 +390,27 @@ public class BookingService : IBookingService
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        var secondsRemaining = Math.Max(0, (int)(hold.HeldUntil - DateTime.UtcNow).TotalSeconds);
+        var seatNumbers = groupHolds.Select(h => h.Seat.SeatNumber).Distinct().OrderBy(s => s).ToList();
+        var primary = groupHolds.First();
+        var secondsRemaining = Math.Max(0, (int)(primary.HeldUntil - DateTime.UtcNow).TotalSeconds);
+        var status = groupHolds.All(h => h.Status == SeatHoldStatus.ConvertedToBooking)
+            ? "ConvertedToBooking"
+            : (groupHolds.Any(h => h.Status == SeatHoldStatus.Held && h.HeldUntil > DateTime.UtcNow) ? "Held" : "Expired");
 
         return new SeatHoldResponseDto
         {
-            HoldId = hold.Id,
+            HoldId = targetGroupId,
+            ReservationGroupId = targetGroupId,
             ServiceId = hold.ServiceId,
             ServiceCode = hold.Service.ServiceCode,
             RouteTitle = hold.Service.Route != null ? $"{hold.Service.Route.OriginCity} - {hold.Service.Route.DestinationCity}" : hold.Service.ServiceCode,
-            SeatNumbers = new List<string> { hold.Seat.SeatNumber },
-            HeldAt = hold.HeldAt,
-            HeldUntil = hold.HeldUntil,
+            SeatNumbers = seatNumbers,
+            HeldAt = primary.HeldAt,
+            HeldUntil = primary.HeldUntil,
             SecondsRemaining = secondsRemaining,
             BaseFarePerSeat = hold.Service.BaseFare,
-            TotalAmount = hold.Service.BaseFare,
-            Status = hold.Status.ToString()
+            TotalAmount = hold.Service.BaseFare * seatNumbers.Count,
+            Status = status
         };
     }
 
@@ -395,12 +428,18 @@ public class BookingService : IBookingService
             if (_context != null)
             {
                 Guid? passengerId = null;
-                if (request.HoldId.HasValue)
+                Guid? reservationGroupId = request.ReservationGroupId;
+                var holdIdToFind = request.HoldId ?? request.ReservationGroupId;
+                if (holdIdToFind.HasValue)
                 {
                     var hold = await _context.SeatHolds
                         .Include(h => h.Passenger)
-                        .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                        .FirstOrDefaultAsync(h => h.ReservationGroupId == holdIdToFind.Value || h.Id == holdIdToFind.Value, cancellationToken);
                     passengerId = hold?.PassengerId;
+                    if (hold != null && hold.ReservationGroupId != Guid.Empty)
+                    {
+                        reservationGroupId = hold.ReservationGroupId;
+                    }
                 }
                 else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
                 {
@@ -417,6 +456,7 @@ public class BookingService : IBookingService
                     Currency = "LKR",
                     Status = PaymentStatus.Failed,
                     HoldId = request.HoldId,
+                    ReservationGroupId = reservationGroupId,
                     PassengerId = passengerId,
                     ProcessedAt = DateTime.UtcNow
                 };
@@ -441,12 +481,22 @@ public class BookingService : IBookingService
             if (_context != null)
             {
                 Guid? passengerId = null;
-                if (request.HoldId.HasValue)
+                Guid? reservationGroupId = (request.ReservationGroupId.HasValue && request.ReservationGroupId.Value != Guid.Empty)
+                    ? request.ReservationGroupId.Value
+                    : null;
+                var holdIdToFind = (request.HoldId.HasValue && request.HoldId.Value != Guid.Empty)
+                    ? request.HoldId
+                    : ((request.ReservationGroupId.HasValue && request.ReservationGroupId.Value != Guid.Empty) ? request.ReservationGroupId : null);
+                if (holdIdToFind.HasValue)
                 {
                     var hold = await _context.SeatHolds
                         .Include(h => h.Passenger)
-                        .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                        .FirstOrDefaultAsync(h => h.ReservationGroupId == holdIdToFind.Value || h.Id == holdIdToFind.Value, cancellationToken);
                     passengerId = hold?.PassengerId;
+                    if (hold != null && hold.ReservationGroupId != Guid.Empty)
+                    {
+                        reservationGroupId = hold.ReservationGroupId;
+                    }
                 }
                 else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
                 {
@@ -462,7 +512,8 @@ public class BookingService : IBookingService
                     Amount = request.Amount,
                     Currency = "LKR",
                     Status = PaymentStatus.Pending,
-                    HoldId = request.HoldId,
+                    HoldId = (request.HoldId.HasValue && request.HoldId.Value != Guid.Empty) ? request.HoldId : null,
+                    ReservationGroupId = reservationGroupId,
                     PassengerId = passengerId,
                     ProcessedAt = DateTime.UtcNow
                 };
@@ -485,12 +536,22 @@ public class BookingService : IBookingService
         if (_context != null)
         {
             Guid? passengerId = null;
-            if (request.HoldId.HasValue)
+            Guid? reservationGroupId = (request.ReservationGroupId.HasValue && request.ReservationGroupId.Value != Guid.Empty)
+                ? request.ReservationGroupId.Value
+                : null;
+            var holdIdToFind = (request.HoldId.HasValue && request.HoldId.Value != Guid.Empty)
+                ? request.HoldId
+                : ((request.ReservationGroupId.HasValue && request.ReservationGroupId.Value != Guid.Empty) ? request.ReservationGroupId : null);
+            if (holdIdToFind.HasValue)
             {
                 var hold = await _context.SeatHolds
                     .Include(h => h.Passenger)
-                    .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+                    .FirstOrDefaultAsync(h => h.ReservationGroupId == holdIdToFind.Value || h.Id == holdIdToFind.Value, cancellationToken);
                 passengerId = hold?.PassengerId;
+                if (hold != null && hold.ReservationGroupId != Guid.Empty)
+                {
+                    reservationGroupId = hold.ReservationGroupId;
+                }
             }
             else if (_currentUserService?.IsAuthenticated == true && _currentUserService.UserId.HasValue)
             {
@@ -506,7 +567,8 @@ public class BookingService : IBookingService
                 Amount = request.Amount,
                 Currency = "LKR",
                 Status = PaymentStatus.Success,
-                HoldId = request.HoldId,
+                HoldId = (request.HoldId.HasValue && request.HoldId.Value != Guid.Empty) ? request.HoldId : null,
+                ReservationGroupId = reservationGroupId,
                 PassengerId = passengerId,
                 ProcessedAt = DateTime.UtcNow
             };
@@ -555,7 +617,9 @@ public class BookingService : IBookingService
                         .Include(h => h.Seat)
                         .Include(h => h.Passenger)
                             .ThenInclude(p => p.User)
-                        .FirstOrDefaultAsync(h => h.Id == request.HoldId, cancellationToken);
+                        .FirstOrDefaultAsync(h => (request.ReservationGroupId.HasValue && h.ReservationGroupId == request.ReservationGroupId.Value) ||
+                                                  h.ReservationGroupId == request.HoldId ||
+                                                  h.Id == request.HoldId, cancellationToken);
 
                     if (hold == null)
                     {
@@ -571,6 +635,10 @@ public class BookingService : IBookingService
                             throw new UnauthorizedAccessException("You do not have permission to checkout this seat hold.");
                         }
                     }
+
+                    var targetGroupId = request.ReservationGroupId.HasValue && request.ReservationGroupId.Value != Guid.Empty
+                        ? request.ReservationGroupId.Value
+                        : (hold.ReservationGroupId != Guid.Empty ? hold.ReservationGroupId : hold.Id);
 
                     // 4. Server-side payment transaction verification (Security Fix 02)
                     var payment = await _context.PaymentAttempts
@@ -602,8 +670,12 @@ public class BookingService : IBookingService
                     // 4d. Idempotency & Replay Protection: Check if payment was already used
                     if (payment.BookingId.HasValue)
                     {
-                        // Check if this is a duplicate checkout request for the same booking
-                        if (payment.HoldId == hold.Id || hold.Status == SeatHoldStatus.ConvertedToBooking)
+                        // Check if this is a duplicate checkout request for the same booking / reservation
+                        var isDuplicateForThisReservation =
+                            (payment.ReservationGroupId.HasValue && payment.ReservationGroupId.Value != Guid.Empty && payment.ReservationGroupId.Value == targetGroupId) ||
+                            (payment.HoldId.HasValue && (payment.HoldId.Value == targetGroupId || payment.HoldId.Value == hold.Id));
+
+                        if (isDuplicateForThisReservation)
                         {
                             var existingBooking = await _context.Bookings
                                 .Include(b => b.Service)
@@ -643,19 +715,52 @@ public class BookingService : IBookingService
                         throw new InvalidOperationException("Payment transaction has already been used to confirm another booking.");
                     }
 
-                    // 4e. Verify payment is linked to this seat hold
-                    if (payment.HoldId.HasValue && payment.HoldId.Value != hold.Id)
+                    // 4e. Verify payment is strictly linked to this reservation group (Security Fix 04 Hardening)
+                    if (payment.ReservationGroupId.HasValue && payment.ReservationGroupId.Value != Guid.Empty)
                     {
-                        throw new InvalidOperationException("Payment transaction is linked to a different seat hold.");
+                        if (payment.ReservationGroupId.Value != targetGroupId)
+                        {
+                            throw new InvalidOperationException("Payment transaction is linked to a different reservation group.");
+                        }
+                    }
+                    else if (payment.HoldId.HasValue && payment.HoldId.Value != Guid.Empty)
+                    {
+                        // Legacy payment: verify that the HoldId belongs to this reservation group or hold
+                        var isLinkedToGroup = payment.HoldId.Value == targetGroupId ||
+                                              payment.HoldId.Value == hold.Id ||
+                                              await _context.SeatHolds.AnyAsync(h => h.Id == payment.HoldId.Value &&
+                                                  (h.ReservationGroupId == targetGroupId || h.Id == targetGroupId), cancellationToken);
+
+                        if (!isLinkedToGroup)
+                        {
+                            throw new InvalidOperationException("Payment transaction is linked to a different seat hold.");
+                        }
+                    }
+                    else
+                    {
+                        // Payment has null or Guid.Empty ReservationGroupId and null or Guid.Empty HoldId (unlinked payment)
+                        throw new InvalidOperationException("Payment transaction is not linked to this reservation group.");
                     }
 
-                    // 5. Server-side validation of 10-minute hold window
+                    // 5. Server-side validation of 10-minute hold window for this reservation group
                     if (hold.Status != SeatHoldStatus.Held || hold.HeldUntil <= DateTime.UtcNow)
                     {
-                        hold.Status = SeatHoldStatus.Expired;
-                        var expiredAllocations = await _context.SeatAllocations
-                            .Where(sa => sa.HoldId == hold.Id)
+                        var groupHoldsToExpire = await _context.SeatHolds
+                            .Where(sh => (sh.ReservationGroupId != Guid.Empty ? sh.ReservationGroupId == targetGroupId : sh.Id == targetGroupId))
                             .ToListAsync(cancellationToken);
+
+                        foreach (var gh in groupHoldsToExpire)
+                        {
+                            gh.Status = SeatHoldStatus.Expired;
+                        }
+
+                        var groupHoldIds = groupHoldsToExpire.Select(sh => sh.Id).ToList();
+
+                        var expiredAllocations = await _context.SeatAllocations
+                            .Where(sa => (sa.ReservationGroupId != null && sa.ReservationGroupId == targetGroupId) ||
+                                         (sa.HoldId != null && groupHoldIds.Contains(sa.HoldId.Value)))
+                            .ToListAsync(cancellationToken);
+
                         if (expiredAllocations.Count > 0)
                         {
                             _context.SeatAllocations.RemoveRange(expiredAllocations);
@@ -665,14 +770,32 @@ public class BookingService : IBookingService
                         throw new InvalidOperationException("Seat hold has expired. Please re-select your seats.");
                     }
 
-                    // 6. Find all sibling holds for this passenger, service, and hold timestamp
+                    // 6. Retrieve ONLY holds belonging to this reservation group (Security Fix 04)
                     var batchHolds = await _context.SeatHolds
-                        .Where(sh => sh.ServiceId == hold.ServiceId &&
-                                     sh.PassengerId == hold.PassengerId &&
+                        .Where(sh => (sh.ReservationGroupId != Guid.Empty ? sh.ReservationGroupId == targetGroupId : sh.Id == targetGroupId) &&
                                      sh.Status == SeatHoldStatus.Held &&
                                      sh.HeldUntil > DateTime.UtcNow)
                         .Include(sh => sh.Seat)
                         .ToListAsync(cancellationToken);
+
+                    if (batchHolds.Count == 0)
+                    {
+                        throw new InvalidOperationException("No active seat holds found for this reservation group.");
+                    }
+
+                    // 6a. Ensure all holds in this reservation group belong to the authenticated passenger and service
+                    foreach (var h in batchHolds)
+                    {
+                        if (h.PassengerId != hold.PassengerId)
+                        {
+                            throw new UnauthorizedAccessException("One or more holds in the reservation group belong to a different passenger.");
+                        }
+
+                        if (h.ServiceId != hold.ServiceId)
+                        {
+                            throw new InvalidOperationException("One or more holds in the reservation group belong to a different service.");
+                        }
+                    }
 
                     var seatNumbersList = batchHolds.Select(h => h.Seat.SeatNumber).Distinct().OrderBy(s => s).ToList();
                     var totalFare = hold.Service.BaseFare * seatNumbersList.Count;
@@ -722,6 +845,7 @@ public class BookingService : IBookingService
                     // 10. Update and Link Payment Attempt
                     payment.BookingId = booking.Id;
                     payment.HoldId = hold.Id;
+                    payment.ReservationGroupId = targetGroupId;
                     payment.PassengerId = hold.PassengerId;
 
                     // 11. Generate HMAC-SHA256 Cryptographic QR Ticket Payload
@@ -754,6 +878,7 @@ public class BookingService : IBookingService
                     {
                         alloc.AllocationType = SeatAllocationType.Booking;
                         alloc.BookingId = booking.Id;
+                        alloc.ReservationGroupId = targetGroupId;
                         alloc.ExpiresAt = DateTime.MaxValue;
                     }
 
@@ -765,6 +890,7 @@ public class BookingService : IBookingService
                             var newAlloc = new SeatAllocation
                             {
                                 Id = Guid.NewGuid(),
+                                ReservationGroupId = targetGroupId,
                                 ServiceId = hold.ServiceId,
                                 SeatId = h.SeatId,
                                 BookingId = booking.Id,

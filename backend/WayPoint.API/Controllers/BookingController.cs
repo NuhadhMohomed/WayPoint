@@ -46,7 +46,9 @@ public class BookingController : ControllerBase
 
         var hold = await _context.SeatHolds
             .Include(h => h.Passenger)
-            .FirstOrDefaultAsync(h => h.Id == request.HoldId, cancellationToken);
+            .FirstOrDefaultAsync(h => (request.ReservationGroupId.HasValue && h.ReservationGroupId == request.ReservationGroupId.Value) ||
+                                      h.ReservationGroupId == request.HoldId ||
+                                      h.Id == request.HoldId, cancellationToken);
 
         if (hold == null)
         {

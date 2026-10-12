@@ -156,6 +156,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       amount: _totalPayable,
       cardholderName: _nameController.text,
       holdId: widget.holdInfo.holdId,
+      reservationGroupId: widget.holdInfo.reservationGroupId,
     );
 
     if (!mounted) return;
@@ -173,6 +174,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
       final confirmation = await apiService.executeCheckout(
         holdId: widget.holdInfo.holdId,
+        reservationGroupId: widget.holdInfo.reservationGroupId,
         paymentTxnId: txnId,
         passengerName: _nameController.text.isNotEmpty ? _nameController.text : 'Nimal Silva',
       );

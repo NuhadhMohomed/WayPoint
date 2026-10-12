@@ -297,6 +297,9 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.Property<DateTime>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ReservationGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -315,6 +318,8 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.HasIndex("HoldId");
 
                     b.HasIndex("PassengerId");
+
+                    b.HasIndex("ReservationGroupId");
 
                     b.ToTable("PaymentAttempts");
                 });
@@ -385,6 +390,9 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.Property<Guid>("PassengerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ReservationGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SeatId")
                         .HasColumnType("uuid");
 
@@ -401,6 +409,8 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.HasIndex("HoldId");
 
                     b.HasIndex("PassengerId");
+
+                    b.HasIndex("ReservationGroupId");
 
                     b.HasIndex("SeatId");
 
@@ -428,6 +438,9 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.Property<Guid>("PassengerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ReservationGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SeatId")
                         .HasColumnType("uuid");
 
@@ -445,6 +458,8 @@ namespace WayPoint.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PassengerId");
+
+                    b.HasIndex("ReservationGroupId");
 
                     b.HasIndex("SeatId");
 

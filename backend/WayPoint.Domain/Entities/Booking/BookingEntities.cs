@@ -11,6 +11,7 @@ public class SeatHold : BaseEntity
     public Guid ServiceId { get; set; }
     public Guid SeatId { get; set; }
     public Guid PassengerId { get; set; }
+    public Guid ReservationGroupId { get; set; }
     public DateTime HeldAt { get; set; } = DateTime.UtcNow;
     public DateTime HeldUntil { get; set; }
     public SeatHoldStatus Status { get; set; } = SeatHoldStatus.Held;
@@ -54,6 +55,7 @@ public class PaymentAttempt : BaseEntity
 {
     public Guid? BookingId { get; set; }
     public Guid? HoldId { get; set; }
+    public Guid? ReservationGroupId { get; set; }
     public Guid? PassengerId { get; set; }
     public string GatewayTransactionId { get; set; } = string.Empty;
     public decimal Amount { get; set; }
@@ -90,6 +92,7 @@ public class SeatAllocation : BaseEntity
     public Guid ServiceId { get; set; }
     public Guid SeatId { get; set; }
     public Guid? HoldId { get; set; }
+    public Guid? ReservationGroupId { get; set; }
     public Guid? BookingId { get; set; }
     public Guid PassengerId { get; set; }
     public DateTime AllocatedAt { get; set; } = DateTime.UtcNow;
