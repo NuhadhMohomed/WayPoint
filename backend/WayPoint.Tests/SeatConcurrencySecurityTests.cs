@@ -436,9 +436,15 @@ public class SeatConcurrencySecurityTests
         });
         Assert.True(paymentResult.IsSuccess);
 
-        // 3. Simultaneously fire two checkout requests for the same hold and payment txn
-        var checkoutController1 = CreateBookingController(serviceA, context, testData.UserA.Id, "Passenger");
-        var checkoutController2 = CreateBookingController(serviceA, context, testData.UserA.Id, "Passenger");
+        // 3. Simultaneously fire two checkout requests across INDEPENDENT DbContext and service instances
+        using var context1 = CreateDbContext(dbName);
+        using var context2 = CreateDbContext(dbName);
+
+        var checkoutService1 = new BookingService(context1, _configuration, CreateMockCurrentUserService(testData.UserA.Id, "Passenger"));
+        var checkoutService2 = new BookingService(context2, _configuration, CreateMockCurrentUserService(testData.UserA.Id, "Passenger"));
+
+        var checkoutController1 = CreateBookingController(checkoutService1, context1, testData.UserA.Id, "Passenger");
+        var checkoutController2 = CreateBookingController(checkoutService2, context2, testData.UserA.Id, "Passenger");
 
         var checkoutRequest = new BookingCheckoutRequestDto
         {
@@ -459,14 +465,27 @@ public class SeatConcurrencySecurityTests
         var confirm1 = Assert.IsType<BookingConfirmationDto>(((OkObjectResult)checkoutResults[0].Result!).Value);
         var confirm2 = Assert.IsType<BookingConfirmationDto>(((OkObjectResult)checkoutResults[1].Result!).Value);
         Assert.Equal(confirm1.BookingReference, confirm2.BookingReference);
+        Assert.Equal(confirm1.TicketId, confirm2.TicketId);
 
         // In database: Exactly 1 booking entity created
-        var bookings = await context.Bookings.Where(b => b.ServiceId == testData.Service.Id).ToListAsync();
+        using var verifyContext = CreateDbContext(dbName);
+        var bookings = await verifyContext.Bookings.Where(b => b.ServiceId == testData.Service.Id).ToListAsync();
         Assert.Single(bookings);
+        Assert.Equal(confirm1.BookingReference, bookings[0].BookingReference);
+
+        // In database: Exactly 1 ticket entity created (no duplicate tickets)
+        var tickets = await verifyContext.Tickets.Where(t => t.BookingId == bookings[0].Id).ToListAsync();
+        Assert.Single(tickets);
+        Assert.Equal(confirm1.TicketId, tickets[0].Id);
+
+        // In database: Exactly 1 payment attempt linked to this single booking (payment not consumed twice)
+        var paymentInDb = await verifyContext.PaymentAttempts.SingleAsync(p => p.GatewayTransactionId == paymentResult.TransactionId);
+        Assert.Equal(bookings[0].Id, paymentInDb.BookingId);
 
         // In database: Allocation transitioned to permanent Booking
-        var alloc = await context.SeatAllocations.SingleAsync(sa => sa.ServiceId == testData.Service.Id && sa.SeatId == testData.SeatA.Id);
+        var alloc = await verifyContext.SeatAllocations.SingleAsync(sa => sa.ServiceId == testData.Service.Id && sa.SeatId == testData.SeatA.Id);
         Assert.Equal(SeatAllocationType.Booking, alloc.AllocationType);
+        Assert.Equal(bookings[0].Id, alloc.BookingId);
         Assert.Equal(DateTime.MaxValue, alloc.ExpiresAt);
     }
 
@@ -651,6 +670,154 @@ public class SeatConcurrencySecurityTests
                 .ToListAsync();
             Assert.Single(seatAllocations);
         }
+    }
+
+    // =========================================================================
+    // TEST 13: Complete Seat Lifecycle Consistency Across All Transitions
+    // (Available -> Held -> Released -> Held -> Expired -> Held -> Checkout -> Cancel/Refund)
+    // =========================================================================
+
+    [Fact]
+    public async Task CompleteSeatLifecycle_AllPhases_RecordsRemainConsistent()
+    {
+        var dbName = $"ConcurrencyTest_Lifecycle_{Guid.NewGuid()}";
+        using var context = CreateDbContext(dbName);
+        var testData = await SeedConcurrencyTestDataAsync(context);
+
+        var service = new BookingService(context, _configuration, CreateMockCurrentUserService(testData.UserA.Id, "Passenger"));
+        var holdController = CreateSeatHoldController(service, context, testData.UserA.Id, "Passenger");
+        var bookingController = CreateBookingController(service, context, testData.UserA.Id, "Passenger");
+
+        // PHASE 1: Create Hold (Available -> Held)
+        var holdResult = await holdController.CreateSeatHold(new SeatHoldRequestDto
+        {
+            ServiceId = testData.Service.Id,
+            SeatNumbers = new List<string> { "1A" },
+            PassengerId = testData.PassengerA.Id
+        }, CancellationToken.None);
+
+        var holdDto = Assert.IsType<SeatHoldResponseDto>(((OkObjectResult)holdResult.Result!).Value);
+        var holdInDb = await context.SeatHolds.SingleAsync(sh => sh.Id == holdDto.HoldId);
+        Assert.Equal(SeatHoldStatus.Held, holdInDb.Status);
+
+        var allocInDb = await context.SeatAllocations.SingleAsync(sa => sa.HoldId == holdDto.HoldId);
+        Assert.Equal(SeatAllocationType.Hold, allocInDb.AllocationType);
+        Assert.Null(allocInDb.BookingId);
+        Assert.Equal(testData.PassengerA.Id, allocInDb.PassengerId);
+
+        // PHASE 2: Release Hold (Held -> Released / Available)
+        var releaseResult = await holdController.ReleaseSeatHold(holdDto.HoldId, CancellationToken.None);
+        Assert.IsType<OkObjectResult>(releaseResult);
+
+        holdInDb = await context.SeatHolds.SingleAsync(sh => sh.Id == holdDto.HoldId);
+        Assert.Equal(SeatHoldStatus.Expired, holdInDb.Status);
+
+        var allocsAfterRelease = await context.SeatAllocations.Where(sa => sa.HoldId == holdDto.HoldId).ToListAsync();
+        Assert.Empty(allocsAfterRelease);
+
+        // PHASE 3: Re-hold and Expire (Held -> Expired / Available)
+        var reHoldResult = await holdController.CreateSeatHold(new SeatHoldRequestDto
+        {
+            ServiceId = testData.Service.Id,
+            SeatNumbers = new List<string> { "1A" },
+            PassengerId = testData.PassengerA.Id
+        }, CancellationToken.None);
+
+        var reHoldDto = Assert.IsType<SeatHoldResponseDto>(((OkObjectResult)reHoldResult.Result!).Value);
+
+        // Simulate 10-minute timeout passage by moving HeldUntil to the past
+        var reHoldInDb = await context.SeatHolds.SingleAsync(sh => sh.Id == reHoldDto.HoldId);
+        reHoldInDb.HeldUntil = DateTime.UtcNow.AddMinutes(-1);
+        var reAllocInDb = await context.SeatAllocations.SingleAsync(sa => sa.HoldId == reHoldDto.HoldId);
+        reAllocInDb.ExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        await context.SaveChangesAsync();
+
+        // Expired hold status check triggers cleanup
+        var expiredStatus = await service.GetSeatHoldStatusAsync(reHoldDto.HoldId);
+        Assert.NotNull(expiredStatus);
+        Assert.Equal("Expired", expiredStatus.Status);
+
+        var allocsAfterExpiry = await context.SeatAllocations.Where(sa => sa.HoldId == reHoldDto.HoldId).ToListAsync();
+        Assert.Empty(allocsAfterExpiry);
+
+        // PHASE 4: Re-hold, Pay, and Checkout (Held -> Confirmed Booking)
+        var checkoutHoldResult = await holdController.CreateSeatHold(new SeatHoldRequestDto
+        {
+            ServiceId = testData.Service.Id,
+            SeatNumbers = new List<string> { "1A" },
+            PassengerId = testData.PassengerA.Id
+        }, CancellationToken.None);
+
+        var checkoutHoldDto = Assert.IsType<SeatHoldResponseDto>(((OkObjectResult)checkoutHoldResult.Result!).Value);
+
+        var paymentResult = await service.ProcessSandboxPaymentAsync(new PaymentChargeRequestDto
+        {
+            HoldId = checkoutHoldDto.HoldId,
+            CardNumber = "4532 1111 2222 0001",
+            Amount = testData.Service.BaseFare
+        });
+        Assert.True(paymentResult.IsSuccess);
+
+        var checkoutResult = await bookingController.Checkout(new BookingCheckoutRequestDto
+        {
+            HoldId = checkoutHoldDto.HoldId,
+            PaymentTransactionId = paymentResult.TransactionId,
+            PassengerName = "Passenger Alpha"
+        }, CancellationToken.None);
+
+        var confirmDto = Assert.IsType<BookingConfirmationDto>(((OkObjectResult)checkoutResult.Result!).Value);
+
+        // Verify database state: Booking Confirmed, Ticket Issued, Hold Converted, Allocation Booking
+        var bookingInDb = await context.Bookings.SingleAsync(b => b.BookingReference == confirmDto.BookingReference);
+        Assert.Equal(BookingStatus.Confirmed, bookingInDb.Status);
+
+        var ticketInDb = await context.Tickets.SingleAsync(t => t.BookingId == bookingInDb.Id);
+        Assert.Equal(TicketStatus.Issued, ticketInDb.Status);
+
+        var holdAfterCheckout = await context.SeatHolds.SingleAsync(sh => sh.Id == checkoutHoldDto.HoldId);
+        Assert.Equal(SeatHoldStatus.ConvertedToBooking, holdAfterCheckout.Status);
+
+        var allocAfterCheckout = await context.SeatAllocations.SingleAsync(sa => sa.SeatId == testData.SeatA.Id);
+        Assert.Equal(SeatAllocationType.Booking, allocAfterCheckout.AllocationType);
+        Assert.Equal(bookingInDb.Id, allocAfterCheckout.BookingId);
+        Assert.Equal(DateTime.MaxValue, allocAfterCheckout.ExpiresAt);
+
+        var paymentAfterCheckout = await context.PaymentAttempts.SingleAsync(p => p.GatewayTransactionId == paymentResult.TransactionId);
+        Assert.Equal(bookingInDb.Id, paymentAfterCheckout.BookingId);
+
+        // PHASE 5: Cancel Booking & Refund (Confirmed -> Cancelled / Available)
+        var cancelResult = await service.CancelBookingAndRefundAsync(new CancelBookingRequestDto
+        {
+            BookingReference = bookingInDb.BookingReference,
+            Reason = "Trip rescheduled"
+        });
+        Assert.Equal("Cancelled", cancelResult.Status);
+
+        bookingInDb = await context.Bookings.SingleAsync(b => b.Id == bookingInDb.Id);
+        Assert.Equal(BookingStatus.Cancelled, bookingInDb.Status);
+
+        ticketInDb = await context.Tickets.SingleAsync(t => t.BookingId == bookingInDb.Id);
+        Assert.Equal(TicketStatus.Cancelled, ticketInDb.Status);
+
+        var refundInDb = await context.Refunds.SingleAsync(r => r.BookingId == bookingInDb.Id);
+        Assert.NotNull(refundInDb);
+
+        // Allocation is deleted so seat becomes Available again!
+        var allocsAfterCancel = await context.SeatAllocations.Where(sa => sa.BookingId == bookingInDb.Id).ToListAsync();
+        Assert.Empty(allocsAfterCancel);
+
+        // Passenger B can now claim the cancelled seat
+        var serviceB = new BookingService(context, _configuration, CreateMockCurrentUserService(testData.UserB.Id, "Passenger"));
+        var controllerB = CreateSeatHoldController(serviceB, context, testData.UserB.Id, "Passenger");
+
+        var newHoldResult = await controllerB.CreateSeatHold(new SeatHoldRequestDto
+        {
+            ServiceId = testData.Service.Id,
+            SeatNumbers = new List<string> { "1A" },
+            PassengerId = testData.PassengerB.Id
+        }, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(newHoldResult.Result);
     }
 
     // =========================================================================
