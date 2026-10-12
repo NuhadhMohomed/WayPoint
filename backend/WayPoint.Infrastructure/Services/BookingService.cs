@@ -6,6 +6,7 @@ using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
 using WayPoint.Application.DTOs.Common;
 using WayPoint.Domain.Entities.Booking;
+using WayPoint.Domain.Entities.Identity;
 using WayPoint.Domain.Enums;
 using WayPoint.Infrastructure.Data;
 
@@ -15,11 +16,16 @@ public class BookingService : IBookingService
 {
     private readonly WayPointDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public BookingService(WayPointDbContext context, IConfiguration configuration)
+    public BookingService(
+        WayPointDbContext context,
+        IConfiguration configuration,
+        ICurrentUserService? currentUserService = null)
     {
         _context = context;
         _configuration = configuration;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<ServiceSummaryDto>> GetAvailableServicesAsync(CancellationToken cancellationToken = default)
@@ -69,14 +75,38 @@ public class BookingService : IBookingService
             throw new KeyNotFoundException($"Scheduled service with ID '{request.ServiceId}' was not found.");
         }
 
-        // 1. Resolve passenger (fallback to test passenger profile if not supplied)
-        var passengerProfile = request.PassengerId.HasValue
-            ? await _context.PassengerProfiles.FirstOrDefaultAsync(p => p.Id == request.PassengerId.Value || p.UserId == request.PassengerId.Value, cancellationToken)
-            : await _context.PassengerProfiles.FirstOrDefaultAsync(cancellationToken);
+        // 1. Resolve passenger profile using trusted caller identity (BOLA / Ownership enforcement)
+        PassengerProfile? passengerProfile = null;
+
+        if (_currentUserService != null && _currentUserService.IsAuthenticated)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (currentUserId.HasValue)
+            {
+                passengerProfile = await _context.PassengerProfiles
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.UserId == currentUserId.Value, cancellationToken);
+            }
+
+            // Spoofing check: non-staff cannot specify another passenger's ID
+            if (request.PassengerId.HasValue && passengerProfile != null &&
+                request.PassengerId.Value != passengerProfile.Id &&
+                request.PassengerId.Value != passengerProfile.UserId &&
+                !_currentUserService.IsStaff)
+            {
+                throw new UnauthorizedAccessException("Cannot create seat hold for another passenger.");
+            }
+        }
+        else if (request.PassengerId.HasValue)
+        {
+            passengerProfile = await _context.PassengerProfiles
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == request.PassengerId.Value || p.UserId == request.PassengerId.Value, cancellationToken);
+        }
 
         if (passengerProfile == null)
         {
-            throw new InvalidOperationException("No passenger profile found to associate with seat hold.");
+            throw new InvalidOperationException("No valid passenger profile found to associate with seat hold.");
         }
 
         // 2. Fetch seats from bus layout
@@ -166,8 +196,20 @@ public class BookingService : IBookingService
 
     public async Task<bool> ReleaseSeatHoldAsync(Guid holdId, CancellationToken cancellationToken = default)
     {
-        var hold = await _context.SeatHolds.FirstOrDefaultAsync(h => h.Id == holdId, cancellationToken);
+        var hold = await _context.SeatHolds
+            .Include(h => h.Passenger)
+            .FirstOrDefaultAsync(h => h.Id == holdId, cancellationToken);
         if (hold == null) return false;
+
+        // BOLA / Ownership enforcement: caller must own the hold unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || hold.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to release this seat hold.");
+            }
+        }
 
         if (hold.Status == SeatHoldStatus.Held)
         {
@@ -185,9 +227,20 @@ public class BookingService : IBookingService
             .Include(h => h.Service)
                 .ThenInclude(s => s.Route)
             .Include(h => h.Seat)
+            .Include(h => h.Passenger)
             .FirstOrDefaultAsync(h => h.Id == holdId, cancellationToken);
 
         if (hold == null) return null;
+
+        // BOLA / Ownership enforcement: caller must own the hold unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || hold.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to view this seat hold.");
+            }
+        }
 
         if (hold.Status == SeatHoldStatus.Held && DateTime.UtcNow > hold.HeldUntil)
         {
@@ -276,6 +329,16 @@ public class BookingService : IBookingService
             if (hold == null)
             {
                 throw new KeyNotFoundException("Active seat hold was not found.");
+            }
+
+            // BOLA / Ownership enforcement: caller must own the seat hold being checked out
+            if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+            {
+                var currentUserId = _currentUserService.UserId;
+                if (!currentUserId.HasValue || hold.Passenger?.UserId != currentUserId.Value)
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to checkout this seat hold.");
+                }
             }
 
             // 2. Server-side validation of 10-minute hold window
@@ -397,60 +460,42 @@ public class BookingService : IBookingService
     public async Task<List<HistoricalBookingDto>> GetPassengerBookingsAsync(Guid? passengerId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Bookings
+            .Include(b => b.Passenger)
             .Include(b => b.Service)
                 .ThenInclude(s => s.Route)
             .Include(b => b.Ticket)
             .Include(b => b.Refunds)
             .AsQueryable();
 
-        if (passengerId.HasValue)
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
         {
-            query = query.Where(b => b.PassengerId == passengerId.Value);
+            var currentUserId = _currentUserService.UserId;
+            var passengerProfile = await _context.PassengerProfiles
+                .FirstOrDefaultAsync(p => p.UserId == currentUserId, cancellationToken);
+
+            if (passengerProfile == null)
+            {
+                return new List<HistoricalBookingDto>();
+            }
+
+            // BOLA enforcement: passenger cannot query another passenger's bookings
+            if (passengerId.HasValue && passengerId.Value != passengerProfile.Id && passengerId.Value != passengerProfile.UserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to view bookings for another passenger.");
+            }
+
+            query = query.Where(b => b.PassengerId == passengerProfile.Id);
+        }
+        else if (passengerId.HasValue)
+        {
+            query = query.Where(b => b.PassengerId == passengerId.Value || b.Passenger.UserId == passengerId.Value);
         }
 
         var bookings = await query
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return bookings.Select(b =>
-        {
-            var route = b.Service?.Route;
-            var departureTime = b.Service?.DepartureTime ?? DateTime.UtcNow;
-            var hoursUntilDeparture = Math.Max(0, (int)(departureTime - DateTime.UtcNow).TotalHours);
-
-            // BR-REFUND-001 Policy Calculation
-            decimal eligibleRefundPercent;
-            if (hoursUntilDeparture > 24) eligibleRefundPercent = 0.90m;
-            else if (hoursUntilDeparture >= 12) eligibleRefundPercent = 0.50m;
-            else eligibleRefundPercent = 0.0m;
-
-            var latestRefund = b.Refunds.OrderByDescending(r => r.ProcessedAt).FirstOrDefault();
-
-            return new HistoricalBookingDto
-            {
-                BookingId = b.Id,
-                BookingReference = b.BookingReference,
-                ServiceId = b.ServiceId,
-                ServiceCode = b.Service?.ServiceCode ?? "SRV-UNKNOWN",
-                RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : "Intercity Transit Corridor",
-                OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
-                DestinationCity = route?.DestinationCity ?? "Destination Terminal",
-                DepartureTime = departureTime,
-                ArrivalTime = b.Service?.ArrivalTime ?? departureTime.AddHours(4),
-                SeatNumbers = b.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
-                TotalFareAmount = b.TotalFareAmount,
-                Status = b.Status.ToString(),
-                BookedAt = b.CreatedAt,
-                TicketId = b.Ticket?.Id,
-                QrCodePayload = b.Ticket?.QrCodePayload,
-                IsBoarded = b.Ticket?.IsBoarded ?? false,
-                RefundAmount = latestRefund?.RefundAmount,
-                RefundPercentage = latestRefund?.Percentage,
-                CancellationReason = latestRefund?.Reason,
-                HoursUntilDeparture = hoursUntilDeparture,
-                EligibleRefundPercentage = eligibleRefundPercent
-            };
-        }).ToList();
+        return bookings.Select(MapToHistoricalBookingDto).ToList();
     }
 
     /// <inheritdoc />
@@ -458,15 +503,34 @@ public class BookingService : IBookingService
         Guid? passengerId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Bookings
+            .Include(b => b.Passenger)
             .Include(b => b.Service)
                 .ThenInclude(s => s.Route)
             .Include(b => b.Ticket)
             .Include(b => b.Refunds)
             .AsQueryable();
 
-        if (passengerId.HasValue)
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
         {
-            query = query.Where(b => b.PassengerId == passengerId.Value);
+            var currentUserId = _currentUserService.UserId;
+            var passengerProfile = await _context.PassengerProfiles
+                .FirstOrDefaultAsync(p => p.UserId == currentUserId, cancellationToken);
+
+            if (passengerProfile == null)
+            {
+                return new PaginatedResponseDto<HistoricalBookingDto>(new List<HistoricalBookingDto>(), 0, pageNumber, pageSize);
+            }
+
+            if (passengerId.HasValue && passengerId.Value != passengerProfile.Id && passengerId.Value != passengerProfile.UserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to view bookings for another passenger.");
+            }
+
+            query = query.Where(b => b.PassengerId == passengerProfile.Id);
+        }
+        else if (passengerId.HasValue)
+        {
+            query = query.Where(b => b.PassengerId == passengerId.Value || b.Passenger.UserId == passengerId.Value);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -477,63 +541,65 @@ public class BookingService : IBookingService
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        var items = bookings.Select(b =>
-        {
-            var route = b.Service?.Route;
-            var departureTime = b.Service?.DepartureTime ?? DateTime.UtcNow;
-            var hoursUntilDeparture = Math.Max(0, (int)(departureTime - DateTime.UtcNow).TotalHours);
-
-            decimal eligibleRefundPercent;
-            if (hoursUntilDeparture > 24) eligibleRefundPercent = 0.90m;
-            else if (hoursUntilDeparture >= 12) eligibleRefundPercent = 0.50m;
-            else eligibleRefundPercent = 0.0m;
-
-            var latestRefund = b.Refunds.OrderByDescending(r => r.ProcessedAt).FirstOrDefault();
-
-            return new HistoricalBookingDto
-            {
-                BookingId = b.Id,
-                BookingReference = b.BookingReference,
-                ServiceId = b.ServiceId,
-                ServiceCode = b.Service?.ServiceCode ?? "SRV-UNKNOWN",
-                RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : "Intercity Transit Corridor",
-                OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
-                DestinationCity = route?.DestinationCity ?? "Destination Terminal",
-                DepartureTime = departureTime,
-                ArrivalTime = b.Service?.ArrivalTime ?? departureTime.AddHours(4),
-                SeatNumbers = b.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
-                TotalFareAmount = b.TotalFareAmount,
-                Status = b.Status.ToString(),
-                BookedAt = b.CreatedAt,
-                TicketId = b.Ticket?.Id,
-                QrCodePayload = b.Ticket?.QrCodePayload,
-                IsBoarded = b.Ticket?.IsBoarded ?? false,
-                RefundAmount = latestRefund?.RefundAmount,
-                RefundPercentage = latestRefund?.Percentage,
-                CancellationReason = latestRefund?.Reason,
-                HoursUntilDeparture = hoursUntilDeparture,
-                EligibleRefundPercentage = eligibleRefundPercent
-            };
-        }).ToList();
+        var items = bookings.Select(MapToHistoricalBookingDto).ToList();
 
         return new PaginatedResponseDto<HistoricalBookingDto>(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task<HistoricalBookingDto?> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default)
     {
-        var bookings = await GetPassengerBookingsAsync(null, cancellationToken);
-        return bookings.FirstOrDefault(b => b.BookingId == bookingId);
+        var booking = await _context.Bookings
+            .Include(b => b.Passenger)
+            .Include(b => b.Service)
+                .ThenInclude(s => s.Route)
+            .Include(b => b.Ticket)
+            .Include(b => b.Refunds)
+            .FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
+
+        if (booking == null) return null;
+
+        // BOLA / Ownership enforcement: caller must own the booking unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || booking.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to access this booking.");
+            }
+        }
+
+        return MapToHistoricalBookingDto(booking);
     }
 
     public async Task<HistoricalBookingDto?> GetBookingByReferenceAsync(string bookingReference, CancellationToken cancellationToken = default)
     {
-        var bookings = await GetPassengerBookingsAsync(null, cancellationToken);
-        return bookings.FirstOrDefault(b => string.Equals(b.BookingReference, bookingReference, StringComparison.OrdinalIgnoreCase));
+        var booking = await _context.Bookings
+            .Include(b => b.Passenger)
+            .Include(b => b.Service)
+                .ThenInclude(s => s.Route)
+            .Include(b => b.Ticket)
+            .Include(b => b.Refunds)
+            .FirstOrDefaultAsync(b => b.BookingReference == bookingReference, cancellationToken);
+
+        if (booking == null) return null;
+
+        // BOLA / Ownership enforcement: caller must own the booking unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || booking.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to access this booking.");
+            }
+        }
+
+        return MapToHistoricalBookingDto(booking);
     }
 
     public async Task<RefundResponseDto> CancelBookingAndRefundAsync(CancelBookingRequestDto request, CancellationToken cancellationToken = default)
     {
         var booking = await _context.Bookings
+            .Include(b => b.Passenger)
             .Include(b => b.Service)
             .Include(b => b.Ticket)
             .FirstOrDefaultAsync(b => b.BookingReference == request.BookingReference, cancellationToken);
@@ -541,6 +607,16 @@ public class BookingService : IBookingService
         if (booking == null)
         {
             throw new KeyNotFoundException($"Booking reference '{request.BookingReference}' not found.");
+        }
+
+        // BOLA / Ownership enforcement: caller must own the booking unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || booking.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to cancel this booking.");
+            }
         }
 
         if (booking.Status == BookingStatus.Cancelled)
@@ -759,6 +835,16 @@ public class BookingService : IBookingService
         if (ticket == null)
             return null;
 
+        // BOLA / Ownership enforcement: caller must own the ticket unless staff
+        if (_currentUserService != null && _currentUserService.IsAuthenticated && !_currentUserService.IsStaff)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue || ticket.Booking.Passenger?.UserId != currentUserId.Value)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to access this ticket.");
+            }
+        }
+
         var route = ticket.Booking.Service?.Route;
 
         return new TicketDetailsDto
@@ -775,6 +861,46 @@ public class BookingService : IBookingService
             QrCodePayload = ticket.QrCodePayload,
             IssuedAt = ticket.CreatedAt,
             PassengerUserId = ticket.Booking.Passenger?.UserId
+        };
+    }
+
+    private static HistoricalBookingDto MapToHistoricalBookingDto(Booking b)
+    {
+        var route = b.Service?.Route;
+        var departureTime = b.Service?.DepartureTime ?? DateTime.UtcNow;
+        var hoursUntilDeparture = Math.Max(0, (int)(departureTime - DateTime.UtcNow).TotalHours);
+
+        // BR-REFUND-001 Policy Calculation
+        decimal eligibleRefundPercent;
+        if (hoursUntilDeparture > 24) eligibleRefundPercent = 0.90m;
+        else if (hoursUntilDeparture >= 12) eligibleRefundPercent = 0.50m;
+        else eligibleRefundPercent = 0.0m;
+
+        var latestRefund = b.Refunds?.OrderByDescending(r => r.ProcessedAt).FirstOrDefault();
+
+        return new HistoricalBookingDto
+        {
+            BookingId = b.Id,
+            BookingReference = b.BookingReference,
+            ServiceId = b.ServiceId,
+            ServiceCode = b.Service?.ServiceCode ?? "SRV-UNKNOWN",
+            RouteTitle = route != null ? $"{route.OriginCity} - {route.DestinationCity} ({route.Name})" : "Intercity Transit Corridor",
+            OriginCity = route?.OriginCity ?? "Makumbura MMC (Colombo)",
+            DestinationCity = route?.DestinationCity ?? "Destination Terminal",
+            DepartureTime = departureTime,
+            ArrivalTime = b.Service?.ArrivalTime ?? departureTime.AddHours(4),
+            SeatNumbers = b.SeatNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+            TotalFareAmount = b.TotalFareAmount,
+            Status = b.Status.ToString(),
+            BookedAt = b.CreatedAt,
+            TicketId = b.Ticket?.Id,
+            QrCodePayload = b.Ticket?.QrCodePayload,
+            IsBoarded = b.Ticket?.IsBoarded ?? false,
+            RefundAmount = latestRefund?.RefundAmount,
+            RefundPercentage = latestRefund?.Percentage,
+            CancellationReason = latestRefund?.Reason,
+            HoursUntilDeparture = hoursUntilDeparture,
+            EligibleRefundPercentage = eligibleRefundPercent
         };
     }
 }

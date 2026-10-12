@@ -28,6 +28,8 @@ public static class DependencyInjection
             });
         });
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IWayPointDbContext>(provider => provider.GetRequiredService<WayPointDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

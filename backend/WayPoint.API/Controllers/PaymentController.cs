@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
 
@@ -7,20 +9,29 @@ namespace WayPoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/payments")]
-[Authorize(Policy = "RequirePassenger")]
+[Authorize]
 public class PaymentController : ControllerBase
 {
     private readonly IBookingService _bookingService;
+    private readonly IWayPointDbContext? _context;
+    private readonly ICurrentUserService? _currentUserService;
     private readonly ILogger<PaymentController> _logger;
 
-    public PaymentController(IBookingService bookingService, ILogger<PaymentController> logger)
+    public PaymentController(
+        IBookingService bookingService,
+        ILogger<PaymentController> logger,
+        IWayPointDbContext? context = null,
+        ICurrentUserService? currentUserService = null)
     {
         _bookingService = bookingService;
         _logger = logger;
+        _context = context;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
     /// Processes a simulated payment card charge against the sandbox gateway (US-PASS-004).
+    /// Enforces BOLA ownership verification: If HoldId is provided, caller must own the hold (or be staff).
     /// Simulates success (ends with 0001), card decline (0002), or timeout (0003).
     /// </summary>
     [HttpPost("confirm-sandbox-charge")]
@@ -48,6 +59,40 @@ public class PaymentController : ControllerBase
             });
         }
 
+        var userId = GetCurrentUserId();
+        var isStaff = IsCallerStaff();
+
+        // If request references a specific HoldId, enforce ownership
+        if (request.HoldId.HasValue && _context != null)
+        {
+            var hold = await _context.SeatHolds
+                .Include(h => h.Passenger)
+                .FirstOrDefaultAsync(h => h.Id == request.HoldId.Value, cancellationToken);
+
+            if (hold == null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Hold Not Found",
+                    Detail = $"Seat hold '{request.HoldId.Value}' was not found."
+                });
+            }
+
+            if (!isStaff && userId.HasValue && hold.Passenger?.UserId != userId.Value)
+            {
+                _logger.LogWarning(
+                    "Payment ownership violation: User {UserId} attempted to process payment for hold {HoldId} belonging to another passenger",
+                    userId.Value, request.HoldId.Value);
+                return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Access Denied",
+                    Detail = "You do not have permission to process payments for another passenger's seat hold."
+                });
+            }
+        }
+
         _logger.LogInformation("Processing sandbox payment of Rs. {Amount} for card ending in {Last4}",
             request.Amount,
             request.CardNumber.Length >= 4 ? request.CardNumber[^4..] : "****");
@@ -65,5 +110,28 @@ public class PaymentController : ControllerBase
         }
 
         return Ok(response);
+    }
+
+    private Guid? GetCurrentUserId()
+    {
+        if (_currentUserService?.UserId.HasValue == true)
+        {
+            return _currentUserService.UserId;
+        }
+
+        var idClaim = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(idClaim, out var id) ? id : null;
+    }
+
+    private bool IsCallerStaff()
+    {
+        if (_currentUserService != null)
+        {
+            return _currentUserService.IsStaff;
+        }
+
+        return User?.IsInRole("Admin") == true ||
+               User?.IsInRole("TransportManager") == true ||
+               User?.IsInRole("Operator") == true;
     }
 }

@@ -23,30 +23,38 @@ public class TicketController : ControllerBase
 
     /// <summary>
     /// Retrieves a digital boarding pass ticket by ID with cryptographic HMAC payload.
-    /// Enforces ownership verification: Booking.PassengerId must match authenticated user (Security Architecture §7.3).
+    /// Enforces BOLA ownership verification: Only the ticket owner (or authorized staff/conductors) may view the ticket.
     /// </summary>
-    [Authorize(Policy = "RequirePassenger")]
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetTicket(Guid id, CancellationToken cancellationToken)
     {
-        var ticket = await _bookingService.GetTicketByIdAsync(id, cancellationToken);
-
-        if (ticket == null)
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var currentUserId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Ticket Not Found",
-                Detail = $"Ticket with ID '{id}' was not found."
-            });
+            return Unauthorized();
         }
 
-        // BR-SECURITY: Verify ticket ownership (Security Architecture §7.3)
-        // Booking.Passenger.UserId must match the authenticated user's JWT NameIdentifier claim
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (Guid.TryParse(userIdClaim, out var currentUserId))
+        var isStaff = User.IsInRole("Admin") || User.IsInRole("TransportManager") ||
+                      User.IsInRole("Operator") || User.IsInRole("Conductor");
+
+        try
         {
-            if (ticket.PassengerUserId != currentUserId)
+            var ticket = await _bookingService.GetTicketByIdAsync(id, cancellationToken);
+
+            if (ticket == null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Ticket Not Found",
+                    Detail = $"Ticket with ID '{id}' was not found."
+                });
+            }
+
+            // BR-SECURITY: Verify ticket ownership (Security Architecture §7.3)
+            // Booking.Passenger.UserId must match the authenticated user's JWT NameIdentifier claim
+            if (!isStaff && ticket.PassengerUserId != currentUserId)
             {
                 _logger.LogWarning(
                     "Ticket ownership violation: User {UserId} attempted to access ticket {TicketId}",
@@ -58,28 +66,38 @@ public class TicketController : ControllerBase
                     Detail = "You do not have permission to view this ticket."
                 });
             }
-        }
 
-        return Ok(new
+            return Ok(new
+            {
+                ticketId = ticket.TicketId,
+                bookingReference = ticket.BookingReference,
+                serviceCode = ticket.ServiceCode,
+                routeTitle = ticket.RouteTitle,
+                seatNumbers = ticket.SeatNumbers,
+                totalFare = ticket.TotalFare,
+                status = ticket.Status,
+                isBoarded = ticket.IsBoarded,
+                boardedAt = ticket.BoardedAt,
+                qrCodePayload = ticket.QrCodePayload,
+                issuedAt = ticket.IssuedAt
+            });
+        }
+        catch (UnauthorizedAccessException ex)
         {
-            ticketId = ticket.TicketId,
-            bookingReference = ticket.BookingReference,
-            serviceCode = ticket.ServiceCode,
-            routeTitle = ticket.RouteTitle,
-            seatNumbers = ticket.SeatNumbers,
-            totalFare = ticket.TotalFare,
-            status = ticket.Status,
-            isBoarded = ticket.IsBoarded,
-            boardedAt = ticket.BoardedAt,
-            qrCodePayload = ticket.QrCodePayload,
-            issuedAt = ticket.IssuedAt
-        });
+            return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Access Denied",
+                Detail = ex.Message
+            });
+        }
     }
 
     /// <summary>
     /// Conductor boarding validation endpoint. Cryptographically verifies HMAC signature and records boarding.
+    /// Preserves legitimate conductor and operator workflows.
     /// </summary>
-    [Authorize(Policy = "RequireOperator")]
+    [Authorize(Roles = "Operator,TransportManager,Admin,Conductor")]
     [HttpPost("verify")]
     public async Task<ActionResult<VerifyQrResponseDto>> VerifyQr(
         [FromBody] VerifyQrRequestDto request,
