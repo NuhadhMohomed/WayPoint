@@ -56,7 +56,7 @@ class PreferenceFilterSheetState extends State<PreferenceFilterSheet> {
             const Text('Bus Class', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: _selectedBusClass,
+              value: _selectedBusClass,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

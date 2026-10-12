@@ -115,7 +115,7 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
                         child: const Icon(Icons.person, size: 32, color: AppTheme.primaryColor),
                       ),
                       const SizedBox(width: 16),
@@ -152,7 +152,7 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.12),
+                      color: AppTheme.primaryColor.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.wb_sunny_rounded, color: AppTheme.primaryColor, size: 22),
@@ -171,7 +171,7 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                      color: AppTheme.primaryColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(

@@ -361,7 +361,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUpcoming
-              ? AppTheme.primaryColor.withValues(alpha: 0.4)
+              ? AppTheme.primaryColor.withOpacity(0.4)
               : const Color(0xFF334155),
           width: isUpcoming ? 1.5 : 1.0,
         ),
@@ -416,10 +416,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
+                    color: statusColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                     border:
-                        Border.all(color: statusColor.withValues(alpha: 0.4)),
+                        Border.all(color: statusColor.withOpacity(0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

@@ -66,7 +66,7 @@ class HoldCountdownBar extends StatelessWidget {
         color: bgColor,
         border: Border(
           bottom:
-              BorderSide(color: barColor.withValues(alpha: 0.35), width: 1.5),
+              BorderSide(color: barColor.withOpacity(0.35), width: 1.5),
         ),
       ),
       child: Column(
@@ -79,7 +79,7 @@ class HoldCountdownBar extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: barColor.withValues(alpha: 0.2),
+                    color: barColor.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(statusIcon, color: barColor, size: 18),
@@ -105,7 +105,7 @@ class HoldCountdownBar extends StatelessWidget {
                             ? '00:00 — Expired'
                             : 'Expires in $minutes:$seconds min',
                         style: TextStyle(
-                          color: textColor.withValues(alpha: 0.75),
+                          color: textColor.withOpacity(0.75),
                           fontSize: 11,
                           fontFamily: 'monospace',
                         ),
@@ -117,10 +117,10 @@ class HoldCountdownBar extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: barColor.withValues(alpha: 0.15),
+                    color: barColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: barColor.withValues(alpha: 0.5), width: 1),
+                        color: barColor.withOpacity(0.5), width: 1),
                   ),
                   child: Text(
                     isExpired ? '00:00' : '$minutes:$seconds',
@@ -138,7 +138,7 @@ class HoldCountdownBar extends StatelessWidget {
           ),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: barColor.withValues(alpha: 0.15),
+            backgroundColor: barColor.withOpacity(0.15),
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
             minHeight: 3.5,
           ),

@@ -255,7 +255,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                    color: AppTheme.primaryColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.support_agent,
@@ -583,7 +583,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 color: const Color(0xFF2C2411),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+                    color: const Color(0xFFF59E0B).withOpacity(0.5)),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x1AF59E0B),
@@ -638,7 +638,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                 color: const Color(0xFF0F291E),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                    color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+                    color: const Color(0xFF16A34A).withOpacity(0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -686,7 +686,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withValues(alpha: 0.6),
+                color: const Color(0xFF1E293B).withOpacity(0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFF334155)),
               ),
@@ -770,7 +770,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                          color: AppTheme.primaryColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
@@ -952,7 +952,7 @@ class _DisruptionAlertScreenState extends State<DisruptionAlertScreen> {
               Container(
                 width: 2,
                 height: 28,
-                color: accentColor.withValues(alpha: 0.4),
+                color: accentColor.withOpacity(0.4),
               ),
           ],
         ),

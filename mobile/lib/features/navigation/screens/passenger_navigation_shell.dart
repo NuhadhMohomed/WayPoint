@@ -44,7 +44,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        indicatorColor: AppTheme.secondaryColor.withValues(alpha: 0.2),
+        indicatorColor: AppTheme.secondaryColor.withOpacity(0.2),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
@@ -109,7 +109,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                        color: AppTheme.primaryColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

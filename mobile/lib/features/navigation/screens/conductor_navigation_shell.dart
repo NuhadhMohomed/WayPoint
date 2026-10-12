@@ -45,7 +45,7 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        indicatorColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+        indicatorColor: AppTheme.primaryColor.withOpacity(0.2),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.qr_code_scanner_outlined),
@@ -86,7 +86,7 @@ class _ConductorNavigationShellState extends State<ConductorNavigationShell> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                color: AppTheme.primaryColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

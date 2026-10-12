@@ -17,7 +17,7 @@ class AiInsightsBanner extends StatelessWidget {
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
     final borderColor = isAiFallback
         ? const Color(0xFFF59E0B)
-        : AppTheme.primaryColor.withValues(alpha: 0.3);
+        : AppTheme.primaryColor.withOpacity(0.3);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -29,7 +29,7 @@ class AiInsightsBanner extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: (isAiFallback ? const Color(0xFFF59E0B) : AppTheme.primaryColor)
-                .withValues(alpha: 0.06),
+                .withOpacity(0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -59,7 +59,7 @@ class AiInsightsBanner extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: (isAiFallback ? const Color(0xFFF59E0B) : AppTheme.primaryColor)
-                      .withValues(alpha: 0.12),
+                      .withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

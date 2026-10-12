@@ -26,7 +26,7 @@ class DisruptionAlertCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppTheme.errorColor.withValues(alpha: 0.3), width: 1),
+        side: BorderSide(color: AppTheme.errorColor.withOpacity(0.3), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
@@ -41,7 +41,7 @@ class DisruptionAlertCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppTheme.errorColor.withValues(alpha: 0.12),
+                      color: AppTheme.errorColor.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
