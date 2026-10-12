@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WayPoint.API.Middleware;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.Features.AiWorkflows.DTOs;
 using WayPoint.Application.Common.Interfaces.Disruption;
@@ -49,13 +50,22 @@ public class AiWorkflowController : ControllerBase
             var result = await _aiWorkflowService.CreateWorkflowAsync(dto);
             return CreatedAtAction(nameof(GetWorkflow), new { id = result.Id }, result);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
-                Title = "Failed to create AI workflow",
-                Detail = ex.Message
+                Title = "Validation Error",
+                Detail = SensitiveDataSanitizer.Sanitize(ex.Message)
+            });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "Internal Server Error",
+                Detail = "An unexpected error occurred while creating the AI workflow."
             });
         }
     }

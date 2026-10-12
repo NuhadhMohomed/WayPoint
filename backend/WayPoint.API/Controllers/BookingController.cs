@@ -6,6 +6,8 @@ using WayPoint.Application.Common.Interfaces;
 using WayPoint.Application.DTOs.Booking;
 using WayPoint.Application.DTOs.Common;
 
+using WayPoint.API.Middleware;
+
 namespace WayPoint.API.Controllers;
 
 [ApiController]
@@ -16,15 +18,18 @@ public class BookingController : ControllerBase
     private readonly IBookingService _bookingService;
     private readonly IWayPointDbContext _context;
     private readonly ILogger<BookingController> _logger;
+    private readonly IHostEnvironment? _environment;
 
     public BookingController(
         IBookingService bookingService,
         IWayPointDbContext context,
-        ILogger<BookingController> logger)
+        ILogger<BookingController> logger,
+        IHostEnvironment? environment = null)
     {
         _bookingService = bookingService;
         _context = context;
         _logger = logger;
+        _environment = environment;
     }
 
     /// <summary>
@@ -120,11 +125,17 @@ public class BookingController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during checkout execution.");
+            var isDev = _environment?.IsDevelopment() == true;
+            var detail = isDev
+                ? SensitiveDataSanitizer.Sanitize(ex.Message)
+                : "An unexpected error occurred while processing the checkout request. Please try again later.";
+
             return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
-                Title = "Checkout Failed",
-                Detail = ex.Message
+                Title = "Internal Server Error",
+                Detail = detail,
+                Instance = HttpContext?.Request?.Path
             });
         }
     }

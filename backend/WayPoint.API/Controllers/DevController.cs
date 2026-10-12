@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WayPoint.API.Middleware;
 using WayPoint.Application.Common.Interfaces;
 using WayPoint.Infrastructure.Data;
 
@@ -75,11 +76,15 @@ public class DevController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to seed database.");
+            var detail = _environment.IsDevelopment()
+                ? SensitiveDataSanitizer.Sanitize(ex.Message)
+                : "An unexpected error occurred while seeding the database.";
+
             return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
-                Title = "Seeding Failed",
-                Detail = ex.Message
+                Title = "Internal Server Error",
+                Detail = detail
             });
         }
     }
