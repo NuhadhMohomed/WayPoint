@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../data/fleet_api_service.dart';
+import '../../booking/models/booking_models.dart';
+import '../../booking/services/booking_api_service.dart';
 
 part 'seat_picker_event.dart';
 part 'seat_picker_state.dart';
@@ -11,10 +13,13 @@ part 'seat_picker_state.dart';
 /// Flow: LoadSeatMap → user taps seats → HoldSeats → 10-min countdown → checkout or HoldExpired.
 class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
   final FleetApiService _api;
+  final BookingApiService _bookingApi;
+  String _serviceId = '';
   StreamSubscription<int>? _timerSubscription;
 
-  SeatPickerBloc({FleetApiService? api})
+  SeatPickerBloc({FleetApiService? api, BookingApiService? bookingApi})
       : _api = api ?? FleetApiService(),
+        _bookingApi = bookingApi ?? BookingApiService(),
         super(const SeatPickerState()) {
     on<LoadSeatMap>(_onLoadSeatMap);
     on<SelectSeat>(_onSelectSeat);
@@ -25,6 +30,7 @@ class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
   }
 
   Future<void> _onLoadSeatMap(LoadSeatMap event, Emitter<SeatPickerState> emit) async {
+    _serviceId = event.serviceId;
     emit(state.copyWith(status: SeatPickerStatus.loading));
     try {
       final matrix = await _api.getServiceSeats(event.serviceId);
@@ -49,11 +55,24 @@ class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
     emit(state.copyWith(selectedSeats: updated));
   }
 
-  void _onHoldSeats(HoldSeats event, Emitter<SeatPickerState> emit) {
+  Future<void> _onHoldSeats(HoldSeats event, Emitter<SeatPickerState> emit) async {
     emit(state.copyWith(status: SeatPickerStatus.seatsHolding));
-    // In production this would call _api.holdSeats(). For now, start the 10-min timer immediately.
-    emit(state.copyWith(status: SeatPickerStatus.seatsHeld, remainingSeconds: 600));
-    _startCountdown();
+    try {
+      final hold = await _bookingApi.createSeatHold(
+        serviceId: _serviceId,
+        seatNumbers: state.selectedSeats,
+      );
+      final remaining = hold.remainingSeconds > 0 ? hold.remainingSeconds : 600;
+      emit(state.copyWith(
+        status: SeatPickerStatus.seatsHeld,
+        holdInfo: hold,
+        remainingSeconds: remaining,
+      ));
+      _startCountdown(remaining);
+    } catch (e) {
+      emit(state.copyWith(status: SeatPickerStatus.seatsHeld, remainingSeconds: 600));
+      _startCountdown(600);
+    }
   }
 
   void _onHoldTimerTick(HoldTimerTick event, Emitter<SeatPickerState> emit) {
@@ -69,11 +88,11 @@ class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
     emit(state.copyWith(status: SeatPickerStatus.holdExpired, selectedSeats: [], remainingSeconds: 0));
   }
 
-  void _startCountdown() {
+  void _startCountdown([int initialRemaining = 600]) {
     _timerSubscription?.cancel();
-    int remaining = 600;
+    int remaining = initialRemaining;
     _timerSubscription =
-        Stream.periodic(const Duration(seconds: 1), (x) => remaining - x - 1).take(600).listen(
+        Stream.periodic(const Duration(seconds: 1), (x) => remaining - x - 1).take(remaining).listen(
       (timeLeft) => add(HoldTimerTick(remainingSeconds: timeLeft)),
     );
   }

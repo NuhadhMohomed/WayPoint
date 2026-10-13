@@ -1,15 +1,18 @@
 import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../models/booking_models.dart';
 
 /// Authoritative API client connecting the Flutter mobile app to the ASP.NET Core backend.
 class BookingApiService {
   final Dio _dio;
   final String baseUrl;
+  final SecureStorageService _storageService;
 
-  BookingApiService({String? customBaseUrl, Dio? dio})
+  BookingApiService({String? customBaseUrl, Dio? dio, SecureStorageService? storageService})
       : baseUrl = customBaseUrl ?? defaultApiBaseUrl,
+        _storageService = storageService ?? SecureStorageService(),
         _dio = dio ??
             Dio(
               BaseOptions(
@@ -21,7 +24,19 @@ class BookingApiService {
                   'Accept': 'application/json',
                 },
               ),
-            );
+            ) {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await _storageService.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   static String get defaultApiBaseUrl {
     if (kIsWeb) return 'http://localhost:5010/api/v1';

@@ -10,6 +10,7 @@ class SeatPickerState extends Equatable {
   final List<String> selectedSeats;
   final int remainingSeconds;
   final String? errorMessage;
+  final SeatHoldInfo? holdInfo;
 
   const SeatPickerState({
     this.status = SeatPickerStatus.initial,
@@ -17,6 +18,7 @@ class SeatPickerState extends Equatable {
     this.selectedSeats = const [],
     this.remainingSeconds = 0,
     this.errorMessage,
+    this.holdInfo,
   });
 
   SeatPickerState copyWith({
@@ -25,6 +27,7 @@ class SeatPickerState extends Equatable {
     List<String>? selectedSeats,
     int? remainingSeconds,
     String? errorMessage,
+    SeatHoldInfo? holdInfo,
   }) {
     return SeatPickerState(
       status: status ?? this.status,
@@ -32,9 +35,10 @@ class SeatPickerState extends Equatable {
       selectedSeats: selectedSeats ?? this.selectedSeats,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       errorMessage: errorMessage ?? this.errorMessage,
+      holdInfo: holdInfo ?? this.holdInfo,
     );
   }
 
   @override
-  List<Object?> get props => [status, seatMatrix, selectedSeats, remainingSeconds, errorMessage];
+  List<Object?> get props => [status, seatMatrix, selectedSeats, remainingSeconds, errorMessage, holdInfo];
 }

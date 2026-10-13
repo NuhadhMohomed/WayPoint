@@ -76,17 +76,56 @@ public static class DependencyInjection
 
     public static string ResolveConnectionString(IConfiguration configuration)
     {
-        // Check DATABASE_URL first (Railway standard)
-        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
-                          ?? configuration["ConnectionStrings:DATABASE_URL"]
-                          ?? configuration.GetConnectionString("DefaultConnection");
+        // 1. Explicit local test / development connection string (User Secrets, appsettings.Development.json, or test overrides)
+        var localConnection = configuration.GetConnectionString("TestConnection")
+                              ?? configuration.GetConnectionString("LocalConnection");
 
-        if (string.IsNullOrWhiteSpace(databaseUrl))
+        // 2. Check if configuration explicitly passed a mock DATABASE_URL (for unit test overrides)
+        var configDbUrl = configuration["ConnectionStrings:DATABASE_URL"]
+                          ?? configuration["DATABASE_URL"];
+
+        // 3. Local database URL override from configuration or environment
+        var localDbUrl = configuration["LOCAL_DATABASE_URL"]
+                         ?? configuration["ConnectionStrings:LOCAL_DATABASE_URL"]
+                         ?? Environment.GetEnvironmentVariable("LOCAL_DATABASE_URL");
+
+        // 4. User Secrets or Development override: check if DefaultConnection is configured with local database (e.g. waypoint_test)
+        var defaultConnection = configuration.GetConnectionString("DefaultConnection");
+        var isCustomDefault = !string.IsNullOrWhiteSpace(defaultConnection) &&
+                              !string.Equals(defaultConnection, "Host=localhost;Port=5432;Database=waypoint;Username=postgres;Password=postgres", StringComparison.OrdinalIgnoreCase);
+
+        string databaseUrl;
+        if (!string.IsNullOrWhiteSpace(localConnection))
         {
-            // Local fallback
-            return "Host=localhost;Port=5432;Database=waypoint;Username=postgres;Password=postgres";
+            databaseUrl = localConnection;
+        }
+        else if (!string.IsNullOrWhiteSpace(configDbUrl) && !configDbUrl.Contains("iriguchi.proxy.rlwy.net"))
+        {
+            // Unit test or explicit non-default configuration override
+            databaseUrl = configDbUrl;
+        }
+        else if (!string.IsNullOrWhiteSpace(localDbUrl))
+        {
+            databaseUrl = localDbUrl;
+        }
+        else if (isCustomDefault && defaultConnection != null)
+        {
+            databaseUrl = defaultConnection;
+        }
+        else
+        {
+            // Production / Railway fallback
+            databaseUrl = !string.IsNullOrWhiteSpace(configDbUrl) ? configDbUrl
+                          : Environment.GetEnvironmentVariable("DATABASE_URL")
+                          ?? defaultConnection
+                          ?? "Host=localhost;Port=5432;Database=waypoint_test;Username=postgres;Password=postgres";
         }
 
+        return ParseOrBuildConnectionString(databaseUrl);
+    }
+
+    private static string ParseOrBuildConnectionString(string databaseUrl)
+    {
         // If it starts with postgres:// or postgresql://, parse it into an NpgsqlConnectionStringBuilder
         if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
             databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))

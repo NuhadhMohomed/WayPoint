@@ -30,7 +30,7 @@ class _PassengerNavigationShellState extends State<PassengerNavigationShell> {
       const JourneySearchScreen(),
       // 1: Seat Matrix (Component 2 - Nuhadh)
       SeatPickerScreen(
-        serviceId: 'srv-colombo-galle-01',
+        serviceId: '57c0900a-96cf-4150-baa4-928d8acd0f70',
         apiService: FleetApiService(),
       ),
       // 2: Ticket Wallet (Component 3 - Mithila)

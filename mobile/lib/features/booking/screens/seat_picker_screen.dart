@@ -185,13 +185,13 @@ class SeatPickerScreen extends StatelessWidget {
                   SeatReservationBar(
                     remainingSeconds: state.remainingSeconds,
                     selectedSeats: state.selectedSeats,
-                    totalAmount: state.selectedSeats.length * 2400.0,
+                    totalAmount: state.holdInfo?.totalAmount ?? (state.selectedSeats.length * 2400.0),
                     onContinue: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => PaymentCheckoutScreen(
-                            holdInfo: SeatHoldInfo.sampleColomboToElla(),
+                            holdInfo: state.holdInfo ?? SeatHoldInfo.sampleColomboToElla(),
                           ),
                         ),
                       );
