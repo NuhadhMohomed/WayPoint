@@ -59,7 +59,9 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
-            if (state is AuthError) {
+            if (state is Authenticated) {
+              Navigator.of(context).pop();
+            } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),

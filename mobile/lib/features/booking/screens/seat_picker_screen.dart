@@ -7,6 +7,7 @@ import '../../../core/widgets/empty_state_view.dart';
 import '../../fleet/bloc/seat_picker_bloc.dart';
 import '../../fleet/data/fleet_api_service.dart';
 import '../models/booking_models.dart';
+import '../services/booking_api_service.dart';
 import 'payment_checkout_screen.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -28,7 +29,7 @@ class SeatPickerScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (_) => SeatPickerBloc(api: apiService)..add(LoadSeatMap(serviceId)),
+      create: (_) => SeatPickerBloc(api: apiService, bookingApi: BookingApiService())..add(LoadSeatMap(serviceId)),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Select Seats'),
@@ -65,14 +66,20 @@ class SeatPickerScreen extends StatelessWidget {
             }
 
             final matrix = state.seatMatrix ?? {};
-            final seats = (matrix['seats'] as List<dynamic>?) ?? [];
+            final seats = ((matrix['seats'] as List<dynamic>?) ?? [])
+                .map((s) => s is Map ? Map<String, dynamic>.from(s) : null)
+                .whereType<Map<String, dynamic>>()
+                .toList();
 
             int maxRow = 0, maxCol = 0;
             for (final s in seats) {
-              if ((s['rowIndex'] as int) > maxRow) maxRow = s['rowIndex'] as int;
-              if ((s['columnIndex'] as int) > maxCol) maxCol = s['columnIndex'] as int;
+              final r = (s['rowIndex'] as num?)?.toInt() ?? 0;
+              final c = (s['columnIndex'] as num?)?.toInt() ?? 0;
+              if (r > maxRow) maxRow = r;
+              if (c > maxCol) maxCol = c;
             }
-            final totalCols = maxCol + 1;
+            final totalCols = maxCol > 0 ? maxCol : 4;
+            final totalRows = maxRow > 0 ? maxRow : 10;
 
             return Column(
               children: [
@@ -138,7 +145,8 @@ class SeatPickerScreen extends StatelessWidget {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: Column(
-                      children: List.generate(maxRow + 1, (r) {
+                      children: List.generate(totalRows, (rIdx) {
+                        final rowNum = rIdx + 1;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
@@ -147,7 +155,7 @@ class SeatPickerScreen extends StatelessWidget {
                               SizedBox(
                                 width: 22,
                                 child: Text(
-                                  '${r + 1}',
+                                  '$rowNum',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -155,20 +163,25 @@ class SeatPickerScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              ...List.generate(totalCols, (c) {
-                                final seat = seats.cast<Map<String, dynamic>?>().firstWhere(
-                                      (s) => s != null && s['rowIndex'] == r && s['columnIndex'] == c,
-                                      orElse: () => null,
+                              ...List.generate(totalCols, (cIdx) {
+                                final colNum = cIdx + 1;
+                                final seat = seats.firstWhere(
+                                      (s) {
+                                        final r = (s['rowIndex'] as num?)?.toInt();
+                                        final c = (s['columnIndex'] as num?)?.toInt();
+                                        return (r == rowNum || r == rIdx) && (c == colNum || c == cIdx);
+                                      },
+                                      orElse: () => {},
                                     );
 
-                                final aisleGap = totalCols == 4 && c == 2
+                                final aisleGap = totalCols == 4 && colNum == 3
                                     ? const SizedBox(width: 24)
                                     : const SizedBox.shrink();
 
                                 return Row(
                                   children: [
                                     aisleGap,
-                                    _SeatCell(seat: seat, state: state),
+                                    _SeatCell(seat: seat.isNotEmpty ? seat : null, state: state),
                                   ],
                                 );
                               }),
@@ -221,8 +234,8 @@ class _SeatCell extends StatelessWidget {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final seatNumber = seat!['seatNumber'] as String;
-    final status = seat!['status'] as String;
+    final seatNumber = (seat!['seatNumber'] ?? '').toString();
+    final status = (seat!['status'] ?? 'Available').toString();
     final isSelected = state.selectedSeats.contains(seatNumber);
     final isAvailable = status == 'Available';
 

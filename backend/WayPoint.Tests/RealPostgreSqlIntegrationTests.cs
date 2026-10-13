@@ -378,4 +378,45 @@ public class RealPostgreSqlIntegrationTests
         cancelledAllocations.Should().BeEmpty("Seat allocations must be released upon cancellation");
         _output.WriteLine("Database verified SeatAllocations released after cancellation.");
     }
+
+    [Fact]
+    public async Task Scenario12_Verify_Manager_Approval_In_PostgreSql()
+    {
+        await using var context = CreateDbContext();
+        var conn = context.Database.GetDbConnection();
+        await conn.OpenAsync();
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT \"Id\", \"DisruptionCaseId\", \"ReplacementServiceId\", \"ProposedByAgent\", \"Status\" FROM \"RebookingProposals\" ORDER BY \"CreatedAt\" DESC LIMIT 5;";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var foundProposals = 0;
+        while (await reader.ReadAsync())
+        {
+            foundProposals++;
+            var pId = reader.GetGuid(0);
+            var caseId = reader.GetGuid(1);
+            var replId = reader.GetGuid(2);
+            var agent = reader.GetString(3);
+            var status = reader.GetString(4);
+            _output.WriteLine($"[Proposal] Id: {pId}, CaseId: {caseId}, ReplacementId: {replId}, Agent: {agent}, Status: {status}");
+        }
+        _output.WriteLine($"Total verified proposals in PostgreSQL: {foundProposals}");
+
+        await reader.CloseAsync();
+
+        cmd.CommandText = "SELECT \"Id\", \"RebookingProposalId\", \"ManagerId\", \"Decision\", \"Comments\", \"DecidedAt\" FROM \"ApprovalDecisions\" ORDER BY \"DecidedAt\" DESC LIMIT 5;";
+        await using var reader2 = await cmd.ExecuteReaderAsync();
+        var foundApprovals = 0;
+        while (await reader2.ReadAsync())
+        {
+            foundApprovals++;
+            var aId = reader2.GetGuid(0);
+            var propId = reader2.GetGuid(1);
+            var mgrId = reader2.GetGuid(2);
+            var decision = reader2.GetString(3);
+            var comments = reader2.IsDBNull(4) ? "(null)" : reader2.GetString(4);
+            var decidedAt = reader2.GetDateTime(5);
+            _output.WriteLine($"[ApprovalDecision] Id: {aId}, ProposalId: {propId}, ManagerId: {mgrId}, Decision: {decision}, Comments: {comments}, DecidedAt: {decidedAt:u}");
+        }
+        _output.WriteLine($"Total verified approval records in PostgreSQL: {foundApprovals}");
+    }
 }

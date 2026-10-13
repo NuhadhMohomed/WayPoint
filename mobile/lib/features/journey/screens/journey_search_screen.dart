@@ -153,6 +153,7 @@ class _JourneySearchScreenState extends State<JourneySearchScreen> {
     );
 
     if (!mounted) return;
+    debugPrint('[_executeSearch] search returned candidates count: ${candidates.length}');
     setState(() => _isSearching = false);
 
     Navigator.of(context).push(

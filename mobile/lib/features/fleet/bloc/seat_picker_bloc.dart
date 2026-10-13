@@ -13,13 +13,13 @@ part 'seat_picker_state.dart';
 /// Flow: LoadSeatMap → user taps seats → HoldSeats → 10-min countdown → checkout or HoldExpired.
 class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
   final FleetApiService _api;
-  final BookingApiService _bookingApi;
+  final BookingApiService? _bookingApi;
   String _serviceId = '';
   StreamSubscription<int>? _timerSubscription;
 
   SeatPickerBloc({FleetApiService? api, BookingApiService? bookingApi})
       : _api = api ?? FleetApiService(),
-        _bookingApi = bookingApi ?? BookingApiService(),
+        _bookingApi = bookingApi,
         super(const SeatPickerState()) {
     on<LoadSeatMap>(_onLoadSeatMap);
     on<SelectSeat>(_onSelectSeat);
@@ -57,22 +57,26 @@ class SeatPickerBloc extends Bloc<SeatPickerEvent, SeatPickerState> {
 
   Future<void> _onHoldSeats(HoldSeats event, Emitter<SeatPickerState> emit) async {
     emit(state.copyWith(status: SeatPickerStatus.seatsHolding));
-    try {
-      final hold = await _bookingApi.createSeatHold(
-        serviceId: _serviceId,
-        seatNumbers: state.selectedSeats,
-      );
-      final remaining = hold.remainingSeconds > 0 ? hold.remainingSeconds : 600;
-      emit(state.copyWith(
-        status: SeatPickerStatus.seatsHeld,
-        holdInfo: hold,
-        remainingSeconds: remaining,
-      ));
-      _startCountdown(remaining);
-    } catch (e) {
-      emit(state.copyWith(status: SeatPickerStatus.seatsHeld, remainingSeconds: 600));
-      _startCountdown(600);
+    if (_bookingApi != null) {
+      try {
+        final hold = await _bookingApi!.createSeatHold(
+          serviceId: _serviceId,
+          seatNumbers: state.selectedSeats,
+        );
+        final remaining = hold.remainingSeconds > 0 ? hold.remainingSeconds : 600;
+        emit(state.copyWith(
+          status: SeatPickerStatus.seatsHeld,
+          holdInfo: hold,
+          remainingSeconds: remaining,
+        ));
+        _startCountdown(remaining);
+        return;
+      } catch (_) {
+        // Fallback to simulation
+      }
     }
+    emit(state.copyWith(status: SeatPickerStatus.seatsHeld, remainingSeconds: 600));
+    _startCountdown(600);
   }
 
   void _onHoldTimerTick(HoldTimerTick event, Emitter<SeatPickerState> emit) {

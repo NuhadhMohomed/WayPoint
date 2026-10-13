@@ -167,8 +167,8 @@ class JourneyCandidateModel {
     final arr = dep.add(const Duration(hours: 6));
 
     return JourneyCandidateModel(
-      serviceId: 'srv-col-ella-0630',
-      serviceCode: 'SRV-COL-ELLA-0630',
+      serviceId: 'a94ab1c8-a5a9-47a2-8fde-dedb1f1fb02d',
+      serviceCode: 'SRV-COL-ELLA-0800',
       routeNumber: 'EX-08',
       origin: 'Colombo (Bastian Hill)',
       destination: 'Ella Town Terminal',
@@ -264,8 +264,8 @@ class JourneyCandidateModel {
     final arr = dep.add(const Duration(hours: 3, minutes: 15));
 
     return JourneyCandidateModel(
-      serviceId: 'srv-col-kdy-0800',
-      serviceCode: 'SRV-COL-KDY-0800',
+      serviceId: 'deafa736-49c9-4b11-b746-a2de2595c789',
+      serviceCode: 'SRV-COL-KDY-0700',
       routeNumber: 'RT-01',
       origin: 'Colombo (Central Super)',
       destination: 'Kandy Goods Shed',
@@ -287,8 +287,8 @@ class JourneyCandidateModel {
     final arr = dep.add(const Duration(hours: 2, minutes: 10));
 
     return JourneyCandidateModel(
-      serviceId: 'srv-col-gle-0745',
-      serviceCode: 'SRV-COL-GLE-0745',
+      serviceId: '57c0900a-96cf-4150-baa4-928d8acd0f70',
+      serviceCode: 'SRV-COL-GAL-0930',
       routeNumber: 'EX-01',
       origin: 'Colombo (Makumbura Multimodal)',
       destination: 'Galle Central Bus Stand',
@@ -310,8 +310,8 @@ class JourneyCandidateModel {
     final arr = dep.add(const Duration(hours: 2, minutes: 20));
 
     return JourneyCandidateModel(
-      serviceId: 'srv-col-gle-0915',
-      serviceCode: 'SRV-COL-GLE-0915',
+      serviceId: '57c0900a-96cf-4150-baa4-928d8acd0f70',
+      serviceCode: 'SRV-COL-GAL-0930',
       routeNumber: 'EX-01',
       origin: 'Colombo (Makumbura Multimodal)',
       destination: 'Galle Central Bus Stand',

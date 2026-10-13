@@ -29,6 +29,7 @@ class JourneyComparisonScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[JourneyComparisonScreen] build called, candidates count: ${candidates.length}');
     final currencyFormat = NumberFormat.currency(
       locale: 'en_LK',
       symbol: 'Rs. ',
@@ -66,12 +67,33 @@ class JourneyComparisonScreen extends StatelessWidget {
         ),
       ),
       body: candidates.isEmpty
-          ? EmptyStateView(
-              icon: Icons.directions_bus_outlined,
-              title: 'No Transit Options Found',
-              description: 'Try adjusting your search date or filters for $originCity to $destinationCity.',
-              actionLabel: 'Modify Search',
-              onAction: () => Navigator.of(context).pop(),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.directions_bus_outlined, size: 56, color: AppTheme.primaryColor),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Transit Options Found',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No services available between $originCity and $destinationCity for the selected date.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: AppTheme.onPrimaryColor),
+                      child: const Text('Modify Search'),
+                    ),
+                  ],
+                ),
+              ),
             )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
@@ -85,6 +107,9 @@ class JourneyComparisonScreen extends StatelessWidget {
                   );
                 }
                 final candidateIndex = showAiBanner ? index - 1 : index;
+                if (candidateIndex < 0 || candidateIndex >= candidates.length) {
+                  return const SizedBox.shrink();
+                }
                 final candidate = candidates[candidateIndex];
                 final durationHours = candidate.durationMinutes ~/ 60;
                 final durationMins = candidate.durationMinutes % 60;

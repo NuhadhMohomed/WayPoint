@@ -18,7 +18,7 @@ class FleetApiService {
 
   Future<Map<String, dynamic>> getServiceSeats(String serviceId) async {
     final response = await _dio.get('/api/v1/services/$serviceId/seats');
-    return response.data as Map<String, dynamic>;
+    return Map<String, dynamic>.from(response.data as Map);
   }
 
   // ─── Seat Hold ───

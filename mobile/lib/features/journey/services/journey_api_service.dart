@@ -39,7 +39,7 @@ class JourneyApiService {
 
         if (items.isNotEmpty) {
           return items
-              .map((c) => JourneyCandidateModel.fromJson(c as Map<String, dynamic>))
+              .map((c) => JourneyCandidateModel.fromJson(Map<String, dynamic>.from(c as Map)))
               .toList();
         }
       }
