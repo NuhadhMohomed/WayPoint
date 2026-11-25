@@ -1,104 +1,85 @@
-# WayPoint Mobile Application (Flutter 3.x / Dart 3)
+# WayPoint Mobile Application (Flutter / Dart 3)
 
-The authoritative cross-platform mobile client application for **WayPoint** (**SE3090 Assignment 1**). Designed for passengers (booking, seat selection, ticketing, disruption alerts) and bus conductors (QR ticket scanning, passenger manifest management).
+> **Status: Active Development (`v0.1.0+1` / WIP)**  
+> The WayPoint cross-platform Flutter client is under active development. Core passenger and conductor screens, BLoC state management, secure token storage, and widget tests are implemented, while live service bindings, role alignment, and offline sync enhancements remain ongoing.
 
 ---
 
-## 1. Overview & Technology Stack
+## 1. Technology Stack (`pubspec.yaml`)
 
-The mobile application is engineered following Flutter and Dart enterprise standards:
-- **Framework**: Flutter 3.x / Dart 3
-- **Architecture**: BLoC / Cubit (`flutter_bloc` v8.1) ([ADR-002](../docs/adr/ADR-002-flutter-state-management.md))
-- **Networking**: `dio` (v5.7) with token interceptor and retry policies
-- **Secure Token Storage**: `flutter_secure_storage` (hardware keystore / iOS Keychain)
-- **Offline Cache**: `shared_preferences` & local caching
-- **UI & Iconography**: Google Fonts (`Inter`), `lucide_icons`
+- **Framework**: Flutter (Dart SDK `>=3.0.0 <4.0.0`)
+- **State Management**: `flutter_bloc` (`^8.1.3`) & `equatable` ([ADR-002](../docs/adr/ADR-002-flutter-state-management.md))
+- **Networking**: `dio` (`^5.4.0`) + `http` (`^1.6.0`)
+- **Storage**: `flutter_secure_storage` (`^9.0.0`) with in-memory fallback in `LocalCacheService`
+- **QR & Media**: `qr_flutter` (`^4.1.0`), `mobile_scanner` (`^5.1.1`), `cached_network_image` (`^3.3.0`), `intl` (`^0.19.0`)
 - **Testing**: `flutter_test`, `bloc_test`, `mocktail`
 
 ---
 
-## 2. Feature Slices & Student Responsibilities
+## 2. Feature Structure (`lib/features/`)
 
 ```text
-mobile/lib/features/
-├── journey/          # Student 1 (Sethum): Journey Search, Comparison & Filter Sheets
-├── fleet/            # Student 4 (Dineth) / Student 2 (Nuhadh): Conductor Scanner & Manifest
-├── booking/          # Student 2 & 3: Interactive Seat Picker (Nuhadh), Checkout & Wallet (Mithila)
-├── disruption/       # Student 4 (Dineth): Real-Time Passenger Disruption Alerts
-├── settings/         # Student 2 (Nuhadh): Passenger Settings, Fleet Reviews & Preferences
-└── auth/             # Shared / Student 3: Mobile Authentication & Secure Keyring
+mobile/lib/
+├── core/                   # ApiConstants, ApiClient, LocalCacheService, SecureStorageService, AppTheme & shared widgets
+└── features/
+    ├── auth/               # AuthCubit, AuthState, PassengerAuthScreen
+    ├── onboarding/         # OnboardingScreen
+    ├── navigation/         # BrandedSplashScreen, AuthGate, PassengerNavigationShell, ConductorNavigationShell
+    ├── journey/            # JourneySearchScreen, JourneyComparisonScreen, PreferenceFilterSheet & AI journey widgets
+    ├── booking/            # SeatPickerScreen, PaymentCheckoutScreen, TicketWalletScreen, BookingHistoryScreen & widgets
+    ├── fleet/              # ConductorScannerScreen, ConductorManifestScreen, ReviewSubmissionScreen & shared BLoCs
+    ├── disruption/         # DisruptionAlertScreen, DisruptionAlertCard, DisruptionApiService
+    └── settings/           # PassengerSettingsScreen
 ```
 
-### Detailed Student Screens & Capabilities
-
-| Student Owner | Feature Folder | Screen Implementations | Key Capabilities |
-| :--- | :--- | :--- | :--- |
-| **Sethum** (Student 1) | `features/journey/` | `JourneySearchScreen`<br>`JourneyComparisonScreen`<br>`PreferenceFilterSheet` | Origin/destination picker, route card listing, multi-leg connecting transit comparisons (`BR-TRANSFER-001`), AC/luxury filters |
-| **Nuhadh** (Student 2) | `features/booking/`<br>`features/settings/` | `SeatPickerScreen`<br>`PassengerSettingsScreen` | Interactive visual bus seat grid, seat status color codes (available, held, booked), 10-minute hold initiation, fleet review submission |
-| **Mithila** (Student 3) | `features/booking/` | `PaymentCheckoutScreen`<br>`TicketWalletScreen`<br>`BookingHistoryScreen` | 10-minute hold countdown timer (`BR-HOLD-001`), payment checkout, cryptographic HMAC QR ticket rendering, historical bookings |
-| **Dineth** (Student 4) | `features/disruption/`<br>`features/fleet/` | `DisruptionAlertScreen`<br>`ConductorScannerScreen`<br>`ConductorManifestScreen` | Push disruption notification display, one-tap reroute acceptance, simulated QR camera scanner, conductor boarding checklist |
+### Feature Modules
+- [`journey/`](lib/features/journey/README.md) — Journey search, comparison, filters, and AI journey recommendation widgets.
+- [`booking/`](lib/features/booking/README.md) — Seat selection, 10-minute hold countdown, sandbox payment checkout, QR ticket wallet, and booking history.
+- [`fleet/`](lib/features/fleet/README.md) — Conductor QR ticket scanner, passenger manifest, service reviews, and shared fleet/booking BLoCs.
+- [`disruption/`](lib/features/disruption/README.md) — Disruption alerts, rebooking consent, and replacement bus options.
 
 ---
 
-## 3. Setup & Development
+## 3. Setup & Local Development
 
-### 3.1 Prerequisites
-- Flutter SDK (v3.24+)
-- Dart 3 SDK
-- Android Studio / Xcode (or VS Code with Flutter extension)
+### Prerequisites
+- Flutter SDK (`3.x`) & Dart 3
+- Android Studio / Xcode / VS Code with Flutter extension
 
-### 3.2 Installation & Startup
+### Run Locally
 ```bash
 cd mobile
-
-# Fetch pub dependencies
 flutter pub get
-
-# Launch on connected emulator or physical device
 flutter run
 ```
 
-### 3.3 Building Android Release APK
-To compile the standalone production APK:
+API base URL defaults in `lib/core/constants/api_constants.dart` to `http://10.0.2.2:5010/api/v1` (Android emulator localhost). Override at build/run time:
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=https://waypoint-api-production.up.railway.app/api/v1
+flutter run --dart-define=API_BASE_URL=http://localhost:5010/api/v1
 ```
 
-The APK binary will be created at:
-```text
-mobile/build/app/outputs/flutter-apk/app-release.apk
+### Build Android APK (Testing / Preview)
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=http://localhost:5010/api/v1
 ```
 
 ---
 
-## 4. Automated Testing
-
-The Flutter test suite validates widget rendering, BLoC state transitions, and user interactions:
+## 4. Automated Testing & Static Analysis
 
 ```bash
 cd mobile
-
-# Run all automated tests
+flutter analyze
 flutter test
-
-# Run tests with verbose output
-flutter test --reporter expanded
 ```
 
-### Key Automated Test Suites
-- `journey_search_test.dart`: Origin/destination query form, route cards rendering.
-- `seat_picker_test.dart`: Visual seat grid, single-seat selection, hold status.
-- `payment_checkout_test.dart`: Fare breakdown calculations, hold timer countdown.
-- `ticket_wallet_test.dart`: QR ticket widget rendering, active/past tabs.
-- `disruption_alert_test.dart`: Real-time incident banner, mitigation acceptance.
-- `conductor_tools_test.dart`: Conductor ticket scanner simulation, boarding manifest.
-- `settings_reviews_test.dart`: Review ratings submission, user preferences.
-- `navigation_shells_test.dart`: Bottom navigation bar state transitions.
+Tests under `mobile/test/` cover core widgets/storage, auth gate, onboarding, journey search & AI widgets, seat picker, payment checkout, ticket wallet, disruption alerts, conductor tools, reviews, and navigation shells.
 
 ---
 
-## 5. Security & Secure Storage Architecture
+## 5. In Progress / Known WIP Notes
 
-- **Token Protection**: JWT access and refresh tokens are persisted using `flutter_secure_storage`, encrypting credentials in Android Keystore / iOS Keychain.
-- **Dio Interceptors**: Automatically injects Bearer tokens and handles 401 token refresh cycles.
-- **Offline Mode**: Saved tickets and upcoming journeys remain cached locally for offline inspection.
+- [ ] **Direct Tab Seat Picker Binding**: In `PassengerNavigationShell`, opening the `Seats` tab directly currently passes a sample `serviceId` (`srv-colombo-galle-01`); navigating from journey comparison passes the selected service.
+- [ ] **Role Routing Alignment**: `AuthGate` checks for `conductor`, `transitmanager`, or `driver` roles to launch `ConductorNavigationShell`, which is still being aligned with the backend `UserRoleType` enum (`Passenger`, `Operator`, `TransportManager`, `Admin`).
+- [ ] **Duplicate Review Screen Cleanup**: Consolidate `features/fleet/presentation/pages/review_submission_screen.dart` and `features/fleet/presentation/screens/review_submission_screen.dart`.
+- [ ] **Sandbox Payment & Offline Sync**: Checkout calls `/api/v1/payments/confirm-sandbox-charge`; real payment gateway and full offline ticket sync are pending.

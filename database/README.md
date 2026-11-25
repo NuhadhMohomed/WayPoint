@@ -1,28 +1,39 @@
 # WayPoint Database Module
 
-This directory is designated for PostgreSQL database schemas, baseline reference scripts, and SQL seed exports.
+> **Status: Active Development (WIP)**  
+> Database schemas and seed scripts are actively evolving alongside new domain features.
 
-## Authoritative Migrations Notice
-As defined in `AGENTS.md` and `system-architecture.md`, **Entity Framework Core migrations** are the authoritative mechanism for relational database schema versioning:
-- **Migration Location**: `backend/WayPoint.Infrastructure/Data/Migrations/`
-- **DbContext Definition**: `backend/WayPoint.Infrastructure/Data/WayPointDbContext.cs`
-- **Data Seeder**: `backend/WayPoint.Infrastructure/Data/DbSeeder.cs`
+This directory holds reference PostgreSQL DDL exports and baseline SQL seed scripts for **WayPoint**.
+
+## Authoritative Schema Versioning
+
+Per [AGENTS.md](../AGENTS.md), **Entity Framework Core 9 migrations** in the backend are the single source of truth for schema changes:
+- **Migrations**: `backend/WayPoint.Infrastructure/Data/Migrations/`
+  - `20260907093703_InitialCreate`
+  - `20260911152247_AddReviewEntities`
+  - `20261003094506_AddAuditLogHashAndNotifications`
+  - `20261003101503_AddAccountLockoutAndJourneyLegs`
+- **DbContext**: `backend/WayPoint.Infrastructure/Data/WayPointDbContext.cs`
+- **Programmatic Seeder**: `backend/WayPoint.Infrastructure/Data/DbSeeder.cs`
 
 ## Contents
-- **`schema_baseline.sql`**: Full idempotent DDL script representing the PostgreSQL relational model generated from authoritative EF Core migrations.
-- **`seed/reference_data.sql`**: Baseline SQL seed data containing core system roles, standard transit amenities, primary scenic corridors, and express route stops.
 
-## Generating SQL Scripts from Migrations
-To regenerate the idempotent raw SQL baseline script from migrations:
+- `schema_baseline.sql` — Idempotent PostgreSQL DDL script exported from EF Core migrations.
+- `seed/reference_data.sql` — Baseline SQL inserts for core roles, transit amenities, sample Sri Lankan express routes (`EX-01`, `EX-02`, `EX-03`), stops, and a `Standard 2x2 Express` seat layout.
+
+## Common Commands
+
+### Apply Migrations & Seed via Backend CLI
 ```bash
-dotnet ef migrations script --project backend/WayPoint.Infrastructure --startup-project backend/WayPoint.API --output database/schema_baseline.sql --idempotent
+dotnet run --project backend/WayPoint.API -- --seed
 ```
 
-## Running Migrations Locally
+### Apply Migrations with EF Core CLI
 ```bash
 dotnet ef database update --project backend/WayPoint.Infrastructure --startup-project backend/WayPoint.API
 ```
-Or use the built-in CLI seed argument on the Web API:
+
+### Regenerate `schema_baseline.sql` After Schema Changes
 ```bash
-dotnet run --project backend/WayPoint.API -- --seed
+dotnet ef migrations script --project backend/WayPoint.Infrastructure --startup-project backend/WayPoint.API --output database/schema_baseline.sql --idempotent
 ```

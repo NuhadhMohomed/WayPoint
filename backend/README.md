@@ -1,97 +1,102 @@
 # WayPoint Backend (ASP.NET Core 8 Web API)
 
-The authoritative backend application layer for **WayPoint** (**SE3090 Assignment 1**). Built using **Clean Architecture**, **ASP.NET Core 8**, **Entity Framework Core 9**, and **Npgsql 9**.
+> **Status: Active Development (`v0.1.0` / WIP)**  
+> This service is the authoritative backend API for **WayPoint**, currently under active development. Core domain entities, REST controllers, JWT authentication, and EF Core 9 PostgreSQL migrations are implemented, while production hardening, background workers, and live payment integration are still in progress.
 
 ---
 
-## 1. Architectural Layers
+## 1. Architecture & Project Structure
 
-The solution is divided into four distinct projects following the Clean Architecture pattern:
+The backend follows **Clean Architecture** across four projects plus an xUnit test project:
 
 ```text
 backend/
-├── WayPoint.Domain/             # Enterprise business entities, enums, domain rules (no external deps)
-├── WayPoint.Application/        # Use cases, interfaces, DTOs, business validations
-├── WayPoint.Infrastructure/     # EF Core 9 DbContext, Npgsql 9 data access, external services, migrations
-├── WayPoint.API/                # ASP.NET Core REST API controllers, filters, middleware, Program.cs
-└── WayPoint.sln                 # .NET solution file
+├── WayPoint.Domain/          # Domain entities, BaseEntity, and domain enums (no external deps)
+├── WayPoint.Application/     # Service interfaces, feature DTOs, pagination & contracts
+├── WayPoint.Infrastructure/  # WayPointDbContext (EF Core 9), Npgsql 9, migrations, DbSeeder & services
+├── WayPoint.API/             # 22 REST controllers, JWT auth, ExceptionHandlingMiddleware & Swagger
+├── WayPoint.Tests/           # xUnit unit & integration test suites
+└── WayPoint.sln              # .NET 8 solution file
 ```
+
+### Implemented REST Controllers (`WayPoint.API/Controllers/`)
+- **Auth & Users**: `AuthController` (`/api/v1/auth`), `UserController` (`/api/v1/users`)
+- **Journey Planning**: `RouteController` (`/api/v1/routes`), `ServiceController` (`/api/v1/services`), `JourneySearchController` (`/api/v1/journeys`)
+- **Fleet & Resources**: `BusController` (`/api/v1/buses`), `SeatLayoutController` (`/api/v1/seats/layouts`), `SeatAvailabilityController` (`/api/v1/services`), `DriverController` (`/api/v1/drivers`), `ResourceFeasibilityController` (`/api/v1/resources`), `ReviewController` (`/api/v1/reviews`)
+- **Booking & Payments**: `SeatHoldController` (`/api/v1/bookings/hold`), `BookingController` (`/api/v1/bookings`), `PaymentController` (`/api/v1/payments`), `TicketController` (`/api/v1/tickets`), `NotificationController` (`/api/v1/notifications`)
+- **Disruptions & AI**: `DisruptionController` (`/api/v1/disruptions`), `RebookingController` (`/api/v1/rebooking`), `ApprovalController` (`/api/v1/approvals`), `ServiceAlertController` (`/api/v1/alerts`), `AiWorkflowController` (`/api/v1/ai/workflows`)
+- **Development Helpers**: `DevController` (`/api/v1/dev`)
 
 ---
 
-## 2. Key Technology Stack
+## 2. Technology Stack
 
-- **Framework**: .NET 8.0 SDK (C# 12)
-- **Database Driver**: `Npgsql.EntityFrameworkCore.PostgreSQL` (v9.0.4)
-- **ORM**: Microsoft Entity Framework Core (v9.0.1)
-- **Direct SSL & ALPN**: Native support for PostgreSQL 18 direct SSL (`SslNegotiation = SslNegotiation.Direct`)
-- **Authentication**: JWT Bearer Authentication (`Microsoft.AspNetCore.Authentication.JwtBearer`)
-- **Password Security**: BCrypt (`BCrypt.Net-Next`)
-- **API Documentation**: OpenAPI / Swagger (`Swashbuckle.AspNetCore`)
+- **Runtime**: .NET 8.0 (`net8.0`, C# 12)
+- **ORM & PostgreSQL Provider**: Entity Framework Core `9.0.1` + `Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`
+- **Authentication & Security**: `Microsoft.AspNetCore.Authentication.JwtBearer` `8.0.11`, `BCrypt.Net-Next` `4.2.0`
+- **API Docs**: `Swashbuckle.AspNetCore` `6.6.2` (OpenAPI / Swagger UI at `/swagger`)
 
 ---
 
 ## 3. Environment & Configuration
 
-Environment variables are loaded dynamically on startup from the root `.env` file via `Program.cs`.
-
-### Required Variables
-Ensure the following variables are defined in the repository root `.env` (copied from `.env.example`):
+`Program.cs` automatically loads environment variables from the repository root `.env` (or `WayPoint.API/.env`). Copy `.env.example` from the repo root to `.env` and configure:
 
 ```env
 ASPNETCORE_ENVIRONMENT=Development
 ASPNETCORE_URLS=http://localhost:5010
-API_BASE_URL=http://localhost:5010/api/v1
-DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/railway
-JWT_SECRET=WayPoint_Super_Secret_Key_For_Jwt_Token_Authentication_2026_SE3090
-SESSION_SECRET=waypoint_secure_session_secret_2026
+DATABASE_URL=postgresql://user:password@localhost:5432/waypoint
+JWT_SECRET=your_jwt_secret_key_here
+AI_SERVICE_URL=http://localhost:8000
 ```
 
-> **Security Rule**: `appsettings.json` must **never** contain live credentials or connection strings. All secrets reside exclusively in `.env` (which is excluded via `.gitignore`).
+> **Note**: `Program.cs` enforces fail-fast startup if `JWT_SECRET` (or `Jwt:Secret` in config) is missing. Keep live secrets out of `appsettings.json` and commit history.
 
 ---
 
 ## 4. Setup & Running Locally
 
-### Step 1: Restore Dependencies
 ```bash
+# 1. Restore packages
 dotnet restore backend/WayPoint.sln
-```
 
-### Step 2: Apply Migrations & Seed Database
-Execute the built-in CLI seeder flag to apply all EF Core migrations and populate initial transit and user data:
-```bash
+# 2. Apply EF Core migrations and seed baseline roles, routes, fleet & test users
 dotnet run --project backend/WayPoint.API -- --seed
-```
 
-### Step 3: Run the Web API
-```bash
+# 3. Run the API server
 dotnet run --project backend/WayPoint.API
 ```
-The API starts on `http://localhost:5010`.
 
-### Step 4: Access Swagger UI
-Open your browser and navigate to:
-```text
-http://localhost:5010/swagger
-```
+- **API Base URL**: `http://localhost:5010/api/v1`
+- **Swagger UI**: `http://localhost:5010/swagger`
+- **Health Check**: `http://localhost:5010/health`
 
 ---
 
-## 5. Seeded Credentials for Testing
+## 5. Seeded Test Accounts (`DbSeeder.cs`)
 
-| Role | Email | Password | Assigned Persona |
-| :--- | :--- | :--- | :--- |
-| **System Administrator** | `admin@waypoint.lk` | `Admin@123` | System oversight & configurations |
-| **Fleet Operator** | `operator@waypoint.lk` | `Operator@123` | Student 2 (Fleet & Bus Management) |
-| **Ticketing Staff** | `staff@waypoint.lk` | `Staff@123` | Student 3 (Bookings & Check-ins) |
-| **Passenger** | `passenger@waypoint.lk` | `Passenger@123` | Student 1 (Search & Journey Planning) |
+The seeder creates the four `UserRoleType` roles (`Admin`, `TransportManager`, `Operator`, `Passenger`) and provisions four default users, all with password **`Password123!`**:
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| `Admin` | `admin@waypoint.lk` | `Password123!` |
+| `TransportManager` | `manager@waypoint.lk` | `Password123!` |
+| `Operator` | `operator@waypoint.lk` | `Password123!` |
+| `Passenger` | `passenger@waypoint.lk` | `Password123!` |
 
 ---
 
 ## 6. Running Automated Tests
 
 ```bash
-dotnet test
+dotnet test backend/WayPoint.sln --configuration Release
 ```
-All unit and integration test suites are executed.
+
+---
+
+## 7. In Progress / Upcoming Backend Work
+
+- [ ] Replace sandbox payment processing (`PaymentController.ProcessSandboxCharge`) with a real payment provider integration.
+- [ ] Add hosted background worker for automatic seat-hold expiry cleanup and scheduled alert dispatch.
+- [ ] Align `Conductor` / `Driver` role claims across backend `UserRoleType` and mobile conductor workflows.
+- [ ] Lock down `[AllowAnonymous]` development/AI preview endpoints (`DevController`, AI recommendation fallbacks) before production release.

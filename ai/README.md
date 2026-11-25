@@ -1,184 +1,122 @@
-# WayPoint AI Subsystem — Multi-Agent Disruption Mitigation & Journey Optimization
+# WayPoint AI Subsystem (FastAPI / LangGraph / Gemini)
 
-> **Component Owners**: Sethum (Student 1), Nuhadh (Student 2), Mithila (Student 3), Dineth (Student 4)  
-> **Architecture Decisions**: [ADR-003 — AI Orchestration](../docs/adr/ADR-003-ai-orchestration.md) | [ADR-004 — Workflow Persistence](../docs/adr/ADR-004-ai-workflow-persistence.md)  
-> **Frameworks**: Python 3.11, LangGraph, LangChain, Google Gemini 1.5 Flash, FastAPI, httpx  
+> **Status: Active Development (`v0.1.0` / WIP)**  
+> The WayPoint Agentic AI microservice is actively developing. The 5-node LangGraph workflow, 10 allow-listed HTTP tools, guardrails, safe-failure handlers, and backend workflow logging are implemented, while prompt calibration, live end-to-end tool resilience, and evaluation coverage continue to evolve.
 
 ---
 
 ## 1. Overview
 
-The **WayPoint AI Subsystem** is an autonomous multi-agent microservice engineered to resolve transit disruptions, optimize multi-leg journey planning, assess fleet resource feasibility, calculate tiered refund policies, and enforce safety guardrails across Sri Lankan intercity bus networks.
+The AI subsystem provides advisory multi-agent reasoning for two primary workflows exposed in `main.py`:
+- `GET /api/ai/health` — Service health & timeout configuration check
+- `POST /api/ai/disruption-rebooking` — Runs `planner → journey → resource → booking → safety`
+- `POST /api/ai/journey-recommendation` — Runs `planner → journey → resource → booking` (skips `safety`)
 
-The subsystem operates strictly as an untrusted advisory layer adhering to the core agentic AI rules:
-1. **Zero Direct Database Access**: Agents communicate exclusively with the authoritative ASP.NET Core API via HTTP tool calls.
-2. **Allow-Listed Tools Only (`BR-AITOOL-001`)**: Agents bind strictly to an approved set of 10 tools.
-3. **Deterministic Output Validation (`FR-AI-003`)**: All AI reasoning is verified by mathematical and business rule validators before any action is proposed.
-4. **Safe Failure Degradation (`FR-AI-004`)**: Unhandled exceptions or LLM service outages trigger safe recovery pathways.
-5. **Human-in-the-Loop Approval (`BR-APPROVAL-001`)**: High-impact operational schedule changes require explicit Transport Manager sign-off.
-6. **Execution Telemetry Persistence ([ADR-004](../docs/adr/ADR-004-ai-workflow-persistence.md))**: Every agent step, tool invocation latency, and validation result is persisted to PostgreSQL for full observability.
+### Core AI Rules (`AGENTS.md`)
+1. **No Direct Database Access**: Communicates with the system exclusively via HTTP calls to the ASP.NET Core Web API (`tools/http_client.py`).
+2. **Allow-Listed Tools Only (`BR-AITOOL-001`)**: Only the 10 tools registered in `tools/registry.py` are permitted (`ToolNotAllowedError` otherwise).
+3. **Structured Schemas & Deterministic Guardrails**: Pydantic schemas (`schemas/`) and deterministic validators (`guardrails/output_validator.py`) verify capacity, driver rest, fare arithmetic, refunds, and approval gates.
+4. **Human Manager Gate**: Disruption workflows transition to `PendingManagerApproval` (`BR-APPROVAL-001`) rather than auto-mutating schedules or confirming payments.
+5. **Safe Failure**: Timeouts, invalid inputs (`guardrails/input_sanitizer.py`), or LLM/API errors degrade via `guardrails/safe_failure.py`.
 
 ---
 
-## 2. Multi-Agent Workflow Architecture
-
-WayPoint organizes its agents into a 5-stage sequential LangGraph StateGraph (`agents/graph.py`):
+## 2. Workflow Graph & Agent Nodes (`agents/graph.py`)
 
 ```text
-┌─────────────┐     ┌──────────────────────┐     ┌────────────────────────┐
-│   Planner   │ ──> │   Journey Analysis   │ ──> │  Resource Feasibility  │
-│   (Node 1)  │     │   (Node 2 / Sethum)  │     │   (Node 3 / Nuhadh)    │
-└─────────────┘     └──────────────────────┘     └────────────────────────┘
-                                                              │
-                                                              ▼
-┌─────────────────────────┐     ┌────────────────────────┐    │
-│   Validation & Safety   │ <── │    Booking & Policy    │ <──┘
-│    (Node 5 / Dineth)    │     │   (Node 4 / Mithila)   │
-└───────────┬─────────────┘     └────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────────┐
-│ State Recorded to PostgreSQL    │
-│ AiWorkflow, Steps & ToolCalls   │
-└─────────────────────────────────┘
+START ──▶ planner ──▶ journey ──▶ resource ──▶ booking ──┬── (journey_recommendation) ──▶ END
+                                                         │
+                                                         └── (disruption_rebooking) ──▶ safety ──▶ END
 ```
 
-### Agent Roles & Student Ownership
-
-| Node | Agent Name | Student Owner | Core Responsibilities & Domain Invariants |
+| Node | File | Student Owner | Responsibility |
 | :--- | :--- | :--- | :--- |
-| **Node 1** | `Planner` | Orchestrator | Decomposes travel requests and disruption incidents into workflow objectives |
-| **Node 2** | `JourneyAnalysisAgent` | **Sethum** (Student 1) | Discovers candidate routes and enforces connecting transfer buffers (`BR-TRANSFER-001` $\ge 20$ min) |
-| **Node 3** | `ResourceFeasibilityAgent` | **Nuhadh** (Student 2) | Evaluates bus seating capacity, driver rest compliance ($>8$ hrs), and replacement vehicle feasibility |
-| **Node 4** | `BookingPolicyAgent` | **Mithila** (Student 3) | Calculates fare deltas and applies tiered Sri Lankan cancellation refund policies (`BR-REFUND-001`) |
-| **Node 5** | `ValidationSafetyAgent` | **Dineth** (Student 4) | Validates blast-radius impact, gates high-impact changes with Manager approval (`BR-APPROVAL-001`), and notifies conductors |
+| `planner` | `agents/planner.py` | Shared Orchestrator | Decomposes inbound objective into workflow state |
+| `journey` | `agents/journey_agent.py` | **Sethum** (Student 1) | Route discovery & transfer window checks (`>= 20` min) |
+| `resource` | `agents/resource_agent.py` | **Nuhadh** (Student 2) | Seat availability & driver/bus resource feasibility |
+| `booking` | `agents/booking_agent.py` | **Mithila** (Student 3) | Fare delta & cancellation refund policy analysis |
+| `safety` | `agents/safety_agent.py` | **Dineth** (Student 4) | Impact assessment, rebooking proposals & manager approval gate |
 
 ---
 
-## 3. The 10 Mandatory Allow-Listed Tools (`BR-AITOOL-001`)
+## 3. Allow-Listed Tools (`tools/registry.py`)
 
-The subsystem exposes exactly 10 allow-listed tools in `tools/registry.py`:
+1. `SearchRoutes` (`tools/journey_tools.py`)
+2. `GetBoardingPoints` (`tools/journey_tools.py`)
+3. `CheckTransferFeasibility` (`tools/journey_tools.py`)
+4. `CheckSeatAvailability` (`tools/resource_tools.py`)
+5. `CalculateFareDifference` (`tools/booking_tools.py`)
+6. `SendPassengerNotification` (`tools/booking_tools.py`)
+7. `CreateRebookingProposal` (`tools/disruption_tools.py`)
+8. `CalculatePassengerImpact` (`tools/disruption_tools.py`)
+9. `RequestManagerApproval` (`tools/disruption_tools.py`)
+10. `ApplyApprovedOperationalChange` (`tools/disruption_tools.py`)
 
-| Tool Name | Assigned Agent / Student | Backend Endpoint / Logic | Schema Definition |
-| :--- | :--- | :--- | :--- |
-| **`SearchRoutes`** | Journey Agent (Sethum) | `GET /api/v1/routes` | `SearchRoutesInput / Output` |
-| **`GetBoardingPoints`** | Journey Agent (Sethum) | `GET /api/v1/boarding-points` | `GetBoardingPointsInput / Output` |
-| **`CheckTransferFeasibility`** | Journey Agent (Sethum) | Local datetime calculation ($\ge 20$ min) | `CheckTransferFeasibilityInput / Output` |
-| **`CheckSeatAvailability`** | Resource Agent (Nuhadh) | `GET /api/v1/services/{id}/seats` | `CheckSeatAvailabilityInput / Output` |
-| **`CalculateFareDifference`** | Policy Agent (Mithila) | `GET /api/v1/services/{id}` | `CalculateFareDifferenceInput / Output` |
-| **`SendPassengerNotification`**| Policy Agent (Mithila) | `POST /api/v1/notifications` | `SendPassengerNotificationInput / Output` |
-| **`CreateRebookingProposal`** | Safety Agent (Dineth) | `POST /api/v1/rebooking-proposals` | `CreateRebookingProposalInput / Output` |
-| **`CalculatePassengerImpact`** | Safety Agent (Dineth) | `GET /api/v1/services/{id}/manifest` | `CalculatePassengerImpactInput / Output` |
-| **`RequestManagerApproval`** | Safety Agent (Dineth) | `POST /api/v1/approvals` | `RequestManagerApprovalInput / Output` |
-| **`ApplyApprovedOperationalChange`** | Safety Agent (Dineth) | `POST /api/v1/approvals/{id}/apply` | `ApplyApprovedChangeInput / Output` |
+*(Additional helper tool modules such as `tools/api_tools.py` support API integration patterns during development.)*
 
 ---
 
-## 4. Deterministic Guardrails & Output Validation (`FR-AI-003`)
-
-To guarantee safety and prevent LLM hallucination, output validator functions inspect the LLM output:
-
-1. **`validate_bus_capacity`**: Rejects proposals where passengers assigned exceed bus capacity.
-2. **`validate_driver_rest`**: Rejects driver assignments violating mandatory 8-hour intercity rest periods.
-3. **`validate_fare_difference_arithmetic`**: Mathematically verifies that $\text{fare\_diff} = \text{new\_fare} - \text{old\_fare}$.
-4. **`validate_cancellation_refund_schedule`**: Enforces Sri Lankan transit refund rules ($>24\text{h} \rightarrow 90\%$, $12\text{--}24\text{h} \rightarrow 50\%$, $<12\text{h} \rightarrow 0\%$).
-5. **`validate_high_impact_approval_gate`**: Requires explicit Transport Manager approval for any timetable shift $>15$ minutes or service cancellation.
-
----
-
-## 5. Directory Structure
+## 4. Directory Structure
 
 ```text
 ai/
-├── agents/                   # Multi-agent LangGraph node implementations
-│   ├── planner.py            # Initial workflow decomposition
-│   ├── journey_agent.py      # Student 1: Route discovery & transfer validation
-│   ├── resource_agent.py     # Student 2: Fleet capacity & driver rest evaluation
-│   ├── booking_agent.py      # Student 3: Fare difference & refund policies
-│   ├── safety_agent.py       # Student 4: High-impact gate & manager approval
-│   ├── graph.py              # LangGraph StateGraph connecting all 5 agents
-│   └── state.py              # WorkflowState TypedDict schema
-│
-├── tools/                    # Tool definitions and allow-list registry
-│   ├── registry.py           # BR-AITOOL-001 central registry enforcing 10 tools
-│   ├── journey_tools.py      # Student 1 tool implementations
-│   ├── resource_tools.py     # Student 2 tool implementations
-│   ├── booking_tools.py      # Student 3 tool implementations
-│   ├── disruption_tools.py   # Student 4 tool implementations
-│   ├── http_client.py        # Authenticated HTTP client for backend REST API
-│   └── workflow_persistence.py # PostgreSQL audit recorder via backend API
-│
-├── guardrails/               # Safety filters and deterministic rules
-│   ├── input_sanitizer.py    # Prompt injection prevention (FR-AI-008)
-│   ├── output_validator.py   # Mathematical and policy validation rules
-│   └── safe_failure.py       # Safe-failure wrapper logic (FR-AI-004)
-│
-├── schemas/                  # Pydantic schemas for structured inputs/outputs
-│   ├── tools.py              # Tool request and response models
-│   └── state.py              # Workflow state models
-│
-├── prompts/                  # System prompts with role boundaries
-│   └── agent_prompts.py      # Prompts for Planner, Journey, Resource, Policy, Safety
-│
-├── tests/                    # Pytest automated test suites
-│   ├── test_agents.py        # Multi-agent pipeline integration tests
-│   ├── test_guardrails.py    # Guardrail and deterministic rule validation tests
-│   ├── test_tools.py         # Tool registry and allow-list enforcement tests
-│   └── test_safe_failure.py  # Safe failure recovery tests
-│
-├── main.py                   # FastAPI application entry point
-├── config.py                 # Configuration and environment variable loader
-└── requirements.txt          # Python dependencies
+├── agents/                 # graph.py, state.py & 5 agent nodes
+├── tools/                  # registry.py, http_client.py & domain tool modules
+├── guardrails/             # input_sanitizer.py, output_validator.py, safe_failure.py
+├── persistence/            # workflow_logger.py (ADR-004 backend trace persistence)
+├── prompts/                # agent_prompts.py, planner_prompt.py, journey_system_prompt.txt
+├── schemas/                # journey_schemas.py, tools.py, workflow.py
+├── tests/                  # Pytest unit, golden, guardrail, registry & persistence tests
+├── config.py               # Environment config loader (ai/.env then root .env)
+├── main.py                 # FastAPI entry point (port 8000)
+├── Dockerfile              # Container build (Python 3.11-slim + uvicorn)
+├── .env.example            # AI-specific environment template
+└── requirements.txt        # Python dependencies (LangGraph, LangChain, FastAPI, httpx)
 ```
 
 ---
 
-## 6. Setup & Execution
+## 5. Setup & Running Locally
 
-### 6.1 Prerequisites
-- Python 3.11+
-- ASP.NET Core backend running on `http://localhost:5010` (or Railway cloud URL)
-- Valid Google Gemini API Key
-
-### 6.2 Environment Configuration
-Create or configure `.env` in the repository root or `ai/` folder:
+### Environment Variables (`config.py`)
+Copy `ai/.env.example` to `ai/.env` (or configure in root `.env`):
 ```env
 API_BASE_URL=http://localhost:5010/api/v1
 GEMINI_API_KEY=your_gemini_api_key_here
-LLM_MODEL=gemini-1.5-flash
-LLM_TEMPERATURE=0.2
-PORT=8000
+LLM_MODEL=gemini-3.5-flash
+LLM_TEMPERATURE=0.1
+AI_SERVICE_EMAIL=admin@waypoint.lk
+AI_SERVICE_PASSWORD=Password123!
+BACKEND_ORIGIN=http://localhost:5010
 ```
 
-### 6.3 Installation & Startup
+### Startup
 ```bash
 cd ai
 python -m venv venv
-
-# Windows
-.\venv\Scripts\Activate.ps1
-# Linux/macOS
-source venv/bin/activate
-
+# Windows: .\venv\Scripts\Activate.ps1
+# Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
-- **FastAPI Service**: `http://localhost:8000`
-- **Swagger Docs**: `http://localhost:8000/docs`
+- **Service URL**: `http://localhost:8000`
+- **Swagger / OpenAPI**: `http://localhost:8000/docs`
 
 ---
 
-## 7. Running Automated Tests
+## 6. Automated Tests
 
 ```bash
 cd ai
-# Run all multi-agent tests
 pytest tests/ -v
-
-# Run specific agent or guardrail tests
-pytest tests/test_agents.py -v
-pytest tests/test_guardrails.py -v
-pytest tests/test_safe_failure.py -v
 ```
 
-All agent tests validate complete LangGraph execution, tool invocation boundaries, and deterministic output verification.
+Includes tests for agents, conditional graph routing, tool allow-list registry, input sanitization, safe-failure fallbacks, golden scenarios, and workflow persistence integration.
+
+---
+
+## 7. In Progress / Upcoming Work
+
+- [ ] Harmonize default `AI_SERVICE_EMAIL` / `AI_SERVICE_PASSWORD` across `ai/.env.example`, `ai/config.py`, and `DbSeeder.cs`.
+- [ ] Expand live end-to-end LLM + backend tool integration benchmarks without mocked responses.
+- [ ] Refine prompt templates and structured output recovery for edge-case multi-leg queries.
